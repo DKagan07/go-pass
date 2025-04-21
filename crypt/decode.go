@@ -1,2 +1,59 @@
 package crypt
 
+import (
+	"crypto/aes"
+	"crypto/cipher"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
+	"os"
+
+	"go-pass/model"
+	"go-pass/utils"
+)
+
+func DecodePassword() {}
+
+func DecryptVault(f *os.File) []model.VaultEntry {
+	key := utils.GetAESKey()
+
+	contents, err := io.ReadAll(f)
+	if err != nil {
+		log.Fatalf("DecryptVault::reading contents: %v", err)
+	}
+
+	hexBuf := make([]byte, hex.DecodedLen(len(contents)))
+	_, err = hex.Decode(hexBuf, contents)
+	if err != nil {
+		log.Fatalf("DecryptVault::decoding hex: %v", err)
+	}
+
+	nonce := hexBuf[:NONCE_SIZE]
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		log.Fatalf("DecryptVault::getting cipher block: %v", err)
+	}
+
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		log.Fatalf("DecryptVault::creating aes gcm: %v", err)
+	}
+
+	b, err := aesgcm.Open(nil, nonce, hexBuf[NONCE_SIZE:], nil)
+	if err != nil {
+		log.Fatalf("DecryptVault::opening gcm: %v", err)
+	}
+
+	fmt.Println("b: ", b)
+
+	var entries []model.VaultEntry
+
+	if err = json.Unmarshal(b, &entries); err != nil {
+		log.Fatalf("DecryptVault::unmarshal: %v", err)
+	}
+
+	return entries
+}

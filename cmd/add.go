@@ -6,17 +6,14 @@ package cmd
 import (
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/term"
 
 	"go-pass/crypt"
 	"go-pass/model"
+	"go-pass/utils"
 )
-
-// TODO: For 'add', I need to make sure to add the password securely as well
 
 // addCmd represents the add command
 var addCmd = &cobra.Command{
@@ -54,27 +51,25 @@ func init() {
 
 func addCmdFunc(cmd *cobra.Command, args []string) {
 	// the value in GetString has to equal the flag that is created above
-	fmt.Println("add called")
 	if len(args) != 1 {
-		log.Fatal("Not enough arguments to call 'add'. Please see help")
-	}
-	fmt.Print("Username:")
-	var username string
-	_, err := fmt.Scan(&username)
-	if err != nil {
-		log.Fatalf("Error getting username: %v", err)
-	}
-	fmt.Printf("Input password:")
-	passwordBytes, err := term.ReadPassword(int(os.Stdin.Fd()))
-	if err != nil {
-		log.Fatalf("Failed reading pword: %v", err)
-	}
-	hashedPw := crypt.HashPassword(string(passwordBytes))
-	if err != nil {
-		log.Fatalf("Error handling username or password: %v\n", err)
+		log.Fatal("add::not enough arguments to call 'add'. Please see help")
 	}
 
-	fmt.Println("hashedPw: ", hashedPw)
+	username, err := utils.GetInputFromUser("Username")
+	if err != nil {
+		log.Fatalf("add::not a valid input: %v", err)
+	}
+
+	passwordBytes, err := utils.GetPasswordFromUser()
+	if err != nil {
+		log.Fatalf("add::failed reading pword: %v", err)
+	}
+	fmt.Println()
+
+	hashedPw := crypt.EncryptPassword(passwordBytes)
+	if err != nil {
+		log.Fatalf("add::error handling username or password: %v\n", err)
+	}
 
 	now := time.Now()
 	ve := model.VaultEntry{
@@ -84,7 +79,29 @@ func addCmdFunc(cmd *cobra.Command, args []string) {
 		CreatedAt: now.UnixMilli(),
 	}
 
-	// crypt.Encrypt(ve)
+	f := utils.OpenVault()
+	defer f.Close()
 
-	fmt.Printf("vault entry: %+v\n", ve)
+	// TODO: need to decode in order to add anything beyond the first addition
+
+	fStat, err := f.Stat()
+	if err != nil {
+		log.Fatalf("add::stat: %v", err)
+	}
+
+	var entries []model.VaultEntry
+	if fStat.Size() != 2 {
+		entries = crypt.DecryptVault(f)
+	} else {
+		entries = utils.GetCurrentVaultEntries(f)
+	}
+
+	entries = append(entries, ve)
+
+	encryptedCipherText, err := crypt.EncryptVault(entries)
+	if err != nil {
+		log.Fatalf("add::obtaining ciphertext: %v", err)
+	}
+
+	utils.WriteToVault(f, encryptedCipherText)
 }
