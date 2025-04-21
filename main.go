@@ -1,16 +1,23 @@
+/*
+Copyright © 2025 NAME HERE <EMAIL ADDRESS>
+*/
 package main
 
 import (
-	"fmt"
-	"os"
-
-	tea "github.com/charmbracelet/bubbletea"
+	"go-pass/cmd"
+	"go-pass/utils"
 )
 
+const FileExistsErr = "file exists"
+
 func main() {
-	p := tea.NewProgram(tea.Model{})
-	if _, err := p.Run(); err != nil {
-		fmt.Printf("Alas, there is an error! %v", err)
-		os.Exit(1)
-	}
+	initProgram()
+	cmd.Execute()
+}
+
+// initProgram will check to see if the file for which we will be storing the
+// passwords exists. If it doesn't, it'll create one
+func initProgram() {
+	f := utils.OpenVault()
+	defer f.Close()
 }
