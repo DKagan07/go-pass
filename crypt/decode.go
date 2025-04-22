@@ -5,7 +5,6 @@ import (
 	"crypto/cipher"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -19,18 +18,22 @@ func DecodePassword() {}
 func DecryptVault(f *os.File) []model.VaultEntry {
 	key := utils.GetAESKey()
 
+	// Get contents
 	contents, err := io.ReadAll(f)
 	if err != nil {
 		log.Fatalf("DecryptVault::reading contents: %v", err)
 	}
 
+	// Hex decode first
 	hexBuf := make([]byte, hex.DecodedLen(len(contents)))
 	_, err = hex.Decode(hexBuf, contents)
 	if err != nil {
 		log.Fatalf("DecryptVault::decoding hex: %v", err)
 	}
 
-	nonce := hexBuf[:NONCE_SIZE]
+	// Nonce is not decrypted in with the AES, so we can grab it after
+	// hex-decoding
+	nonce := hexBuf[:utils.NONCE_SIZE]
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -42,12 +45,10 @@ func DecryptVault(f *os.File) []model.VaultEntry {
 		log.Fatalf("DecryptVault::creating aes gcm: %v", err)
 	}
 
-	b, err := aesgcm.Open(nil, nonce, hexBuf[NONCE_SIZE:], nil)
+	b, err := aesgcm.Open(nil, nonce, hexBuf[utils.NONCE_SIZE:], nil)
 	if err != nil {
 		log.Fatalf("DecryptVault::opening gcm: %v", err)
 	}
-
-	fmt.Println("b: ", b)
 
 	var entries []model.VaultEntry
 

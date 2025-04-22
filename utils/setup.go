@@ -1,8 +1,8 @@
 package utils
 
 import (
+	"crypto/rand"
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 	"path"
@@ -10,12 +10,34 @@ import (
 	"go-pass/model"
 )
 
+const (
+	NONCE_SIZE = 12
+	KEY_SIZE   = 32
+)
+
 // GetAESKey is a helper function that gets the key from the environment
 // variable called 'SECRET_PASSWORD_KEY'. 'SECRET_PASSWORD_KEY' should be a
 // strong, 32-byte password that's unique. You can generate a strong password
 // from something like: 'https://passwords-generator.org/32-character'
 func GetAESKey() []byte {
-	return []byte(os.Getenv("SECRET_PASSWORD_KEY"))
+	key := []byte(os.Getenv("SECRET_PASSWORD_KEY"))
+	if len(key) != KEY_SIZE {
+		log.Fatal("GetAESKey::Key not appropriate length")
+	}
+	return key
+}
+
+// utils.GenerateNonce generates a Number Once, used for AES-256 encryption.
+func GenerateNonce() []byte {
+	nonce := make([]byte, NONCE_SIZE)
+	if _, err := rand.Read(nonce); err != nil {
+		log.Fatalf("EncryptVault::creating nonce: %v", err)
+	}
+
+	if len(nonce) != NONCE_SIZE {
+		log.Fatal("GenerateNonce::nonce not correct length")
+	}
+	return nonce
 }
 
 // OpenVault opens the vault file in which the passwords are stored. It is up to
@@ -58,7 +80,6 @@ func GetCurrentVaultEntries(f *os.File) []model.VaultEntry {
 	if err := decoder.Decode(&currContents); err != nil {
 		log.Fatalf("GetCurrentVaultEntries::decoding: %v", err)
 	}
-	fmt.Println("currContents: ", currContents)
 
 	return currContents
 }
@@ -73,7 +94,6 @@ func WriteToVault(f *os.File, contents []byte) {
 		log.Fatalf("WriteToVault::truncate: %v", err)
 	}
 
-	fmt.Println("contents in WriteToVault: ", contents)
 	// Write to the file
 	if _, err := f.Write(contents); err != nil {
 		log.Fatalf("WriteToVault::write: %v", err)

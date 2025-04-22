@@ -5,7 +5,7 @@ type VaultEntry struct {
 	Name string `json:"name"`
 	// Username is the username for the login
 	Username string `json:"username"`
-	// Password is a hashed password that we want stored, hashed with bcrypt
+	// Password is an encrypted password, encrypted with AES-256-GCM
 	Password []byte `json:"password"`
 	// CreatedAt is the timestamp when the entry was created, in milliseconds
 	CreatedAt int64 `json:"created_at"`

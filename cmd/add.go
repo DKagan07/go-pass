@@ -24,6 +24,9 @@ var addCmd = &cobra.Command{
 'add' adds a new password to the vault. The passwords are encrypted and
 stored securely. 'add' takes a source, and then you are prompted to add a
 username and password.
+
+NOTE: Entries are case sensitive in order to retreive. When you use the list
+cmd, that is NOT case sensitive.
 Ex.
 	$ gopass add github
 	Username: me@example.com
@@ -47,6 +50,8 @@ func init() {
 	// is called directly, e.g.:
 	// addCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	// addCmd.Flags().StringP("something", "d", "", "Add something")
+
+	// NOTE: perhaps add a flag here to show the password and not hide it?
 }
 
 func addCmdFunc(cmd *cobra.Command, args []string) {
@@ -81,8 +86,6 @@ func addCmdFunc(cmd *cobra.Command, args []string) {
 
 	f := utils.OpenVault()
 	defer f.Close()
-
-	// TODO: need to decode in order to add anything beyond the first addition
 
 	fStat, err := f.Stat()
 	if err != nil {

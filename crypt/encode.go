@@ -3,17 +3,13 @@ package crypt
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"log"
 
 	"go-pass/model"
 	"go-pass/utils"
 )
-
-const NONCE_SIZE = 12
 
 // EncryptPassword encrypts the password with AES-256 GSM.
 func EncryptPassword(pw []byte) []byte {
@@ -32,7 +28,7 @@ func EncryptPassword(pw []byte) []byte {
 		log.Fatal("creating aes gcm")
 	}
 
-	nonce := generateNonce()
+	nonce := utils.GenerateNonce()
 
 	return aesgcm.Seal(nil, nonce, hexEncodedPw, nil)
 }
@@ -57,7 +53,7 @@ func EncryptVault(vault []model.VaultEntry) ([]byte, error) {
 		log.Fatal("EncryptVault::creating aes gcm")
 	}
 
-	nonce := generateNonce()
+	nonce := utils.GenerateNonce()
 
 	cipherText := aesgcm.Seal(nil, nonce, b, nil)
 
@@ -66,16 +62,6 @@ func EncryptVault(vault []model.VaultEntry) ([]byte, error) {
 
 	dst := make([]byte, hex.EncodedLen(len(cipherText)))
 	hex.Encode(dst, cipherText)
-	fmt.Println("hex encode in encrypt: ", dst)
 
 	return dst, nil
-}
-
-// generateNonce generates a Number Once, used for AES-256 encryption.
-func generateNonce() []byte {
-	nonce := make([]byte, NONCE_SIZE)
-	if _, err := rand.Read(nonce); err != nil {
-		log.Fatalf("EncryptVault::creating nonce: %v", err)
-	}
-	return nonce
 }
