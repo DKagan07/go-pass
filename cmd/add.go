@@ -95,8 +95,6 @@ func addCmdFunc(cmd *cobra.Command, args []string) {
 	var entries []model.VaultEntry
 	if fStat.Size() != 2 {
 		entries = crypt.DecryptVault(f)
-	} else {
-		entries = utils.GetCurrentVaultEntries(f)
 	}
 
 	entries = append(entries, ve)

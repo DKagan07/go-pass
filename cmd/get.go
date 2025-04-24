@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"go-pass/crypt"
-	"go-pass/model"
 	"go-pass/utils"
 )
 
@@ -57,18 +56,12 @@ func getCmdFunc(cmd *cobra.Command, args []string) {
 		log.Fatal("get::no arguments needed for 'list'. See the help command!")
 	}
 
+	name := args[0]
+
 	f := utils.OpenVault()
 	defer f.Close()
 
-	fStat, err := f.Stat()
-	if err != nil {
-		log.Fatalf("get::getting stat")
-	}
-
-	var entries []model.VaultEntry
-	if fStat.Size() != 2 {
-		entries = crypt.DecryptVault(f)
-	}
+	entries := crypt.DecryptVault(f)
 
 	if len(entries) == 0 {
 		fmt.Println("Nothing in your vault!")
@@ -76,7 +69,7 @@ func getCmdFunc(cmd *cobra.Command, args []string) {
 	}
 
 	for _, e := range entries {
-		if e.Name == args[0] {
+		if e.Name == name {
 			// decode password
 			crypt.DecryptPassword(e.Password)
 			fmt.Println("From vault:")
@@ -86,5 +79,5 @@ func getCmdFunc(cmd *cobra.Command, args []string) {
 			return
 		}
 	}
-	fmt.Printf("%s not found in vault.\n", args[0])
+	fmt.Printf("%s not found in vault.\n", name)
 }

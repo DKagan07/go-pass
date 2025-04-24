@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"go-pass/crypt"
-	"go-pass/model"
 	"go-pass/utils"
 )
 
@@ -65,15 +64,7 @@ func listCmdFunc(cmd *cobra.Command, args []string) {
 	f := utils.OpenVault()
 	defer f.Close()
 
-	fStat, err := f.Stat()
-	if err != nil {
-		log.Fatalf("list::getting stat")
-	}
-
-	var entries []model.VaultEntry
-	if fStat.Size() != 2 {
-		entries = crypt.DecryptVault(f)
-	}
+	entries := crypt.DecryptVault(f)
 
 	if len(entries) == 0 {
 		fmt.Println("Nothing in your vault!")

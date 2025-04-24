@@ -71,3 +71,29 @@ func EncryptVault(vault []model.VaultEntry) ([]byte, error) {
 
 	return dst, nil
 }
+
+// TODO: There seems to be some replicated code, maybe should break that out?
+
+// func encrypt(b []byte) []byte {
+// 	key := utils.GetAESKey()
+//
+// 	cipherBlock, err := aes.NewCipher(key)
+// 	if err != nil {
+// 		log.Fatalf("creating cipher block: %v", err)
+// 	}
+//
+// 	aesgcm, err := cipher.NewGCM(cipherBlock)
+// 	if err != nil {
+// 		log.Fatal("creating aes gcm")
+// 	}
+//
+// 	nonce := utils.GenerateNonce()
+//
+// 	cipherTextPass := aesgcm.Seal(nil, nonce, b, nil)
+// 	cipherTextPass = append(nonce, cipherTextPass...)
+//
+// 	dst := make([]byte, hex.EncodedLen(len(cipherTextPass)))
+// 	hex.Encode(dst, cipherTextPass)
+//
+// 	return dst
+// }
