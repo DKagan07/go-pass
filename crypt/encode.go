@@ -30,7 +30,13 @@ func EncryptPassword(pw []byte) []byte {
 
 	nonce := utils.GenerateNonce()
 
-	return aesgcm.Seal(nil, nonce, hexEncodedPw, nil)
+	cipherTextPass := aesgcm.Seal(nil, nonce, hexEncodedPw, nil)
+	cipherTextPass = append(nonce, cipherTextPass...)
+
+	dst := make([]byte, hex.EncodedLen(len(cipherTextPass)))
+	hex.Encode(dst, cipherTextPass)
+
+	return dst
 }
 
 // Encrypt encrypts the whole model.VaultEntry struct to be stored locally on

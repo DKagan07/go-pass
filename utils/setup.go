@@ -73,6 +73,10 @@ func OpenVault() *os.File {
 	return f
 }
 
+// GetCurrentVaultEntries takes the file and returns a []model.VaultEntry (this
+// mainly just decodes). This function needs to be called after the file is
+// decrypted; otherwise it'll fail. It is up to the caller of the function to
+// ensure that the file is closed.
 func GetCurrentVaultEntries(f *os.File) []model.VaultEntry {
 	currContents := []model.VaultEntry{}
 
@@ -84,6 +88,9 @@ func GetCurrentVaultEntries(f *os.File) []model.VaultEntry {
 	return currContents
 }
 
+// WriteToVault takes a *os.File and the contents wanted in the file, in []byte,
+// and writes it to the file. It is up to the caller of this function that the
+// file is closed.
 func WriteToVault(f *os.File, contents []byte) {
 	// Reset the file
 	if _, err := f.Seek(0, 0); err != nil {

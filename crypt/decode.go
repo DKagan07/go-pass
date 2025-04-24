@@ -13,8 +13,44 @@ import (
 	"go-pass/utils"
 )
 
-func DecodePassword() {}
+// DecryptPassword takes a []byte that we initially stored in the file, decrypt
+// it, and return the string form of that password.
+func DecryptPassword(passBytes []byte) string {
+	key := utils.GetAESKey()
 
+	// hex decode first, then aes-256 decode
+	dst := make([]byte, hex.DecodedLen(len(passBytes)))
+	if _, err := hex.Decode(dst, passBytes); err != nil {
+		log.Fatalf("DecryptPass::failed to hex decode password: %v", err)
+	}
+
+	nonce := dst[:utils.NONCE_SIZE]
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		log.Fatalf("DecryptVault::getting cipher block: %v", err)
+	}
+
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		log.Fatalf("DecryptVault::creating aes gcm: %v", err)
+	}
+
+	b, err := aesgcm.Open(nil, nonce, dst[utils.NONCE_SIZE:], nil)
+	if err != nil {
+		log.Fatalf("DecryptPassword::opening gcm: %v", err)
+	}
+
+	pass := make([]byte, hex.DecodedLen(len(b)))
+	if _, err := hex.Decode(pass, b); err != nil {
+		log.Fatalf("DecryptPassword::hex decode password")
+	}
+
+	return string(pass)
+}
+
+// DecryptVault takes a *os.File and returns a []model.VaultEntry. The purpose
+// of this is is to read the contents of the file.
 func DecryptVault(f *os.File) []model.VaultEntry {
 	key := utils.GetAESKey()
 
