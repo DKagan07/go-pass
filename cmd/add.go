@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -60,12 +61,12 @@ func addCmdFunc(cmd *cobra.Command, args []string) {
 		log.Fatal("add::not enough arguments to call 'add'. Please see help")
 	}
 
-	username, err := utils.GetInputFromUser("Username")
+	username, err := utils.GetInputFromUser(os.Stdin, "Username")
 	if err != nil {
 		log.Fatalf("add::not a valid input: %v", err)
 	}
 
-	passwordBytes, err := utils.GetPasswordFromUser()
+	passwordBytes, err := utils.GetPasswordFromUser(os.Stdin)
 	if err != nil {
 		log.Fatalf("add::failed reading pword: %v", err)
 	}

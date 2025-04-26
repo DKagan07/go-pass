@@ -2,15 +2,17 @@ package utils
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
 	"golang.org/x/term"
 )
 
-func GetInputFromUser(field string) (string, error) {
-	br := bufio.NewReader(os.Stdin)
+func GetInputFromUser(r io.Reader, field string) (string, error) {
+	br := bufio.NewReader(r)
 	fmt.Printf("%s: ", field)
 	username, err := br.ReadString('\n')
 	if err != nil {
@@ -20,9 +22,13 @@ func GetInputFromUser(field string) (string, error) {
 	return cleanString(username), nil
 }
 
-func GetPasswordFromUser() ([]byte, error) {
+func GetPasswordFromUser(r io.Reader) ([]byte, error) {
 	fmt.Print("Password: ")
-	return term.ReadPassword(int(os.Stdin.Fd()))
+	fd, ok := (r).(*os.File)
+	if !ok {
+		return nil, errors.New("cannot read from source")
+	}
+	return term.ReadPassword(int(fd.Fd()))
 }
 
 func cleanString(s string) string {
