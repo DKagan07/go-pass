@@ -24,7 +24,10 @@ var addCmd = &cobra.Command{
 
 'add' adds a new password to the vault. The passwords are encrypted and
 stored securely. 'add' takes a source, and then you are prompted to add a
-username and password.
+username and password, and some notes. This notes section is for extra
+information needed for any login. If multiple pieces of information are needed,
+the info should be separated by semicolons, as pressing <Enter> will submit the
+information.
 
 NOTE: Entries are case sensitive in order to retreive. When you use the list
 cmd, that is NOT case sensitive.
