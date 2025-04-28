@@ -92,7 +92,7 @@ func addCmdFunc(cmd *cobra.Command, args []string) {
 		Username:  username,
 		Password:  hashedPw,
 		Notes:     notes,
-		CreatedAt: now.UnixMilli(),
+		UpdatedAt: now.UnixMilli(),
 	}
 
 	f := utils.OpenVault()

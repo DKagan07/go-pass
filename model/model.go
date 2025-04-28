@@ -10,6 +10,6 @@ type VaultEntry struct {
 	// Notes is a section that can be empty that the user can add extra notes
 	// about needing to login.
 	Notes string `json:"notes,omitempty"`
-	// CreatedAt is the timestamp when the entry was created, in milliseconds
-	CreatedAt int64 `json:"created_at"`
+	// UpdatedAt is the timestamp when the entry was created, in milliseconds
+	UpdatedAt int64 `json:"updated_at"`
 }
