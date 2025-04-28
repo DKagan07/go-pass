@@ -2,17 +2,19 @@ package utils
 
 import (
 	"crypto/rand"
-	"encoding/json"
 	"log"
 	"os"
 	"path"
-
-	"go-pass/model"
 )
 
 const (
 	NONCE_SIZE = 12
 	KEY_SIZE   = 32
+)
+
+var (
+	home, _    = os.UserHomeDir()
+	VAULT_PATH = path.Join(home, ".local", "gopass")
 )
 
 // GetAESKey is a helper function that gets the key from the environment
@@ -40,52 +42,38 @@ func GenerateNonce() []byte {
 	return nonce
 }
 
-// OpenVault opens the vault file in which the passwords are stored. It is up to
-// the caller to close the opened file.
-func OpenVault() *os.File {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatalf("OpenVault::Error UserHomeDir: %v\n", err)
-	}
-
-	err = os.Mkdir(path.Join(home, ".local", "gopass"), 0700)
+func CreateVault() *os.File {
+	err := os.Mkdir(VAULT_PATH, 0700)
 	if !os.IsExist(err) {
-		log.Fatalf("OpenVault::Error creating dir: %v\n", err)
+		log.Fatalf("CreateVault::Error creating dir: %v\n", err)
 	}
 
-	vaultPath := path.Join(home, ".local", "gopass", "pass.json")
-	f, err := os.OpenFile(vaultPath, os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		log.Fatalf("OpenVault::Error reading file %s: %v", vaultPath, err)
-	}
-
-	fileStat, err := f.Stat()
-	if err != nil {
-		log.Fatal("OpenVault::getting stat on file")
-	}
-
-	if fileStat.Size() == 0 {
-		if _, err = f.Write([]byte("[]")); err != nil {
-			log.Fatal("OpenVault::appending empty array to new file")
+	vaultPath := path.Join(VAULT_PATH, "pass.json")
+	f, err := os.OpenFile(vaultPath, os.O_RDWR, 0644)
+	if !os.IsExist(err) {
+		f, err := os.OpenFile(vaultPath, os.O_RDWR|os.O_CREATE, 0644)
+		if err != nil {
+			log.Fatalf("CreateVault::creating file: %v", err)
 		}
+		return f
+	}
+	if err != nil {
+		log.Fatalf("CreateVault::Error reading file %s: %v", vaultPath, err)
 	}
 
 	return f
 }
 
-// GetCurrentVaultEntries takes the file and returns a []model.VaultEntry (this
-// mainly just decodes). This function needs to be called after the file is
-// decrypted; otherwise it'll fail. It is up to the caller of the function to
-// ensure that the file is closed.
-func GetCurrentVaultEntries(f *os.File) []model.VaultEntry {
-	currContents := []model.VaultEntry{}
-
-	decoder := json.NewDecoder(f)
-	if err := decoder.Decode(&currContents); err != nil {
-		log.Fatalf("GetCurrentVaultEntries::decoding: %v", err)
+// OpenVault opens the vault file in which the passwords are stored. It is up to
+// the caller to close the opened file.
+func OpenVault() *os.File {
+	vaultPath := path.Join(VAULT_PATH, "pass.json")
+	f, err := os.OpenFile(vaultPath, os.O_RDWR, 0644)
+	if err != nil {
+		log.Fatalf("OpenVault::Error reading file %s: %v", vaultPath, err)
 	}
 
-	return currContents
+	return f
 }
 
 // WriteToVault takes a *os.File and the contents wanted in the file, in []byte,

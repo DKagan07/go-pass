@@ -5,6 +5,8 @@ package main
 
 import (
 	"go-pass/cmd"
+	"go-pass/crypt"
+	"go-pass/model"
 	"go-pass/utils"
 )
 
@@ -18,8 +20,22 @@ func main() {
 }
 
 func initProgram() {
-	// Just ensure that the file exists on startup
-	f := utils.OpenVault()
+	f := utils.CreateVault()
+
+	fileStat, err := f.Stat()
+	if err != nil {
+		panic("init::getting stat on file")
+	}
+
+	if fileStat.Size() == 0 {
+		ve := []model.VaultEntry{}
+		b, err := crypt.EncryptVault(ve)
+		if err != nil {
+			panic("init::encrypt ve")
+		}
+		utils.WriteToVault(f, b)
+	}
+
 	f.Close()
 
 	// Ensure that the key exists on startup
