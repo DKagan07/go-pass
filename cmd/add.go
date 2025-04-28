@@ -32,6 +32,7 @@ Ex.
 	$ gopass add github
 	Username: me@example.com
 	Password: ********
+	Notes: <any extra notes, can be empty>
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
 		addCmdFunc(cmd, args)
@@ -77,11 +78,17 @@ func addCmdFunc(cmd *cobra.Command, args []string) {
 		log.Fatalf("add::error handling username or password: %v\n", err)
 	}
 
+	notes, err := utils.GetInputFromUser(os.Stdin, "Notes")
+	if err != nil {
+		log.Fatalf("add::not valid input for notes: %v", err)
+	}
+
 	now := time.Now()
 	ve := model.VaultEntry{
 		Name:      args[0],
 		Username:  username,
 		Password:  hashedPw,
+		Notes:     notes,
 		CreatedAt: now.UnixMilli(),
 	}
 

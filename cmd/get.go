@@ -31,6 +31,7 @@ $ gopass get Google
 Name: Google
 	Username: <username>
 	Password: <human-readable password>
+	Notes: <will show if any notes are present>
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
 		getCmdFunc(cmd, args)
@@ -70,12 +71,15 @@ func getCmdFunc(cmd *cobra.Command, args []string) {
 
 	for _, e := range entries {
 		if e.Name == name {
-			// decode password
-			crypt.DecryptPassword(e.Password)
+			// The \t's are for aligning the text in the terminal
 			fmt.Println("From vault:")
 			fmt.Println("Name: ", e.Name)
-			fmt.Println("\tUsername: ", e.Username)
-			fmt.Println("\tPassword: ", crypt.DecryptPassword(e.Password))
+			fmt.Println("\tUsername: \t", e.Username)
+			fmt.Println("\tPassword: \t", crypt.DecryptPassword(e.Password))
+
+			if len(e.Notes) > 0 {
+				fmt.Println("\tNotes: \t\t", e.Notes)
+			}
 			return
 		}
 	}
