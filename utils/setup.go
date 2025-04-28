@@ -42,13 +42,22 @@ func GenerateNonce() []byte {
 	return nonce
 }
 
-func CreateVault() *os.File {
+// CreateVault creates a file in a default path. If directories aren't created,
+// this function will create them.
+func CreateVault(name string) *os.File {
+	var fName string
+	if name == "" {
+		fName = "pass.json"
+	} else {
+		fName = name
+	}
+
 	err := os.Mkdir(VAULT_PATH, 0700)
 	if !os.IsExist(err) {
 		log.Fatalf("CreateVault::Error creating dir: %v\n", err)
 	}
 
-	vaultPath := path.Join(VAULT_PATH, "pass.json")
+	vaultPath := path.Join(VAULT_PATH, fName)
 	f, err := os.OpenFile(vaultPath, os.O_RDWR, 0644)
 	if !os.IsExist(err) {
 		f, err := os.OpenFile(vaultPath, os.O_RDWR|os.O_CREATE, 0644)

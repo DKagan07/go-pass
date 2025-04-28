@@ -20,7 +20,7 @@ func main() {
 }
 
 func initProgram() {
-	f := utils.CreateVault()
+	f := utils.CreateVault("")
 
 	fileStat, err := f.Stat()
 	if err != nil {
