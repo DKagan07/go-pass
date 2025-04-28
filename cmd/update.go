@@ -20,12 +20,20 @@ import (
 var updateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Long: fmt.Sprintf(`%s
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+'update' updates a current entry in your vault. The command takes in the name
+of your entry. To update the entry, at least 1 flag is required. There are 4
+flags, each of them to update part of the entry. Minimum of 1, but can have
+multiple if multiple fields needs updating.
+
+See help for all the flags available.
+
+Ex.
+	$ gopass update github -u -s
+	Source name: <updated name for entry>
+	Username: <update username>
+`, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
 		updateCmdFunc(cmd, args)
 	},
@@ -60,6 +68,11 @@ func updateCmdFunc(cmd *cobra.Command, args []string) {
 	usernameBool, _ := cmd.Flags().GetBool("username")
 	passwordBool, _ := cmd.Flags().GetBool("password")
 	notesBool, _ := cmd.Flags().GetBool("notes")
+
+	if !sourceBool && !usernameBool && !passwordBool && !notesBool {
+		fmt.Println("Need at least one flag. See help for more information")
+		return
+	}
 
 	f := utils.OpenVault()
 	defer f.Close()
