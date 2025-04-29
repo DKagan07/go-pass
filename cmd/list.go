@@ -61,7 +61,7 @@ func listCmdFunc(cmd *cobra.Command, args []string) {
 		log.Fatalf("list::getting string from flag: %v", err)
 	}
 
-	f := utils.OpenVault()
+	f := utils.OpenVault("")
 	defer f.Close()
 
 	entries := crypt.DecryptVault(f)

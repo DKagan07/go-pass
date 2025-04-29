@@ -74,7 +74,7 @@ func updateCmdFunc(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	f := utils.OpenVault()
+	f := utils.OpenVault("")
 	defer f.Close()
 
 	var ve model.VaultEntry

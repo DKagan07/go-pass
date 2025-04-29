@@ -95,7 +95,7 @@ func addCmdFunc(cmd *cobra.Command, args []string) {
 		UpdatedAt: now.UnixMilli(),
 	}
 
-	f := utils.OpenVault()
+	f := utils.OpenVault("")
 	defer f.Close()
 
 	fStat, err := f.Stat()

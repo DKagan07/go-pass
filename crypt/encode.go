@@ -8,12 +8,11 @@ import (
 	"log"
 
 	"go-pass/model"
-	"go-pass/utils"
 )
 
 // EncryptPassword encrypts the password with AES-256 GSM.
 func EncryptPassword(pw []byte) []byte {
-	key := utils.GetAESKey()
+	key := GetAESKey()
 	src := []byte(pw)
 	hexEncodedPw := make([]byte, hex.EncodedLen(len(src)))
 	hex.Encode(hexEncodedPw, src)
@@ -28,7 +27,7 @@ func EncryptPassword(pw []byte) []byte {
 		log.Fatal("creating aes gcm")
 	}
 
-	nonce := utils.GenerateNonce()
+	nonce := GenerateNonce()
 
 	cipherTextPass := aesgcm.Seal(nil, nonce, hexEncodedPw, nil)
 	cipherTextPass = append(nonce, cipherTextPass...)
@@ -47,7 +46,7 @@ func EncryptVault(vault []model.VaultEntry) ([]byte, error) {
 		log.Fatalf("EncryptVault::Marshal json: %v", err)
 		return nil, err
 	}
-	key := utils.GetAESKey()
+	key := GetAESKey()
 
 	cipherBlock, err := aes.NewCipher(key)
 	if err != nil {
@@ -59,7 +58,7 @@ func EncryptVault(vault []model.VaultEntry) ([]byte, error) {
 		log.Fatal("EncryptVault::creating aes gcm")
 	}
 
-	nonce := utils.GenerateNonce()
+	nonce := GenerateNonce()
 
 	cipherText := aesgcm.Seal(nil, nonce, b, nil)
 

@@ -10,13 +10,12 @@ import (
 	"os"
 
 	"go-pass/model"
-	"go-pass/utils"
 )
 
 // DecryptPassword takes a []byte that we initially stored in the file, decrypt
 // it, and return the string form of that password.
 func DecryptPassword(passBytes []byte) string {
-	key := utils.GetAESKey()
+	key := GetAESKey()
 
 	// hex decode first, then aes-256 decode
 	dst := make([]byte, hex.DecodedLen(len(passBytes)))
@@ -24,7 +23,7 @@ func DecryptPassword(passBytes []byte) string {
 		log.Fatalf("DecryptPass::failed to hex decode password: %v", err)
 	}
 
-	nonce := dst[:utils.NONCE_SIZE]
+	nonce := dst[:NONCE_SIZE]
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -36,7 +35,7 @@ func DecryptPassword(passBytes []byte) string {
 		log.Fatalf("DecryptVault::creating aes gcm: %v", err)
 	}
 
-	b, err := aesgcm.Open(nil, nonce, dst[utils.NONCE_SIZE:], nil)
+	b, err := aesgcm.Open(nil, nonce, dst[NONCE_SIZE:], nil)
 	if err != nil {
 		log.Fatalf("DecryptPassword::opening gcm: %v", err)
 	}
@@ -52,7 +51,7 @@ func DecryptPassword(passBytes []byte) string {
 // DecryptVault takes a *os.File and returns a []model.VaultEntry. The purpose
 // of this is is to read the contents of the file.
 func DecryptVault(f *os.File) []model.VaultEntry {
-	key := utils.GetAESKey()
+	key := GetAESKey()
 
 	// Get contents
 	contents, err := io.ReadAll(f)
@@ -69,7 +68,7 @@ func DecryptVault(f *os.File) []model.VaultEntry {
 
 	// Nonce is not decrypted in with the AES, so we can grab it after
 	// hex-decoding
-	nonce := hexBuf[:utils.NONCE_SIZE]
+	nonce := hexBuf[:NONCE_SIZE]
 
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -81,7 +80,7 @@ func DecryptVault(f *os.File) []model.VaultEntry {
 		log.Fatalf("DecryptVault::creating aes gcm: %v", err)
 	}
 
-	b, err := aesgcm.Open(nil, nonce, hexBuf[utils.NONCE_SIZE:], nil)
+	b, err := aesgcm.Open(nil, nonce, hexBuf[NONCE_SIZE:], nil)
 	if err != nil {
 		log.Fatalf("DecryptVault::opening gcm: %v", err)
 	}

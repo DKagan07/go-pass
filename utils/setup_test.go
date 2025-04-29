@@ -16,27 +16,12 @@ func cleanup() {
 	os.Remove(fName)
 }
 
-func TestGetAESKey(t *testing.T) {
-	key := GetAESKey()
-
-	assert := assert.New(t)
-	assert.NotNil(key)
-	assert.Len(key, KEY_SIZE)
-}
-
-func TestGenerateNonce(t *testing.T) {
-	nonce := GenerateNonce()
-
-	assert := assert.New(t)
-	assert.NotNil(nonce)
-	assert.Len(nonce, NONCE_SIZE)
-}
-
 func TestCreateVault(t *testing.T) {
 	cleanup()
 	defer cleanup()
 
 	f := CreateVault(TEST_FILE_NAME)
+	defer f.Close()
 
 	assert := assert.New(t)
 	assert.DirExists(VAULT_PATH)
@@ -44,12 +29,24 @@ func TestCreateVault(t *testing.T) {
 	assert.FileExists(path.Join(VAULT_PATH, TEST_FILE_NAME))
 }
 
-// func TestOpenVault(t *testing.T) J {
-// 	cleanup()
-// 	defer cleanup()
-//
-// 	f := CreateVault(TEST_FILE_NAME)
-// 	f.Close()
-//
-// 	f2 := OpenVault()
-// }
+func TestOpenVault(t *testing.T) {
+	cleanup()
+	// defer cleanup()
+
+	f := CreateVault(TEST_FILE_NAME)
+	f.Close()
+
+	f2 := OpenVault(TEST_FILE_NAME)
+	defer f2.Close()
+
+	fPath := path.Join(VAULT_PATH, TEST_FILE_NAME)
+
+	assert := assert.New(t)
+	assert.NotNil(f2)
+	assert.FileExists(fPath)
+
+	stat, err := os.Stat(fPath)
+	assert.NoError(err)
+	assert.NotNil(stat)
+	assert.NotZero(stat.Size())
+}
