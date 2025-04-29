@@ -70,7 +70,7 @@ func addCmdFunc(cmd *cobra.Command, args []string) {
 		log.Fatalf("add::not a valid input: %v", err)
 	}
 
-	passwordBytes, err := utils.GetPasswordFromUser(os.Stdin)
+	passwordBytes, err := utils.GetPasswordFromUser(false, os.Stdin)
 	if err != nil {
 		log.Fatalf("add::failed reading pword: %v", err)
 	}
@@ -115,5 +115,5 @@ func addCmdFunc(cmd *cobra.Command, args []string) {
 		log.Fatalf("add::obtaining ciphertext: %v", err)
 	}
 
-	utils.WriteToVault(f, encryptedCipherText)
+	utils.WriteToFile(f, encryptedCipherText)
 }

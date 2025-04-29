@@ -1,17 +1,22 @@
 package utils
 
 import (
+	"fmt"
+	"io"
 	"log"
 	"os"
 	"path"
+	"time"
 
 	"go-pass/crypt"
 	"go-pass/model"
 )
 
 var (
-	home, _    = os.UserHomeDir()
-	VAULT_PATH = path.Join(home, ".local", "gopass")
+	home, _     = os.UserHomeDir()
+	VAULT_PATH  = path.Join(home, ".local", "gopass")
+	CONFIG_PATH = path.Join(home, ".config", "gopass")
+	CONFIG_FILE = path.Join(CONFIG_PATH, "gopass-cfg.json")
 )
 
 // CreateVault creates a file in a default path. If directories aren't created,
@@ -46,7 +51,7 @@ func CreateVault(name string) *os.File {
 			if err != nil {
 				panic("init::encrypt ve")
 			}
-			WriteToVault(f, b)
+			WriteToFile(f, b)
 		}
 
 		return f
@@ -74,21 +79,58 @@ func OpenVault(name string) *os.File {
 	return f
 }
 
-// WriteToVault takes a *os.File and the contents wanted in the file, in []byte,
+// WriteToFile takes a *os.File and the contents wanted in the file, in []byte,
 // and writes it to the file. It is up to the caller of this function that the
 // file is closed.
-func WriteToVault(f *os.File, contents []byte) {
+func WriteToFile(f *os.File, contents []byte) {
 	// Reset the file
-	if _, err := f.Seek(0, 0); err != nil {
-		log.Fatalf("WriteToVault::seek: %v", err)
+	if _, err := f.Seek(0, io.SeekStart); err != nil {
+		log.Fatalf("WriteToFile::seek: %v", err)
 	}
 
 	if err := f.Truncate(0); err != nil {
-		log.Fatalf("WriteToVault::truncate: %v", err)
+		log.Fatalf("WriteToFile::truncate: %v", err)
 	}
 
 	// Write to the file
 	if _, err := f.Write(contents); err != nil {
-		log.Fatalf("WriteToVault::write: %v", err)
+		log.Fatalf("WriteToFile::write: %v", err)
 	}
+}
+
+// Caller should close these open files
+func CreateConfig(vaultName string, mPass []byte) *os.File {
+	err := os.Mkdir(CONFIG_PATH, 0700)
+	if !os.IsExist(err) {
+		log.Fatalf("CreateConfig::Error creating dir: %v\n", err)
+	}
+
+	f, err := os.OpenFile(CONFIG_FILE, os.O_RDWR, 0644)
+	if !os.IsExist(err) {
+		f, err := os.OpenFile(CONFIG_FILE, os.O_RDWR|os.O_CREATE, 0644)
+		if err != nil {
+			log.Fatalf("CreateVault::creating file: %v", err)
+		}
+
+		now := time.Now().UnixMilli()
+		cfg := model.Config{
+			MasterPassword: mPass,
+			VaultName:      vaultName,
+			LastVisited:    now,
+		}
+
+		cipherText, err := crypt.EncryptConfig(cfg)
+		if err != nil {
+			fmt.Println("err in creating cfg ciphertext: ", err)
+		}
+
+		WriteToFile(f, cipherText)
+
+		return f
+	}
+	if err != nil {
+		log.Fatalf("CreateVault::Error reading file %s: %v", CONFIG_FILE, err)
+	}
+
+	return f
 }

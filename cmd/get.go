@@ -20,7 +20,8 @@ var getCmd = &cobra.Command{
 	Long: fmt.Sprintf(`%s
 
 'get' gets a specific source, case SENSITIVE, from the vault and returns the
-credentials from the name of the source.
+credentials from the name of the source. If the source name has a <Space> in it,
+you have to surround the source name with double quotes.
 
 If you want to see if a specific source is in the vault, you can use the:
 	'gopass list -n <name-of-source>'

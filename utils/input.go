@@ -22,8 +22,13 @@ func GetInputFromUser(r io.Reader, field string) (string, error) {
 	return cleanString(username), nil
 }
 
-func GetPasswordFromUser(r io.Reader) ([]byte, error) {
-	fmt.Print("Password: ")
+func GetPasswordFromUser(master bool, r io.Reader) ([]byte, error) {
+	phrase := "Password: "
+	if master {
+		phrase = "Master Password: "
+	}
+
+	fmt.Print(phrase)
 	fd, ok := (r).(*os.File)
 	if !ok {
 		return nil, errors.New("cannot read from source")

@@ -7,6 +7,7 @@ toolchain go1.23.8
 require (
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
+	golang.org/x/crypto v0.37.0
 	golang.org/x/term v0.31.0
 )
 

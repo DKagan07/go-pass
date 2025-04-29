@@ -31,7 +31,7 @@ func TestCreateVault(t *testing.T) {
 
 func TestOpenVault(t *testing.T) {
 	cleanup()
-	// defer cleanup()
+	defer cleanup()
 
 	f := CreateVault(TEST_FILE_NAME)
 	f.Close()

@@ -20,7 +20,7 @@ var deleteCmd = &cobra.Command{
 	Short: "A brief description of your command",
 	Long: fmt.Sprintf(`%s
 
-'delete' deletes a specific source name from your vault. This has to be case
+'delete' deletes a specific source name from your vault. This HAS to be case
 sensitive.
 Ex.
 	$ gopass delete google
@@ -79,5 +79,5 @@ func deleteCmdFunc(cmd *cobra.Command, args []string) {
 		log.Fatalf("delete::failed to encrypt: %v", err)
 	}
 
-	utils.WriteToVault(f, b)
+	utils.WriteToFile(f, b)
 }

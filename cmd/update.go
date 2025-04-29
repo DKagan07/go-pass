@@ -27,6 +27,10 @@ of your entry. To update the entry, at least 1 flag is required. There are 4
 flags, each of them to update part of the entry. Minimum of 1, but can have
 multiple if multiple fields needs updating.
 
+If you want to update the source name with a name with a <Space>, be careful
+that if you want to 'get' this source name, you need to add double quotes around
+the name. Ex: gopass get "blah1 blah2" -> is 1 source name with a space.
+
 See help for all the flags available.
 
 Ex.
@@ -109,7 +113,7 @@ func updateCmdFunc(cmd *cobra.Command, args []string) {
 		ve.Username = updatedUsername
 	}
 	if passwordBool {
-		updatedPassword, _ = utils.GetPasswordFromUser(os.Stdin)
+		updatedPassword, _ = utils.GetPasswordFromUser(false, os.Stdin)
 		ve.Password = crypt.EncryptPassword(updatedPassword)
 	}
 	if notesBool {
@@ -127,5 +131,5 @@ func updateCmdFunc(cmd *cobra.Command, args []string) {
 		log.Fatalf("update::obtaining ciphertext: %v", err)
 	}
 
-	utils.WriteToVault(f, encryptedCipherText)
+	utils.WriteToFile(f, encryptedCipherText)
 }

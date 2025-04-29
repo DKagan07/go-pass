@@ -23,11 +23,29 @@ func TestGetInputFromUser(t *testing.T) {
 // package relies specifically on the interface with the terminal, and mocking
 // that would make this overly complex for what this function actually does.
 func TestGetPasswordFromUser(t *testing.T) {
-	r := strings.NewReader("test\n")
+	tests := []struct {
+		name   string
+		master bool
+	}{
+		{
+			name:   "not a master password",
+			master: false,
+		},
+		{
+			name:   "master password",
+			master: true,
+		},
+	}
 
-	user, err := GetPasswordFromUser(r)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := strings.NewReader("test\n")
 
-	assert := assert.New(t)
-	assert.Error(err)
-	assert.Nil(user)
+			user, err := GetPasswordFromUser(false, r)
+
+			assert := assert.New(t)
+			assert.Error(err)
+			assert.Nil(user)
+		})
+	}
 }

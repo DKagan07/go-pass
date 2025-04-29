@@ -71,6 +71,40 @@ func EncryptVault(vault []model.VaultEntry) ([]byte, error) {
 	return dst, nil
 }
 
+// TODO: This feels wrong -- maybe make it more extensible because it's the same
+// as 'EncryptVault'
+func EncryptConfig(cfg model.Config) ([]byte, error) {
+	b, err := json.Marshal(cfg)
+	if err != nil {
+		log.Fatalf("EncryptConfig::Marshal json: %v", err)
+		return nil, err
+	}
+
+	key := GetAESKey()
+
+	cipherBlock, err := aes.NewCipher(key)
+	if err != nil {
+		log.Fatalf("EncryptConfig::creating cipher block: %v", err)
+	}
+
+	aesgcm, err := cipher.NewGCM(cipherBlock)
+	if err != nil {
+		log.Fatal("EncryptConfig::creating aes gcm")
+	}
+
+	nonce := GenerateNonce()
+
+	cipherText := aesgcm.Seal(nil, nonce, b, nil)
+
+	// Appending the nonce to the data bytes
+	cipherText = append(nonce, cipherText...)
+
+	dst := make([]byte, hex.EncodedLen(len(cipherText)))
+	hex.Encode(dst, cipherText)
+
+	return dst, nil
+}
+
 // TODO: There seems to be some replicated code, maybe should break that out?
 
 // func encrypt(b []byte) []byte {

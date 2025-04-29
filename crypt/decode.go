@@ -93,3 +93,52 @@ func DecryptVault(f *os.File) []model.VaultEntry {
 
 	return entries
 }
+
+// TODO: This feels wrong -- maybe make it more extensible because it's the same
+// as 'DecryptVault' except for the json.Unmarshal
+func DecryptConfig(f *os.File) model.Config {
+	key := GetAESKey()
+
+	if _, err := f.Seek(0, io.SeekStart); err != nil {
+		log.Fatalf("DecryptConfig::seek: %v", err)
+	}
+
+	// Get contents
+	contents, err := io.ReadAll(f)
+	if err != nil {
+		log.Fatalf("DecryptConfig::reading contents: %v", err)
+	}
+
+	// Hex decode first
+	hexBuf := make([]byte, hex.DecodedLen(len(contents)))
+	_, err = hex.Decode(hexBuf, contents)
+	if err != nil {
+		log.Fatalf("DecryptConfig::decoding hex: %v", err)
+	}
+
+	// Nonce is not decrypted in with the AES, so we can grab it after
+	// hex-decoding
+	nonce := hexBuf[:NONCE_SIZE]
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		log.Fatalf("DecryptConfig::getting cipher block: %v", err)
+	}
+
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		log.Fatalf("DecryptConfig::creating aes gcm: %v", err)
+	}
+
+	b, err := aesgcm.Open(nil, nonce, hexBuf[NONCE_SIZE:], nil)
+	if err != nil {
+		log.Fatalf("DecryptConfig::opening gcm: %v", err)
+	}
+
+	var cfg model.Config
+	if err = json.Unmarshal(b, &cfg); err != nil {
+		log.Fatalf("DecryptConfig::unmarshal: %v", err)
+	}
+
+	return cfg
+}

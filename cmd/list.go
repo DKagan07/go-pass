@@ -91,5 +91,5 @@ func listCmdFunc(cmd *cobra.Command, args []string) {
 		log.Fatalf("list::obtaining ciphertext: %v", err)
 	}
 
-	utils.WriteToVault(f, encryptedCipherText)
+	utils.WriteToFile(f, encryptedCipherText)
 }

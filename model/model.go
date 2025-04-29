@@ -13,3 +13,16 @@ type VaultEntry struct {
 	// UpdatedAt is the timestamp when the entry was created, in milliseconds
 	UpdatedAt int64 `json:"updated_at"`
 }
+
+type Config struct {
+	// MasterPassword is a bcrypt-hashed password that the user will need to
+	// input in to use the app.
+	MasterPassword []byte `json:"master_password"`
+	// VaultName is the name of the vault file in the FS. There is a default
+	// value of "pass.json".
+	VaultName string `json:"vault_name"`
+	// LastVisited is the time in UnixMilli when the user last used the app. The
+	// idea is that the user will have to re-input the password in after 30 mins
+	// of 'inactivity', for security.
+	LastVisited int64 `json:"last_visited"`
+}
