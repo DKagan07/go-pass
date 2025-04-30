@@ -22,7 +22,10 @@ var initCmd = &cobra.Command{
 	Long: fmt.Sprintf(`%s
 
 'init' initializes all of the files and config that is required to run the app.
-Notably, there's a flag that you can customize the name of your vault.
+Notably, there's a flag that you can customize the name of your vault. 
+
+Remember! The Master Password you set now is used for logging in with the 
+'login' command.
 
 ***
 IMPORTANT: The file type should be a json file, so your name should not have
