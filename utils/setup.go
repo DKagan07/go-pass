@@ -134,3 +134,12 @@ func CreateConfig(vaultName string, mPass []byte) *os.File {
 
 	return f
 }
+
+func OpenConfig() *os.File {
+	f, err := os.OpenFile(CONFIG_FILE, os.O_RDWR, 0644)
+	if err != nil {
+		log.Fatalf("OpenConfig::Error reading file: %v", err)
+	}
+
+	return f
+}

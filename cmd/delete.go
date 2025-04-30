@@ -51,7 +51,11 @@ func deleteCmdFunc(cmd *cobra.Command, args []string) {
 
 	name := args[0]
 
-	f := utils.OpenVault("")
+	cfgFile := utils.OpenConfig()
+	defer cfgFile.Close()
+
+	cfg := crypt.DecryptConfig(cfgFile)
+	f := utils.OpenVault(cfg.VaultName)
 	defer f.Close()
 
 	entries := crypt.DecryptVault(f)

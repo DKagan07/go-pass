@@ -78,7 +78,11 @@ func updateCmdFunc(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	f := utils.OpenVault("")
+	cfgFile := utils.OpenConfig()
+	defer cfgFile.Close()
+
+	cfg := crypt.DecryptConfig(cfgFile)
+	f := utils.OpenVault(cfg.VaultName)
 	defer f.Close()
 
 	var ve model.VaultEntry

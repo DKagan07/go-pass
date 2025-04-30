@@ -95,7 +95,11 @@ func addCmdFunc(cmd *cobra.Command, args []string) {
 		UpdatedAt: now.UnixMilli(),
 	}
 
-	f := utils.OpenVault("")
+	cfgFile := utils.OpenConfig()
+	defer cfgFile.Close()
+
+	cfg := crypt.DecryptConfig(cfgFile)
+	f := utils.OpenVault(cfg.VaultName)
 	defer f.Close()
 
 	fStat, err := f.Stat()
