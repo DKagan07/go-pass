@@ -65,6 +65,20 @@ func addCmdFunc(cmd *cobra.Command, args []string) {
 		log.Fatal("add::not enough arguments to call 'add'. Please see help")
 	}
 
+	cfgFile, ok, err := utils.OpenConfig()
+	if ok && err == nil {
+		fmt.Println("A file is not found. Need to init.")
+		return
+	}
+	defer cfgFile.Close()
+	cfg := crypt.DecryptConfig(cfgFile)
+
+	now := time.Now().UnixMilli()
+	if !utils.IsAccessBeforeLogin(cfg, now) {
+		fmt.Println("Cannot access, need to login")
+		return
+	}
+
 	username, err := utils.GetInputFromUser(os.Stdin, "Username")
 	if err != nil {
 		log.Fatalf("add::not a valid input: %v", err)
@@ -74,7 +88,6 @@ func addCmdFunc(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatalf("add::failed reading pword: %v", err)
 	}
-	fmt.Println()
 
 	hashedPw := crypt.EncryptPassword(passwordBytes)
 	if err != nil {
@@ -86,19 +99,14 @@ func addCmdFunc(cmd *cobra.Command, args []string) {
 		log.Fatalf("add::not valid input for notes: %v", err)
 	}
 
-	now := time.Now()
 	ve := model.VaultEntry{
 		Name:      args[0],
 		Username:  username,
 		Password:  hashedPw,
 		Notes:     notes,
-		UpdatedAt: now.UnixMilli(),
+		UpdatedAt: now,
 	}
 
-	cfgFile := utils.OpenConfig()
-	defer cfgFile.Close()
-
-	cfg := crypt.DecryptConfig(cfgFile)
 	f := utils.OpenVault(cfg.VaultName)
 	defer f.Close()
 

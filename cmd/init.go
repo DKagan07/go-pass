@@ -35,6 +35,7 @@ Ex.
 
 Ex 2.
 	$ gopass init --vault-name <random_name>.json
+	Master Password: <insert master password here>
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
 		initCmdFunc(cmd, args)
@@ -61,6 +62,12 @@ func initCmdFunc(cmd *cobra.Command, args []string) {
 		log.Fatalf("init::cannot run command with any arguments")
 	}
 
+	cf, err := os.Stat(utils.CONFIG_FILE)
+	if cf != nil || os.IsExist(err) {
+		fmt.Println("Cannot run this command")
+		return
+	}
+
 	vaultName, err := cmd.Flags().GetString("vault-name")
 	if err != nil {
 		log.Fatalf("init::failed to get flag: %v", err)
@@ -81,12 +88,6 @@ func initCmdFunc(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatalf("init::bcrypt gen pass: %v", err)
 	}
-
-	// TODO: need some checks here for init-ing after an init is already done
-	// Perhaps check to see if the files exist? If so, then give a generic
-	// message saying "cannot run this command" or something like that.
-	// Maybe need to start returning errors and things along that lines to make
-	// sure that happens?
 
 	f := utils.CreateConfig(vaultName, masterPass)
 	f.Close()

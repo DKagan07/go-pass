@@ -33,7 +33,9 @@ func GetPasswordFromUser(master bool, r io.Reader) ([]byte, error) {
 	if !ok {
 		return nil, errors.New("cannot read from source")
 	}
-	return term.ReadPassword(int(fd.Fd()))
+	b, err := term.ReadPassword(int(fd.Fd()))
+	fmt.Println()
+	return b, err
 }
 
 func cleanString(s string) string {

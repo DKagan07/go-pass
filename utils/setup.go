@@ -13,10 +13,11 @@ import (
 )
 
 var (
-	home, _     = os.UserHomeDir()
-	VAULT_PATH  = path.Join(home, ".local", "gopass")
-	CONFIG_PATH = path.Join(home, ".config", "gopass")
-	CONFIG_FILE = path.Join(CONFIG_PATH, "gopass-cfg.json")
+	home, _        = os.UserHomeDir()
+	VAULT_PATH     = path.Join(home, ".local", "gopass")
+	CONFIG_PATH    = path.Join(home, ".config", "gopass")
+	CONFIG_FILE    = path.Join(CONFIG_PATH, "gopass-cfg.json")
+	THIRTY_MINUTES = time.Minute.Milliseconds() * 30
 )
 
 // CreateVault creates a file in a default path. If directories aren't created,
@@ -135,11 +136,23 @@ func CreateConfig(vaultName string, mPass []byte) *os.File {
 	return f
 }
 
-func OpenConfig() *os.File {
+// OpenConfig opens the config file. It returns the file, a boolean whether or
+// not the file does not exist (true if it doesn't exist), and an error.
+//
+// It is up to the caller to close the file
+func OpenConfig() (*os.File, bool, error) {
 	f, err := os.OpenFile(CONFIG_FILE, os.O_RDWR, 0644)
-	if err != nil {
-		log.Fatalf("OpenConfig::Error reading file: %v", err)
+	if os.IsNotExist(err) {
+		return nil, true, nil
 	}
+	if err != nil {
+		return nil, false, err
+	}
+	return f, false, nil
+}
 
-	return f
+// IsAccessBeforeLogin returns true if the command being run is before the
+// thirty minutes, false if otherwise
+func IsAccessBeforeLogin(cfg model.Config, t int64) bool {
+	return t <= (cfg.LastVisited + THIRTY_MINUTES)
 }

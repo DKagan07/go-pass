@@ -78,16 +78,26 @@ func updateCmdFunc(cmd *cobra.Command, args []string) {
 		return
 	}
 
-	cfgFile := utils.OpenConfig()
+	cfgFile, ok, err := utils.OpenConfig()
+	if ok && err == nil {
+		fmt.Println("A file is not found. Need to init.")
+		return
+	}
 	defer cfgFile.Close()
-
 	cfg := crypt.DecryptConfig(cfgFile)
+
+	now := time.Now().UnixMilli()
+	if !utils.IsAccessBeforeLogin(cfg, now) {
+		fmt.Println("Cannot access, need to login")
+		return
+	}
+
 	f := utils.OpenVault(cfg.VaultName)
 	defer f.Close()
+	entries := crypt.DecryptVault(f)
 
 	var ve model.VaultEntry
 
-	entries := crypt.DecryptVault(f)
 	var idx int
 	for i, e := range entries {
 		if sn == e.Name {
@@ -125,7 +135,6 @@ func updateCmdFunc(cmd *cobra.Command, args []string) {
 		ve.Notes = updatedNotes
 	}
 
-	now := time.Now().UnixMilli()
 	ve.UpdatedAt = now
 
 	entries[idx] = ve

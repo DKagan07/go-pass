@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -60,13 +61,22 @@ func getCmdFunc(cmd *cobra.Command, args []string) {
 
 	name := args[0]
 
-	cfgFile := utils.OpenConfig()
+	cfgFile, ok, err := utils.OpenConfig()
+	if ok && err == nil {
+		fmt.Println("A file is not found. Need to init.")
+		return
+	}
 	defer cfgFile.Close()
-
 	cfg := crypt.DecryptConfig(cfgFile)
+
+	now := time.Now().UnixMilli()
+	if !utils.IsAccessBeforeLogin(cfg, now) {
+		fmt.Println("Cannot access, need to login")
+		return
+	}
+
 	f := utils.OpenVault(cfg.VaultName)
 	defer f.Close()
-
 	entries := crypt.DecryptVault(f)
 
 	if len(entries) == 0 {
