@@ -140,6 +140,8 @@ func CreateConfig(vaultName string, mPass []byte) *os.File {
 // not the file does not exist (true if it doesn't exist), and an error.
 //
 // It is up to the caller to close the file
+// TODO: This probably isn't the most correct way to do this, but this is ok
+// for now
 func OpenConfig() (*os.File, bool, error) {
 	f, err := os.OpenFile(CONFIG_FILE, os.O_RDWR, 0644)
 	if os.IsNotExist(err) {
