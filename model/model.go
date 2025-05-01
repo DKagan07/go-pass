@@ -26,3 +26,13 @@ type Config struct {
 	// of 'inactivity', for security.
 	LastVisited int64 `json:"last_visited"`
 }
+
+type UserInput struct {
+	// Username is the username that is obtained from the user.
+	Username string
+	// Password is the encrypted password that we get from the user and then
+	// encrypt.
+	Password []byte
+	// Notes is the single string of notes that we get from the user.
+	Notes string
+}

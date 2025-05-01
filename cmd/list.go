@@ -62,7 +62,7 @@ func listCmdFunc(cmd *cobra.Command, args []string) {
 		log.Fatalf("list::getting string from flag: %v", err)
 	}
 
-	cfgFile, ok, err := utils.OpenConfig()
+	cfgFile, ok, err := utils.OpenConfig("")
 	if ok && err == nil {
 		fmt.Println("A file is not found. Need to init.")
 		return

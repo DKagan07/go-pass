@@ -100,15 +100,21 @@ func WriteToFile(f *os.File, contents []byte) {
 }
 
 // Caller should close these open files
-func CreateConfig(vaultName string, mPass []byte) *os.File {
+func CreateConfig(vaultName string, mPass []byte, configName string) *os.File {
 	err := os.Mkdir(CONFIG_PATH, 0700)
 	if !os.IsExist(err) {
 		log.Fatalf("CreateConfig::Error creating dir: %v\n", err)
 	}
 
-	f, err := os.OpenFile(CONFIG_FILE, os.O_RDWR, 0644)
+	if configName != "" {
+		configName = path.Join(CONFIG_PATH, configName)
+	} else {
+		configName = CONFIG_FILE
+	}
+
+	f, err := os.OpenFile(configName, os.O_RDWR, 0644)
 	if !os.IsExist(err) {
-		f, err := os.OpenFile(CONFIG_FILE, os.O_RDWR|os.O_CREATE, 0644)
+		f, err := os.OpenFile(configName, os.O_RDWR|os.O_CREATE, 0644)
 		if err != nil {
 			log.Fatalf("CreateVault::creating file: %v", err)
 		}
@@ -142,8 +148,14 @@ func CreateConfig(vaultName string, mPass []byte) *os.File {
 // It is up to the caller to close the file
 // TODO: This probably isn't the most correct way to do this, but this is ok
 // for now
-func OpenConfig() (*os.File, bool, error) {
-	f, err := os.OpenFile(CONFIG_FILE, os.O_RDWR, 0644)
+func OpenConfig(fn string) (*os.File, bool, error) {
+	if fn != "" {
+		fn = path.Join(CONFIG_PATH, fn)
+	} else {
+		fn = CONFIG_FILE
+	}
+
+	f, err := os.OpenFile(fn, os.O_RDWR, 0644)
 	if os.IsNotExist(err) {
 		return nil, true, nil
 	}

@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"time"
@@ -38,73 +39,88 @@ Ex.
 	Notes: <any extra notes, can be empty>
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
-		addCmdFunc(cmd, args)
+		if err := AddCmdHandler(cmd, args); err != nil {
+			fmt.Println("Error with add")
+			return
+		}
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(addCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// addCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// addCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	// addCmd.Flags().StringP("something", "d", "", "Add something")
-
-	// NOTE: perhaps add a flag here to show the password and not hide it?
+	// TODO: perhaps add a flag here to show the password and not hide it?
 }
 
-func addCmdFunc(cmd *cobra.Command, args []string) {
+// AddCmdHandler is the handler that orchestrates the 'add' command.
+func AddCmdHandler(cmd *cobra.Command, args []string) error {
 	// the value in GetString has to equal the flag that is created above
 	if len(args) != 1 {
+		// something here
 		log.Fatal("add::not enough arguments to call 'add'. Please see help")
 	}
 
-	cfgFile, ok, err := utils.OpenConfig()
+	cfg, err := CheckConfig("")
+	if err != nil {
+		fmt.Println("err: ", err)
+		return err
+	}
+
+	userInput, err := GetInput(os.Stdin, os.Stdin, os.Stdin)
+	if err != nil {
+		fmt.Println("input err: ", err)
+		return err
+	}
+
+	return AddToVault(args[0], userInput, cfg, time.Now().UnixMilli())
+}
+
+// CheckConfig checks to see if the config file exists. If it does, we return
+// the model.Config.
+func CheckConfig(fn string) (model.Config, error) {
+	cfgFile, ok, err := utils.OpenConfig(fn)
 	if ok && err == nil {
 		fmt.Println("A file is not found. Need to init.")
-		return
+		return model.Config{}, fmt.Errorf("File needs to be created")
 	}
 	defer cfgFile.Close()
 	cfg := crypt.DecryptConfig(cfgFile)
+	return cfg, nil
+}
 
-	now := time.Now().UnixMilli()
-	if !utils.IsAccessBeforeLogin(cfg, now) {
-		fmt.Println("Cannot access, need to login")
-		return
-	}
+// GetInput is a function where we get input from the user, and return it in a
+// model.UserInput.
+func GetInput(us, pw, no io.Reader) (model.UserInput, error) {
+	ui := model.UserInput{}
 
-	username, err := utils.GetInputFromUser(os.Stdin, "Username")
+	username, err := utils.GetInputFromUser(us, "Username")
 	if err != nil {
-		log.Fatalf("add::not a valid input: %v", err)
+		return ui, err
 	}
-
-	passwordBytes, err := utils.GetPasswordFromUser(false, os.Stdin)
+	password, err := utils.GetPasswordFromUser(false, pw)
 	if err != nil {
-		log.Fatalf("add::failed reading pword: %v", err)
+		return ui, err
 	}
-
-	hashedPw := crypt.EncryptPassword(passwordBytes)
+	notes, err := utils.GetInputFromUser(no, "Notes")
 	if err != nil {
-		log.Fatalf("add::error handling username or password: %v\n", err)
+		return ui, err
 	}
 
-	notes, err := utils.GetInputFromUser(os.Stdin, "Notes")
-	if err != nil {
-		log.Fatalf("add::not valid input for notes: %v", err)
-	}
+	ui.Username = username
+	ui.Password = crypt.EncryptPassword(password)
+	ui.Notes = notes
+	return ui, nil
+}
 
+// AddToVault holds the logic that adds encrypts the input from the user, and
+// stores it into the vault.
+func AddToVault(source string, ui model.UserInput, cfg model.Config, t int64) error {
 	ve := model.VaultEntry{
-		Name:      args[0],
-		Username:  username,
-		Password:  hashedPw,
-		Notes:     notes,
-		UpdatedAt: now,
+		Name:      source,
+		Username:  ui.Username,
+		Password:  ui.Password,
+		Notes:     ui.Notes,
+		UpdatedAt: t,
 	}
 
 	f := utils.OpenVault(cfg.VaultName)
@@ -124,8 +140,10 @@ func addCmdFunc(cmd *cobra.Command, args []string) {
 
 	encryptedCipherText, err := crypt.EncryptVault(entries)
 	if err != nil {
-		log.Fatalf("add::obtaining ciphertext: %v", err)
+		fmt.Println("Error with 'add' command")
+		return fmt.Errorf("add::obtaining ciphertext: %v", err)
 	}
 
 	utils.WriteToFile(f, encryptedCipherText)
+	return nil
 }

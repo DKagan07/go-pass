@@ -47,7 +47,7 @@ func init() {
 }
 
 func loginCmdFunc(cmd *cobra.Command, args []string) {
-	cfgFile, ok, err := utils.OpenConfig()
+	cfgFile, ok, err := utils.OpenConfig("")
 	if ok && err == nil {
 		fmt.Println("A file is not found. Need to init.")
 		return

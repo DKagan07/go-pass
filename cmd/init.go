@@ -92,7 +92,7 @@ func initCmdFunc(cmd *cobra.Command, args []string) {
 		log.Fatalf("init::bcrypt gen pass: %v", err)
 	}
 
-	f := utils.CreateConfig(vaultName, masterPass)
+	f := utils.CreateConfig(vaultName, masterPass, "")
 	f.Close()
 
 	vf := utils.CreateVault(vaultName)

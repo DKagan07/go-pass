@@ -35,6 +35,9 @@ func GetPasswordFromUser(master bool, r io.Reader) ([]byte, error) {
 	}
 	b, err := term.ReadPassword(int(fd.Fd()))
 	fmt.Println()
+	if len(b) == 0 {
+		return nil, errors.New("Must enter a password")
+	}
 	return b, err
 }
 
