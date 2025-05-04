@@ -4,6 +4,7 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"slices"
@@ -12,13 +13,14 @@ import (
 	"github.com/spf13/cobra"
 
 	"go-pass/crypt"
+	"go-pass/model"
 	"go-pass/utils"
 )
 
 // deleteCmd represents the delete command
 var deleteCmd = &cobra.Command{
 	Use:   "delete",
-	Short: "A brief description of your command",
+	Short: "Delete a specific item frmo your vault",
 	Long: fmt.Sprintf(`%s
 
 'delete' deletes a specific source name from your vault. This HAS to be case
@@ -27,53 +29,49 @@ Ex.
 	$ gopass delete google
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
-		deleteCmdFunc(cmd, args)
+		DeleteCmdHandler(cmd, args)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(deleteCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// deleteCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// deleteCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
-func deleteCmdFunc(cmd *cobra.Command, args []string) {
+func DeleteCmdHandler(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
-		log.Fatal("delete::incorrect number of args. See help for more information!")
+		return errors.New(
+			"Too many or not enough arugments for 'delete'. See 'help' for correct usage.",
+		)
 	}
 
-	name := args[0]
+	itemToDelete := args[0]
 
-	cfgFile, ok, err := utils.OpenConfig("")
-	if ok && err == nil {
-		fmt.Println("A file is not found. Need to init.")
-		return
+	cfg, err := CheckConfig("")
+	if err != nil {
+		return err
 	}
-	defer cfgFile.Close()
-	cfg := crypt.DecryptConfig(cfgFile)
 
 	now := time.Now().UnixMilli()
 	if !utils.IsAccessBeforeLogin(cfg, now) {
-		fmt.Println("Cannot access, need to login")
-		return
+		return fmt.Errorf("Cannot access, need to login")
 	}
 
+	err = DeleteItemInVault(cfg, itemToDelete)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func DeleteItemInVault(cfg model.Config, name string) error {
 	f := utils.OpenVault(cfg.VaultName)
 	defer f.Close()
 
 	entries := crypt.DecryptVault(f)
 
 	if len(entries) == 0 {
-		fmt.Println("Nothing in your vault!")
-		return
+		return fmt.Errorf("Nothing in your vault!")
 	}
 
 	found := false
@@ -87,6 +85,7 @@ func deleteCmdFunc(cmd *cobra.Command, args []string) {
 
 	if !found {
 		fmt.Printf("%s not found\n", name)
+		return fmt.Errorf("%s not found in vault.", name)
 	}
 
 	b, err := crypt.EncryptVault(entries)
@@ -95,4 +94,6 @@ func deleteCmdFunc(cmd *cobra.Command, args []string) {
 	}
 
 	utils.WriteToFile(f, b)
+
+	return nil
 }

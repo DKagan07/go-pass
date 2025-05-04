@@ -6,6 +6,8 @@ This application encrypts, hashes, and stores passwords.
 Everything is local to your computer! Nothing is stored on the internet
 
 To enable it, `git clone` this repo, `cd` into it, and run `make` in the root of the repo!
+Note: You have to have Go installed, have your go toolchain binaries in the $HOME/go/bin, and
+$HOME/go/bin to your $PATH.
 
 #### TODO:
 
