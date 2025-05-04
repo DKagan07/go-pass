@@ -4,6 +4,7 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -56,8 +57,9 @@ func init() {
 func AddCmdHandler(cmd *cobra.Command, args []string) error {
 	// the value in GetString has to equal the flag that is created above
 	if len(args) != 1 {
-		// TODO: add something here
-		log.Fatal("add::not enough arguments to call 'add'. Please see help")
+		return errors.New(
+			"Too many or not enough arugments for 'add'. See 'help' for correct usage.",
+		)
 	}
 
 	cfg, err := CheckConfig("")

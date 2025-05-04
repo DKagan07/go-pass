@@ -5,19 +5,19 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/spf13/cobra"
 
 	"go-pass/crypt"
+	"go-pass/model"
 	"go-pass/utils"
 )
 
 // getCmd represents the get command
 var getCmd = &cobra.Command{
 	Use:   "get",
-	Short: "A brief description of your command",
+	Short: "Get specific information from your vault by source name",
 	Long: fmt.Sprintf(`%s
 
 'get' gets a specific source, case SENSITIVE, from the vault and returns the
@@ -36,52 +36,56 @@ Name: Google
 	Notes: <will show if any notes are present>
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
-		getCmdFunc(cmd, args)
+		GetCmdHandler(cmd, args)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(getCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// getCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// getCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
-func getCmdFunc(cmd *cobra.Command, args []string) {
+// GetCmdHandler is the handler function that encapsulates the GetItemsFromVault
+// logic and runs some checks beforehand.
+func GetCmdHandler(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
-		log.Fatal("get::no arguments needed for 'list'. See the help command!")
+		return fmt.Errorf(
+			"Only 1 argument needed for the get command. See 'help' for correct usage",
+		)
 	}
 
 	name := args[0]
 
-	cfgFile, ok, err := utils.OpenConfig("")
-	if ok && err == nil {
-		fmt.Println("A file is not found. Need to init.")
-		return
+	cfg, err := CheckConfig("")
+	if err != nil {
+		fmt.Println("Error checking config: ", err.Error())
+		return err
 	}
-	defer cfgFile.Close()
-	cfg := crypt.DecryptConfig(cfgFile)
 
 	now := time.Now().UnixMilli()
 	if !utils.IsAccessBeforeLogin(cfg, now) {
 		fmt.Println("Cannot access, need to login")
-		return
+		return fmt.Errorf("Cannot access, need to login")
 	}
 
+	err = GetItemFromVault(cfg, name)
+	if err != nil {
+		return fmt.Errorf("Cannot get %s from vault: %v", name, err)
+	}
+
+	return nil
+}
+
+// GetItemFromVault retreies the 'name' from the vault. If it doesn't exist, an
+// error gets returned.
+func GetItemFromVault(cfg model.Config, name string) error {
 	f := utils.OpenVault(cfg.VaultName)
 	defer f.Close()
+
 	entries := crypt.DecryptVault(f)
 
 	if len(entries) == 0 {
 		fmt.Println("Nothing in your vault!")
-		return
+		return fmt.Errorf("Nothing in vault.")
 	}
 
 	for _, e := range entries {
@@ -95,8 +99,9 @@ func getCmdFunc(cmd *cobra.Command, args []string) {
 			if len(e.Notes) > 0 {
 				fmt.Println("\tNotes: \t\t", e.Notes)
 			}
-			return
+			return nil
 		}
 	}
-	fmt.Printf("%s not found in vault.\n", name)
+	fmt.Printf("'%s' not found in vault.\n", name)
+	return fmt.Errorf("%s not found in vault.\n", name)
 }

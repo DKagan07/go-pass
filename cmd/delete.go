@@ -37,6 +37,7 @@ func init() {
 	rootCmd.AddCommand(deleteCmd)
 }
 
+// DeleteCmdHandler is the handler function that encapsulates the delete logic
 func DeleteCmdHandler(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
 		return errors.New(
@@ -64,6 +65,8 @@ func DeleteCmdHandler(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// DeleteItemInVault encapsulates the logic for deleting 'name' from the vault
+// if it exists. If not, it will error and print a message out to user.
 func DeleteItemInVault(cfg model.Config, name string) error {
 	f := utils.OpenVault(cfg.VaultName)
 	defer f.Close()
