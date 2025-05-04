@@ -28,8 +28,8 @@ func CreateVault(name string) *os.File {
 		fName = "pass.json"
 	}
 
-	err := os.Mkdir(VAULT_PATH, 0700)
-	if !os.IsExist(err) {
+	err := os.MkdirAll(VAULT_PATH, 0700)
+	if err != nil {
 		log.Fatalf("CreateVault::Error creating dir: %v\n", err)
 	}
 
@@ -101,9 +101,9 @@ func WriteToFile(f *os.File, contents []byte) {
 
 // Caller should close these open files
 func CreateConfig(vaultName string, mPass []byte, configName string) *os.File {
-	err := os.Mkdir(CONFIG_PATH, 0700)
-	if !os.IsExist(err) {
-		log.Fatalf("CreateConfig::Error creating dir: %v\n", err)
+	err := os.MkdirAll(CONFIG_PATH, 0700)
+	if err != nil {
+		log.Fatalf("CreateConfig::Err creating dir: %v", err)
 	}
 
 	if configName != "" {

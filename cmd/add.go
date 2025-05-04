@@ -56,7 +56,7 @@ func init() {
 func AddCmdHandler(cmd *cobra.Command, args []string) error {
 	// the value in GetString has to equal the flag that is created above
 	if len(args) != 1 {
-		// something here
+		// TODO: add something here
 		log.Fatal("add::not enough arguments to call 'add'. Please see help")
 	}
 
@@ -77,6 +77,7 @@ func AddCmdHandler(cmd *cobra.Command, args []string) error {
 
 // CheckConfig checks to see if the config file exists. If it does, we return
 // the model.Config.
+// TODO: Should probably go into utils?
 func CheckConfig(fn string) (model.Config, error) {
 	cfgFile, ok, err := utils.OpenConfig(fn)
 	if ok && err == nil {

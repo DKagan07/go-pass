@@ -4,39 +4,90 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"io"
+	"os"
+	"path"
+	"strings"
 
 	"github.com/spf13/cobra"
+
+	"go-pass/model"
+	"go-pass/utils"
 )
 
 // cleanCmd represents the clean command
 var cleanCmd = &cobra.Command{
 	Use:   "clean",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Removes all storage of passwords",
+	Long: fmt.Sprintf(`%s
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+'clean' removes your config and vault from your computer. This is a permanent
+event and needs to be done with clear intentions. A simple 'y' or 'n' is needed
+at the prompt.
+`, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("clean called")
+		CleanCmdHandler(cmd, args)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(cleanCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// cleanCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// cleanCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
-// TODO: 'clean' will remove the config file and the vault. NEED TO DOUBLE
-// CHECK WITH USER FOR IT TO GO THROUGH
+// CleanCmdHandler is the handler function for the 'clean' command.
+func CleanCmdHandler(cmd *cobra.Command, args []string) error {
+	if len(args) != 0 {
+		return errors.New("Too many arugments for 'clean'. See 'help' for correct usage.")
+	}
+
+	cfg, err := CheckConfig("")
+	if err != nil {
+		return fmt.Errorf("Config file does not exist: %v", err)
+	}
+
+	return CleanFiles(cfg, os.Stdin)
+}
+
+// Clean files separates the logic from the handler. This prompts the user and
+// deletes the files if the user says yes.
+func CleanFiles(cfg model.Config, r io.Reader) error {
+	fmt.Println("'clean' will remove your config and your vault.")
+	ans, err := utils.GetInputFromUser(r, "Are you sure? (y/n)")
+	if err != nil {
+		return fmt.Errorf("Clean: Error with user input: %v", err)
+	}
+
+	if strings.EqualFold(ans, "y") {
+		RemoveConfig("")
+		RemoveVault(cfg.VaultName)
+	}
+
+	return nil
+}
+
+// RemoveConfig encapsulates the logic of removing the config.
+func RemoveConfig(configFP string) error {
+	if configFP == "" {
+		configFP = utils.CONFIG_FILE
+	} else {
+		configFP = path.Join(utils.CONFIG_PATH, configFP)
+	}
+
+	if err := os.Remove(configFP); err != nil {
+		return fmt.Errorf("Error removing file: %v", err)
+	}
+	fmt.Println("Removed config.")
+	return nil
+}
+
+// RemoveVault encapsulates the logic of removing the vault, or the place where
+// the passwords are stored.
+func RemoveVault(vaultName string) error {
+	if err := os.Remove(path.Join(utils.VAULT_PATH, vaultName)); err != nil {
+		return fmt.Errorf("Error removing vault: %v", err)
+	}
+	fmt.Println("Removed vault.")
+	return nil
+}
