@@ -103,6 +103,8 @@ func GetItemFromVault(cfg model.Config, name string) error {
 		}
 	}
 
+	fmt.Printf("'%s' not found.\n", name)
+
 	encryptedCipherText, err := crypt.EncryptVault(entries)
 	if err != nil {
 		fmt.Println("Error with 'add' command")

@@ -24,11 +24,12 @@ func cleanup() {
 func TestCreateVault(t *testing.T) {
 	cleanup()
 	defer cleanup()
+	assert := assert.New(t)
 
-	f, _ := CreateVault(TEST_FILE_NAME)
+	f, err := CreateVault(TEST_FILE_NAME)
+	assert.NoError(err)
 	defer f.Close()
 
-	assert := assert.New(t)
 	assert.DirExists(VAULT_PATH)
 	assert.NotNil(f)
 	assert.FileExists(path.Join(VAULT_PATH, TEST_FILE_NAME))
@@ -37,8 +38,10 @@ func TestCreateVault(t *testing.T) {
 func TestOpenVault(t *testing.T) {
 	cleanup()
 	defer cleanup()
+	assert := assert.New(t)
 
-	f, _ := CreateVault(TEST_FILE_NAME)
+	f, err := CreateVault(TEST_FILE_NAME)
+	assert.NoError(err)
 	f.Close()
 
 	f2 := OpenVault(TEST_FILE_NAME)
@@ -46,7 +49,6 @@ func TestOpenVault(t *testing.T) {
 
 	fPath := path.Join(VAULT_PATH, TEST_FILE_NAME)
 
-	assert := assert.New(t)
 	assert.NotNil(f2)
 	assert.FileExists(fPath)
 

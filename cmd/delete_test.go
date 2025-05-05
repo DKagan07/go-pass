@@ -19,10 +19,12 @@ var (
 func TestDeleteItemInVault(t *testing.T) {
 	defer cleanup()
 
-	cfgFile, _ := utils.CreateConfig(TEST_VAULT_NAME, TEST_MASTER_PASSWORD, TEST_CONFIG_NAME)
+	cfgFile, err := utils.CreateConfig(TEST_VAULT_NAME, TEST_MASTER_PASSWORD, TEST_CONFIG_NAME)
+	assert.NoError(t, err)
 	defer cfgFile.Close()
 
-	vaultFile, _ := utils.CreateVault(TEST_VAULT_NAME)
+	vaultFile, err := utils.CreateVault(TEST_VAULT_NAME)
+	assert.NoError(t, err)
 	defer vaultFile.Close()
 
 	now := time.Now().UnixMilli()
@@ -32,30 +34,35 @@ func TestDeleteItemInVault(t *testing.T) {
 		LastVisited:    now,
 	}
 
-	AddToVault(vaultEntry1, model.UserInput{
+	err = AddToVault(vaultEntry1, model.UserInput{
 		Username: vaultEntry1,
 		Password: []byte(vaultEntry1),
 	}, cfg, now)
-	AddToVault(vaultEntry2, model.UserInput{
+	assert.NoError(t, err)
+	err = AddToVault(vaultEntry2, model.UserInput{
 		Username: vaultEntry2,
 		Password: []byte(vaultEntry2),
 	}, cfg, now)
-	AddToVault(vaultEntry3, model.UserInput{
+	assert.NoError(t, err)
+	err = AddToVault(vaultEntry3, model.UserInput{
 		Username: vaultEntry3,
 		Password: []byte(vaultEntry3),
 	}, cfg, now)
+	assert.NoError(t, err)
 
-	err := DeleteItemInVault(cfg, vaultEntry2)
+	err = DeleteItemInVault(cfg, vaultEntry2)
 	assert.NoError(t, err)
 }
 
 func TestDeleteItemInVaultNotExist(t *testing.T) {
 	defer cleanup()
 
-	cfgFile, _ := utils.CreateConfig(TEST_VAULT_NAME, TEST_MASTER_PASSWORD, TEST_CONFIG_NAME)
+	cfgFile, err := utils.CreateConfig(TEST_VAULT_NAME, TEST_MASTER_PASSWORD, TEST_CONFIG_NAME)
+	assert.NoError(t, err)
 	defer cfgFile.Close()
 
-	vaultFile, _ := utils.CreateVault(TEST_VAULT_NAME)
+	vaultFile, err := utils.CreateVault(TEST_VAULT_NAME)
+	assert.NoError(t, err)
 	defer vaultFile.Close()
 
 	now := time.Now().UnixMilli()
@@ -65,19 +72,22 @@ func TestDeleteItemInVaultNotExist(t *testing.T) {
 		LastVisited:    now,
 	}
 
-	AddToVault(vaultEntry1, model.UserInput{
+	err = AddToVault(vaultEntry1, model.UserInput{
 		Username: vaultEntry1,
 		Password: []byte(vaultEntry1),
 	}, cfg, now)
-	AddToVault(vaultEntry2, model.UserInput{
+	assert.NoError(t, err)
+	err = AddToVault(vaultEntry2, model.UserInput{
 		Username: vaultEntry2,
 		Password: []byte(vaultEntry2),
 	}, cfg, now)
-	AddToVault(vaultEntry3, model.UserInput{
+	assert.NoError(t, err)
+	err = AddToVault(vaultEntry3, model.UserInput{
 		Username: vaultEntry3,
 		Password: []byte(vaultEntry3),
 	}, cfg, now)
+	assert.NoError(t, err)
 
-	err := DeleteItemInVault(cfg, "nonExistant")
+	err = DeleteItemInVault(cfg, "nonExistant")
 	assert.Error(t, err)
 }

@@ -13,9 +13,12 @@ import (
 
 func TestGetItemFromVault_HappyPath(t *testing.T) {
 	defer cleanup()
-	cfgFile, _ := utils.CreateConfig(TEST_VAULT_NAME, TEST_MASTER_PASSWORD, TEST_CONFIG_NAME)
+	cfgFile, err := utils.CreateConfig(TEST_VAULT_NAME, TEST_MASTER_PASSWORD, TEST_CONFIG_NAME)
+	assert.NoError(t, err)
 	defer cfgFile.Close()
-	vaultFile, _ := utils.CreateVault(TEST_VAULT_NAME)
+
+	vaultFile, err := utils.CreateVault(TEST_VAULT_NAME)
+	assert.NoError(t, err)
 	defer vaultFile.Close()
 
 	now := time.Now().UnixMilli()
@@ -25,28 +28,33 @@ func TestGetItemFromVault_HappyPath(t *testing.T) {
 		LastVisited:    now,
 	}
 
-	AddToVault(vaultEntry1, model.UserInput{
+	err = AddToVault(vaultEntry1, model.UserInput{
 		Username: vaultEntry1,
 		Password: crypt.EncryptPassword([]byte(vaultEntry1)),
 	}, cfg, now)
-	AddToVault(vaultEntry2, model.UserInput{
+	assert.NoError(t, err)
+	err = AddToVault(vaultEntry2, model.UserInput{
 		Username: vaultEntry2,
 		Password: crypt.EncryptPassword([]byte(vaultEntry2)),
 	}, cfg, now)
-	AddToVault(vaultEntry3, model.UserInput{
+	assert.NoError(t, err)
+	err = AddToVault(vaultEntry3, model.UserInput{
 		Username: vaultEntry3,
 		Password: crypt.EncryptPassword([]byte(vaultEntry3)),
 	}, cfg, now)
+	assert.NoError(t, err)
 
-	err := GetItemFromVault(cfg, vaultEntry2)
+	err = GetItemFromVault(cfg, vaultEntry2)
 	assert.NoError(t, err)
 }
 
 func TestGetItemFromVault_NotExist(t *testing.T) {
 	defer cleanup()
-	cfgFile, _ := utils.CreateConfig(TEST_VAULT_NAME, TEST_MASTER_PASSWORD, TEST_CONFIG_NAME)
+	cfgFile, err := utils.CreateConfig(TEST_VAULT_NAME, TEST_MASTER_PASSWORD, TEST_CONFIG_NAME)
+	assert.NoError(t, err)
 	defer cfgFile.Close()
-	vaultFile, _ := utils.CreateVault(TEST_VAULT_NAME)
+	vaultFile, err := utils.CreateVault(TEST_VAULT_NAME)
+	assert.NoError(t, err)
 	defer vaultFile.Close()
 
 	now := time.Now().UnixMilli()
@@ -56,19 +64,22 @@ func TestGetItemFromVault_NotExist(t *testing.T) {
 		LastVisited:    now,
 	}
 
-	AddToVault(vaultEntry1, model.UserInput{
+	err = AddToVault(vaultEntry1, model.UserInput{
 		Username: vaultEntry1,
 		Password: crypt.EncryptPassword([]byte(vaultEntry1)),
 	}, cfg, now)
-	AddToVault(vaultEntry2, model.UserInput{
+	assert.NoError(t, err)
+	err = AddToVault(vaultEntry2, model.UserInput{
 		Username: vaultEntry2,
 		Password: crypt.EncryptPassword([]byte(vaultEntry2)),
 	}, cfg, now)
-	AddToVault(vaultEntry3, model.UserInput{
+	assert.NoError(t, err)
+	err = AddToVault(vaultEntry3, model.UserInput{
 		Username: vaultEntry3,
 		Password: crypt.EncryptPassword([]byte(vaultEntry3)),
 	}, cfg, now)
+	assert.NoError(t, err)
 
-	err := GetItemFromVault(cfg, "notExist")
+	err = GetItemFromVault(cfg, "notExist")
 	assert.Error(t, err)
 }

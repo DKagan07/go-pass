@@ -18,7 +18,6 @@ var (
 	TEST_MASTER_PASSWORD = []byte("mastahpass")
 )
 
-// TODO: For some reason these tests are flaky/failing?
 func TestAddCheckConfig(t *testing.T) {
 	cleanup()
 	tests := []struct {
@@ -37,16 +36,22 @@ func TestAddCheckConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			assert := assert.New(t)
 			if tt.configPresent {
-				f, _ := utils.CreateConfig(TEST_VAULT_NAME, TEST_MASTER_PASSWORD, TEST_CONFIG_NAME)
+				f, err := utils.CreateConfig(
+					TEST_VAULT_NAME,
+					TEST_MASTER_PASSWORD,
+					TEST_CONFIG_NAME,
+				)
+				assert.NoError(err)
 				defer f.Close()
 
-				v, _ := utils.CreateVault(TEST_VAULT_NAME)
+				v, err := utils.CreateVault(TEST_VAULT_NAME)
+				assert.NoError(err)
 				defer v.Close()
 			}
 
 			cfg, err := CheckConfig(TEST_CONFIG_NAME)
-			assert := assert.New(t)
 
 			time := cfg.LastVisited
 			if tt.configPresent {
@@ -62,18 +67,20 @@ func TestAddCheckConfig(t *testing.T) {
 			}
 			cleanup()
 		})
-		// TODO: Perhaps this cleans it up?
-		time.Sleep(time.Millisecond * 250)
+
+		time.Sleep(time.Millisecond * 100)
 	}
 }
 
 func TestAddAddToVault(t *testing.T) {
 	defer cleanup()
 
-	cfgF, _ := utils.CreateConfig(TEST_VAULT_NAME, TEST_MASTER_PASSWORD, TEST_CONFIG_NAME)
+	cfgF, err := utils.CreateConfig(TEST_VAULT_NAME, TEST_MASTER_PASSWORD, TEST_CONFIG_NAME)
+	assert.NoError(t, err)
 	cfgF.Close()
 
-	vaultF, _ := utils.CreateVault(TEST_VAULT_NAME)
+	vaultF, err := utils.CreateVault(TEST_VAULT_NAME)
+	assert.NoError(t, err)
 	defer vaultF.Close()
 
 	now := time.Now().UnixMilli()
@@ -88,7 +95,7 @@ func TestAddAddToVault(t *testing.T) {
 		VaultName:      TEST_VAULT_NAME,
 		LastVisited:    now - time.Hour.Milliseconds(),
 	}
-	err := AddToVault(source, ui, cfg, now)
+	err = AddToVault(source, ui, cfg, now)
 	assert.NoError(t, err)
 
 	fStat, _ := vaultF.Stat()

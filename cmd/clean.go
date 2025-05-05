@@ -60,8 +60,14 @@ func CleanFiles(cfg model.Config, r io.Reader) error {
 	}
 
 	if strings.EqualFold(ans, "y") {
-		RemoveConfig("")
-		RemoveVault(cfg.VaultName)
+		if err := RemoveConfig(""); err != nil {
+			fmt.Println("Error removing config")
+			return err
+		}
+		if err := RemoveVault(cfg.VaultName); err != nil {
+			fmt.Println("Error removing vault")
+			return err
+		}
 	}
 
 	return nil

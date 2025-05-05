@@ -27,11 +27,12 @@ func TestDoesConfigExist(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.doesConfigExists {
-				f, _ := utils.CreateConfig(
+				f, err := utils.CreateConfig(
 					TEST_VAULT_NAME,
 					TEST_MASTER_PASSWORD,
 					TEST_CONFIG_NAME,
 				)
+				assert.NoError(t, err)
 				f.Close()
 			}
 			assert.Equal(t, tt.doesConfigExists, DoesConfigExist(TEST_CONFIG_NAME))

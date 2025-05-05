@@ -18,7 +18,7 @@ const (
 func GetAESKey() []byte {
 	key := []byte(os.Getenv("SECRET_PASSWORD_KEY"))
 	if len(key) != KEY_SIZE {
-		log.Fatal("GetAESKey::Key not appropriate length")
+		log.Fatal("Key not appropriate length or not present. Please set.")
 	}
 	return key
 }

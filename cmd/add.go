@@ -49,8 +49,6 @@ Ex.
 
 func init() {
 	rootCmd.AddCommand(addCmd)
-
-	// TODO: perhaps add a flag here to show the password and not hide it?
 }
 
 // AddCmdHandler is the handler that orchestrates the 'add' command.

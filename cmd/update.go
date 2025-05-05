@@ -4,7 +4,9 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"time"
@@ -19,7 +21,7 @@ import (
 // updateCmd represents the update command
 var updateCmd = &cobra.Command{
 	Use:   "update",
-	Short: "A brief description of your command",
+	Short: "Updates an entry in your vault with specific flags",
 	Long: fmt.Sprintf(`%s
 
 'update' updates a current entry in your vault. The command takes in the name
@@ -39,49 +41,51 @@ Ex.
 	Username: <update username>
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
-		updateCmdFunc(cmd, args)
+		UpdateCmdHandler(cmd, args)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(updateCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// updateCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// updateCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	updateCmd.Flags().BoolP("source", "s", false, "Update the source name")
 	updateCmd.Flags().BoolP("username", "u", false, "Update the login username")
 	updateCmd.Flags().BoolP("password", "p", false, "Update the password")
 	updateCmd.Flags().BoolP("notes", "n", false, "Update the notes")
 }
 
-func updateCmdFunc(cmd *cobra.Command, args []string) {
+type Inputs struct {
+	Source   bool
+	Username bool
+	Password bool
+	Notes    bool
+}
+
+type InputSources struct {
+	Source   io.Reader
+	Username io.Reader
+	Password io.Reader
+	Notes    io.Reader
+}
+
+// UpdateCmdHandler is the handler function that encapsulates the update logic
+func UpdateCmdHandler(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
-		log.Fatal("update::not enough arguments to call 'update'. Please see help")
+		fmt.Println("Wrong number of arguments, need 1. Please see 'help'.")
+		return fmt.Errorf("Wrong number of arguments, need 1. Please see 'help'.")
+	}
+
+	i, err := UpdateFlags(cmd)
+	if err != nil {
+		return err
 	}
 
 	sn := args[0]
 
-	sourceBool, _ := cmd.Flags().GetBool("source")
-	usernameBool, _ := cmd.Flags().GetBool("username")
-	passwordBool, _ := cmd.Flags().GetBool("password")
-	notesBool, _ := cmd.Flags().GetBool("notes")
-
-	if !sourceBool && !usernameBool && !passwordBool && !notesBool {
-		fmt.Println("Need at least one flag. See help for more information")
-		return
-	}
-
 	cfgFile, ok, err := utils.OpenConfig("")
 	if ok && err == nil {
 		fmt.Println("A file is not found. Need to init.")
-		return
+		return fmt.Errorf("File not found: %v", err)
 	}
 	defer cfgFile.Close()
 	cfg := crypt.DecryptConfig(cfgFile)
@@ -89,9 +93,56 @@ func updateCmdFunc(cmd *cobra.Command, args []string) {
 	now := time.Now().UnixMilli()
 	if !utils.IsAccessBeforeLogin(cfg, now) {
 		fmt.Println("Cannot access, need to login")
-		return
+		return errors.New("Need to login")
 	}
 
+	err = UpdateEntry(i, cfg, sn, InputSources{os.Stdin, os.Stdin, os.Stdin, os.Stdin})
+	if err != nil {
+		return fmt.Errorf("Error updating entry: %v", err)
+	}
+
+	return nil
+}
+
+// UpdateFlags consolidates the different flags that may or may not be present.
+// It returns a type Input and error
+func UpdateFlags(cmd *cobra.Command) (Inputs, error) {
+	sourceBool, err := cmd.Flags().GetBool("source")
+	if err != nil {
+		return Inputs{}, err
+	}
+
+	usernameBool, err := cmd.Flags().GetBool("username")
+	if err != nil {
+		return Inputs{}, err
+	}
+
+	passwordBool, err := cmd.Flags().GetBool("password")
+	if err != nil {
+		return Inputs{}, err
+	}
+
+	notesBool, err := cmd.Flags().GetBool("notes")
+	if err != nil {
+		return Inputs{}, err
+	}
+
+	if !sourceBool && !usernameBool && !passwordBool && !notesBool {
+		fmt.Println("Need at least one flag. See help for more information")
+		return Inputs{}, errors.New("Need at last 1 flag")
+	}
+
+	return Inputs{
+		Source:   sourceBool,
+		Username: usernameBool,
+		Password: passwordBool,
+		Notes:    notesBool,
+	}, nil
+}
+
+// UpdateEntry contains the logic of actually updating the vault entry and
+// storing it in the vault.
+func UpdateEntry(inputs Inputs, cfg model.Config, sourceName string, is InputSources) error {
 	f := utils.OpenVault(cfg.VaultName)
 	defer f.Close()
 	entries := crypt.DecryptVault(f)
@@ -100,7 +151,7 @@ func updateCmdFunc(cmd *cobra.Command, args []string) {
 
 	var idx int
 	for i, e := range entries {
-		if sn == e.Name {
+		if sourceName == e.Name {
 			ve = e
 			idx = i
 			break
@@ -109,33 +160,14 @@ func updateCmdFunc(cmd *cobra.Command, args []string) {
 
 	// Not found
 	if ve.Name == "" {
-		fmt.Println("not found")
-		return
+		fmt.Printf("'%s' not found\n", sourceName)
+		return errors.New("Not found")
 	}
 
-	var updatedSourceName string
-	var updatedUsername string
-	var updatedPassword []byte
-	var updatedNotes string
-
-	if sourceBool {
-		updatedSourceName, _ = utils.GetInputFromUser(os.Stdin, "Source Name")
-		ve.Name = updatedSourceName
+	ve, err := UpdateVaultEntry(ve, inputs, is)
+	if err != nil {
+		return err
 	}
-	if usernameBool {
-		updatedUsername, _ = utils.GetInputFromUser(os.Stdin, "Username")
-		ve.Username = updatedUsername
-	}
-	if passwordBool {
-		updatedPassword, _ = utils.GetPasswordFromUser(false, os.Stdin)
-		ve.Password = crypt.EncryptPassword(updatedPassword)
-	}
-	if notesBool {
-		updatedNotes, _ = utils.GetInputFromUser(os.Stdin, "Notes")
-		ve.Notes = updatedNotes
-	}
-
-	ve.UpdatedAt = now
 
 	entries[idx] = ve
 
@@ -145,4 +177,53 @@ func updateCmdFunc(cmd *cobra.Command, args []string) {
 	}
 
 	utils.WriteToFile(f, encryptedCipherText)
+	return nil
+}
+
+// UpdateVaultEntry takes in the user input and, depending on the flags, update
+// the vault entry accordingly. It returns the updated model.VaultEntry
+func UpdateVaultEntry(
+	ve model.VaultEntry,
+	inputs Inputs,
+	updateSources InputSources,
+) (model.VaultEntry, error) {
+	var updatedSourceName string
+	var updatedUsername string
+	var updatedPassword []byte
+	var updatedNotes string
+	var err error
+
+	if inputs.Source {
+		updatedSourceName, err = utils.GetInputFromUser(updateSources.Source, "Source Name")
+		if err != nil {
+			return model.VaultEntry{}, err
+		}
+		ve.Name = updatedSourceName
+	}
+	if inputs.Username {
+		updatedUsername, err = utils.GetInputFromUser(updateSources.Username, "Username")
+		if err != nil {
+			return model.VaultEntry{}, err
+		}
+		ve.Username = updatedUsername
+	}
+	if inputs.Password {
+		updatedPassword, err = utils.GetPasswordFromUser(false, updateSources.Password)
+		if err != nil {
+			return model.VaultEntry{}, err
+		}
+		ve.Password = crypt.EncryptPassword(updatedPassword)
+	}
+	if inputs.Notes {
+		updatedNotes, err = utils.GetInputFromUser(updateSources.Notes, "Notes")
+		if err != nil {
+			return model.VaultEntry{}, err
+		}
+		ve.Notes = updatedNotes
+	}
+
+	now := time.Now().UnixMilli()
+	ve.UpdatedAt = now
+
+	return ve, nil
 }
