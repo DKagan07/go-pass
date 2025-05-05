@@ -11,7 +11,7 @@ import (
 )
 
 func TestRemoveConfig(t *testing.T) {
-	cfgFile := utils.CreateConfig(TEST_VAULT_NAME, TEST_MASTER_PASSWORD, TEST_CONFIG_NAME)
+	cfgFile, _ := utils.CreateConfig(TEST_VAULT_NAME, TEST_MASTER_PASSWORD, TEST_CONFIG_NAME)
 	defer cfgFile.Close()
 
 	err := RemoveConfig(TEST_CONFIG_NAME)
@@ -25,7 +25,7 @@ func TestRemoveConfig(t *testing.T) {
 }
 
 func TestRemoveVault(t *testing.T) {
-	vaultFile := utils.CreateVault(TEST_VAULT_NAME)
+	vaultFile, _ := utils.CreateVault(TEST_VAULT_NAME)
 	defer vaultFile.Close()
 
 	err := RemoveVault(TEST_VAULT_NAME)

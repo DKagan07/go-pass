@@ -22,7 +22,7 @@ var (
 
 // CreateVault creates a file in a default path. If directories aren't created,
 // this function will create them.
-func CreateVault(name string) *os.File {
+func CreateVault(name string) (*os.File, error) {
 	fName := name
 	if name == "" {
 		fName = "pass.json"
@@ -30,7 +30,7 @@ func CreateVault(name string) *os.File {
 
 	err := os.MkdirAll(VAULT_PATH, 0700)
 	if err != nil {
-		log.Fatalf("CreateVault::Error creating dir: %v\n", err)
+		return nil, fmt.Errorf("CreateVault::Error creating dir: %v\n", err)
 	}
 
 	vaultPath := path.Join(VAULT_PATH, fName)
@@ -38,7 +38,7 @@ func CreateVault(name string) *os.File {
 	if !os.IsExist(err) {
 		f, err := os.OpenFile(vaultPath, os.O_RDWR|os.O_CREATE, 0644)
 		if err != nil {
-			log.Fatalf("CreateVault::creating file: %v", err)
+			return nil, fmt.Errorf("CreateVault::creating file: %v", err)
 		}
 
 		fileStat, err := f.Stat()
@@ -55,13 +55,13 @@ func CreateVault(name string) *os.File {
 			WriteToFile(f, b)
 		}
 
-		return f
+		return f, nil
 	}
 	if err != nil {
-		log.Fatalf("CreateVault::Error reading file %s: %v", vaultPath, err)
+		return nil, fmt.Errorf("CreateVault::Error reading file %s: %v", vaultPath, err)
 	}
 
-	return f
+	return f, nil
 }
 
 // OpenVault opens the vault file in which the passwords are stored. It is up to
@@ -100,10 +100,10 @@ func WriteToFile(f *os.File, contents []byte) {
 }
 
 // Caller should close these open files
-func CreateConfig(vaultName string, mPass []byte, configName string) *os.File {
+func CreateConfig(vaultName string, mPass []byte, configName string) (*os.File, error) {
 	err := os.MkdirAll(CONFIG_PATH, 0700)
 	if err != nil {
-		log.Fatalf("CreateConfig::Err creating dir: %v", err)
+		return nil, fmt.Errorf("CreateConfig::Err creating dir: %v", err)
 	}
 
 	if configName != "" {
@@ -116,7 +116,8 @@ func CreateConfig(vaultName string, mPass []byte, configName string) *os.File {
 	if !os.IsExist(err) {
 		f, err := os.OpenFile(configName, os.O_RDWR|os.O_CREATE, 0644)
 		if err != nil {
-			log.Fatalf("CreateVault::creating file: %v", err)
+			// log.Fatalf("CreateVault::creating file: %v", err)
+			return nil, fmt.Errorf("CreateVault::creating file: %v", err)
 		}
 
 		now := time.Now().UnixMilli()
@@ -128,18 +129,20 @@ func CreateConfig(vaultName string, mPass []byte, configName string) *os.File {
 
 		cipherText, err := crypt.EncryptConfig(cfg)
 		if err != nil {
-			fmt.Println("err in creating cfg ciphertext: ", err)
+			// fmt.Println("err in creating cfg ciphertext: ", err)
+			return nil, fmt.Errorf("err in creating cfg ciphertext: %v", err)
 		}
 
 		WriteToFile(f, cipherText)
 
-		return f
+		return f, nil
 	}
 	if err != nil {
-		log.Fatalf("CreateVault::Error reading file %s: %v", CONFIG_FILE, err)
+		// log.Fatalf("CreateVault::Error reading file %s: %v", CONFIG_FILE, err)
+		return nil, fmt.Errorf("CreateVault::Error reading file %s: %v", CONFIG_FILE, err)
 	}
 
-	return f
+	return f, nil
 }
 
 // OpenConfig opens the config file. It returns the file, a boolean whether or

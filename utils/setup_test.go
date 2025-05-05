@@ -19,11 +19,13 @@ func cleanup() {
 	os.Remove(fName)
 }
 
+// TODO: UPDATE THESE TESTS FOR THE CREATE CONFIG AND VAULT FUNCTIONS
+// This needs to happen in ALL of the command test files too
 func TestCreateVault(t *testing.T) {
 	cleanup()
 	defer cleanup()
 
-	f := CreateVault(TEST_FILE_NAME)
+	f, _ := CreateVault(TEST_FILE_NAME)
 	defer f.Close()
 
 	assert := assert.New(t)
@@ -36,7 +38,7 @@ func TestOpenVault(t *testing.T) {
 	cleanup()
 	defer cleanup()
 
-	f := CreateVault(TEST_FILE_NAME)
+	f, _ := CreateVault(TEST_FILE_NAME)
 	f.Close()
 
 	f2 := OpenVault(TEST_FILE_NAME)

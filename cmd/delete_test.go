@@ -19,10 +19,10 @@ var (
 func TestDeleteItemInVault(t *testing.T) {
 	defer cleanup()
 
-	cfgFile := utils.CreateConfig(TEST_VAULT_NAME, TEST_MASTER_PASSWORD, TEST_CONFIG_NAME)
+	cfgFile, _ := utils.CreateConfig(TEST_VAULT_NAME, TEST_MASTER_PASSWORD, TEST_CONFIG_NAME)
 	defer cfgFile.Close()
 
-	vaultFile := utils.CreateVault(TEST_VAULT_NAME)
+	vaultFile, _ := utils.CreateVault(TEST_VAULT_NAME)
 	defer vaultFile.Close()
 
 	now := time.Now().UnixMilli()
@@ -52,10 +52,10 @@ func TestDeleteItemInVault(t *testing.T) {
 func TestDeleteItemInVaultNotExist(t *testing.T) {
 	defer cleanup()
 
-	cfgFile := utils.CreateConfig(TEST_VAULT_NAME, TEST_MASTER_PASSWORD, TEST_CONFIG_NAME)
+	cfgFile, _ := utils.CreateConfig(TEST_VAULT_NAME, TEST_MASTER_PASSWORD, TEST_CONFIG_NAME)
 	defer cfgFile.Close()
 
-	vaultFile := utils.CreateVault(TEST_VAULT_NAME)
+	vaultFile, _ := utils.CreateVault(TEST_VAULT_NAME)
 	defer vaultFile.Close()
 
 	now := time.Now().UnixMilli()

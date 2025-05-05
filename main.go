@@ -6,7 +6,6 @@ package main
 import (
 	"go-pass/cmd"
 	"go-pass/crypt"
-	"go-pass/utils"
 )
 
 const (
@@ -14,14 +13,9 @@ const (
 )
 
 func main() {
-	initProgram()
-	cmd.Execute()
-}
-
-func initProgram() {
-	f := utils.CreateVault("")
-	f.Close()
-
-	// Ensure that the key exists on startup
+	// We run this here because the key needs to be in place for any sort of
+	// encryption. This function panics if th ekey isn't found in the env vars.
 	crypt.GetAESKey()
+
+	cmd.Execute()
 }

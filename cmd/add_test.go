@@ -18,9 +18,9 @@ var (
 	TEST_MASTER_PASSWORD = []byte("mastahpass")
 )
 
+// TODO: For some reason these tests are flaky/failing?
 func TestAddCheckConfig(t *testing.T) {
-	defer cleanup()
-
+	cleanup()
 	tests := []struct {
 		name          string
 		configPresent bool
@@ -38,10 +38,10 @@ func TestAddCheckConfig(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.configPresent {
-				f := utils.CreateConfig(TEST_VAULT_NAME, TEST_MASTER_PASSWORD, TEST_CONFIG_NAME)
+				f, _ := utils.CreateConfig(TEST_VAULT_NAME, TEST_MASTER_PASSWORD, TEST_CONFIG_NAME)
 				defer f.Close()
 
-				v := utils.CreateVault(TEST_VAULT_NAME)
+				v, _ := utils.CreateVault(TEST_VAULT_NAME)
 				defer v.Close()
 			}
 
@@ -60,17 +60,20 @@ func TestAddCheckConfig(t *testing.T) {
 				assert.Error(err)
 				assert.Equal(model.Config{}, cfg)
 			}
+			cleanup()
 		})
+		// TODO: Perhaps this cleans it up?
+		time.Sleep(time.Millisecond * 250)
 	}
 }
 
 func TestAddAddToVault(t *testing.T) {
 	defer cleanup()
 
-	cfgF := utils.CreateConfig(TEST_VAULT_NAME, TEST_MASTER_PASSWORD, TEST_CONFIG_NAME)
+	cfgF, _ := utils.CreateConfig(TEST_VAULT_NAME, TEST_MASTER_PASSWORD, TEST_CONFIG_NAME)
 	cfgF.Close()
 
-	vaultF := utils.CreateVault(TEST_VAULT_NAME)
+	vaultF, _ := utils.CreateVault(TEST_VAULT_NAME)
 	defer vaultF.Close()
 
 	now := time.Now().UnixMilli()

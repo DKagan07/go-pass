@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/crypto/bcrypt"
 
 	"go-pass/utils"
 )
@@ -18,7 +18,7 @@ import (
 // initCmd represents the init command
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "A brief description of your command",
+	Short: "Initialize all files and begins use of the app",
 	Long: fmt.Sprintf(`%s
 
 'init' initializes all of the files and config that is required to run the app.
@@ -41,68 +41,93 @@ Ex 2.
 	Master Password: <insert master password here>
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
-		initCmdFunc(cmd, args)
+		InitCmdHandler(cmd, args)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(initCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// initCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
 	initCmd.Flags().
 		StringP("vault-name", "v", "", "The name of the vault file that's not the default")
 }
 
-func initCmdFunc(cmd *cobra.Command, args []string) {
+// InitCmdHandler is the handler funciton that encapsulates the logic for
+// initializing the program
+func InitCmdHandler(cmd *cobra.Command, args []string) error {
 	if len(args) != 0 {
-		log.Fatalf("init::cannot run command with any arguments")
+		fmt.Println("No arguments needed. See 'help' for more information")
+		return fmt.Errorf("No arguments needed. See 'help' for more information")
 	}
 
-	cf, err := os.Stat(utils.CONFIG_FILE)
-	if cf != nil || os.IsExist(err) {
-		fmt.Println("Cannot run this command")
-		return
+	if DoesConfigExist("") {
+		fmt.Println("Cannot init")
+		return fmt.Errorf("Cannot run this command")
 	}
 
 	vaultName, err := cmd.Flags().GetString("vault-name")
 	if err != nil {
-		log.Fatalf("init::failed to get flag: %v", err)
+		return fmt.Errorf("init::failed to get flag: %v", err)
 	}
 
 	if vaultName == "" {
 		vaultName = "pass.json"
 	}
 
-	vaultName = ensureVaultName(vaultName)
+	vaultName = EnsureVaultName(vaultName)
 
 	password, err := utils.GetPasswordFromUser(true, os.Stdin)
 	if err != nil {
 		log.Fatalf("init::failed to get password: %v", err)
 	}
 
-	masterPass, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
+	err = CreateFiles(vaultName, "", password)
 	if err != nil {
-		log.Fatalf("init::bcrypt gen pass: %v", err)
+		return fmt.Errorf("failed creating files: %v", err)
 	}
 
-	f := utils.CreateConfig(vaultName, masterPass, "")
-	f.Close()
-
-	vf := utils.CreateVault(vaultName)
-	vf.Close()
+	return nil
 }
 
-// ensureVaultName ensures that the vaultName is of a .json variety
-func ensureVaultName(s string) string {
+// DoesConfigExist is a helper function that returns a bool whether or not the
+// config file exists; true if it does, false if it doesnt
+func DoesConfigExist(cfgName string) bool {
+	var cfgPath string
+	if cfgName == "" {
+		cfgPath = utils.CONFIG_FILE
+	} else {
+		cfgPath = path.Join(utils.CONFIG_PATH, cfgName)
+	}
+	cf, err := os.Stat(cfgPath)
+	if cf != nil || os.IsExist(err) {
+		return true
+	}
+	return false
+}
+
+// ensureVaultName ensures that the vaultName is of a .json variety. If not, it
+// will add it in. Should probably make this more robust
+func EnsureVaultName(s string) string {
 	if strings.Contains(s, ".json") {
 		return s
 	}
 	return fmt.Sprintf("%s.json", s)
+}
+
+// CreateFiles encapsulates the logic of creating the config and vaults, and
+// closing the files
+func CreateFiles(vaultName string, cfgName string, pass []byte) error {
+	f, err := utils.CreateConfig(vaultName, pass, cfgName)
+	if err != nil {
+		return err
+	}
+	f.Close()
+
+	vf, err := utils.CreateVault(vaultName)
+	if err != nil {
+		return err
+	}
+	vf.Close()
+
+	return nil
 }
