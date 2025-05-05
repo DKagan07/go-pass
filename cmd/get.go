@@ -102,6 +102,13 @@ func GetItemFromVault(cfg model.Config, name string) error {
 			return nil
 		}
 	}
-	fmt.Printf("'%s' not found in vault.\n", name)
-	return fmt.Errorf("%s not found in vault.\n", name)
+
+	encryptedCipherText, err := crypt.EncryptVault(entries)
+	if err != nil {
+		fmt.Println("Error with 'add' command")
+		return fmt.Errorf("add::obtaining ciphertext: %v", err)
+	}
+
+	utils.WriteToFile(f, encryptedCipherText)
+	return fmt.Errorf("'%s' not found in vault.\n", name)
 }
