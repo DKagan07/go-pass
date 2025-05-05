@@ -1,5 +1,9 @@
+PREFIX ?= /usr/local
+BINDIR = $(PREFIX)/bin
+
 build:
-	go build -o gopass && mv gopass $(HOME)/go/bin
+	go build -o gopass
+	sudo mv gopass $(BINDIR)
 	
 test:
 	go test ./... -v
