@@ -16,7 +16,7 @@ Everything is local to your computer! Nothing is stored on the internet.`
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "gopass",
-	Short: "A brief description of your application",
+	Short: "Stores and encrypts all of your sensitive passwords",
 	Long:  LongDescriptionText,
 }
 

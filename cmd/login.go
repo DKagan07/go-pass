@@ -4,7 +4,9 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"time"
@@ -19,51 +21,55 @@ import (
 // loginCmd represents the login command
 var loginCmd = &cobra.Command{
 	Use:   "login",
-	Short: "A brief description of your command",
+	Short: "Login to the app",
 	Long: fmt.Sprintf(`%s
 
-'login' logs the user in for 30 minutes. Running 'init' also counts as an
-initial login. To login, you will need your Master Password that you set when
-the 'init' command was ran.
+'login' logs the user in for 30 minutes. Running 'init' for the first time also
+counts as an initial login. To login, you will need your Master Password that
+you set when the 'init' command was ran.
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("login called")
-		loginCmdFunc(cmd, args)
+		LoginCmdHandler(cmd, args)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(loginCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// loginCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// loginCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
-func loginCmdFunc(cmd *cobra.Command, args []string) {
-	cfgFile, ok, err := utils.OpenConfig("")
+func LoginCmdHandler(cmd *cobra.Command, args []string) error {
+	if len(args) != 0 {
+		fmt.Println("No arguments needed for 'login'. See 'help' for more guidance")
+		return fmt.Errorf("No arguments needed for 'login'. See 'help' for more guidance")
+	}
+
+	err := LoginUser("", os.Stdin)
+	if err != nil {
+		return fmt.Errorf("Login user: %v", err)
+	}
+	return nil
+}
+
+func LoginUser(cfgName string, input io.Reader) error {
+	cfgFile, ok, err := utils.OpenConfig(cfgName)
 	if ok && err == nil {
-		fmt.Println("A file is not found. Need to init.")
-		return
+		fmt.Println("A file is not found. Need to 'init'.")
+		return errors.New("A file is not found. Need to 'init'")
 	}
 	cfg := crypt.DecryptConfig(cfgFile)
 
-	pass, err := utils.GetPasswordFromUser(true, os.Stdin)
+	pass, err := utils.GetPasswordFromUser(true, input)
 	if err != nil {
-		log.Fatalf("login::failed reading pword: %v", err)
+		fmt.Println("Error getting info from user")
+		return fmt.Errorf("Getting password from user: %v", err)
 	}
 
 	if err = bcrypt.CompareHashAndPassword(cfg.MasterPassword, pass); err != nil {
 		fmt.Println("Login failed")
-		return
+		return errors.New("Login failed")
 	}
-	fmt.Println("Success")
+
+	fmt.Println("Success!")
 
 	now := time.Now().UnixMilli()
 	cfg.LastVisited = now
@@ -74,4 +80,6 @@ func loginCmdFunc(cmd *cobra.Command, args []string) {
 	}
 
 	utils.WriteToFile(cfgFile, cipherText)
+
+	return nil
 }

@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/crypto/bcrypt"
 
 	"go-pass/utils"
 )
@@ -81,7 +82,12 @@ func InitCmdHandler(cmd *cobra.Command, args []string) error {
 		log.Fatalf("init::failed to get password: %v", err)
 	}
 
-	err = CreateFiles(vaultName, "", password)
+	bPassword, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("bcrypting password: %v", err)
+	}
+
+	err = CreateFiles(vaultName, "", bPassword)
 	if err != nil {
 		return fmt.Errorf("failed creating files: %v", err)
 	}
