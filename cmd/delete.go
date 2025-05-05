@@ -74,6 +74,7 @@ func DeleteItemInVault(cfg model.Config, name string) error {
 	entries := crypt.DecryptVault(f)
 
 	if len(entries) == 0 {
+		fmt.Println("Nothing in your vault")
 		return fmt.Errorf("Nothing in your vault!")
 	}
 

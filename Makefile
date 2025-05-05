@@ -3,3 +3,6 @@ build:
 	
 test:
 	go test ./... -v
+
+remove:
+	rm -rf ~/.local/gopass && rm -rf ~/.config/gopass
