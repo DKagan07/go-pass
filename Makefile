@@ -10,3 +10,6 @@ test:
 
 remove:
 	rm -rf ~/.local/gopass && rm -rf ~/.config/gopass
+
+uninstall:
+	sudo rm -f $(BINDIR)/gopass
