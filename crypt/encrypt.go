@@ -10,7 +10,7 @@ import (
 	"go-pass/model"
 )
 
-// EncryptPassword encrypts the password with AES-256 GSM.
+// EncryptPassword encrypts the password with AES-256 GCM.
 func EncryptPassword(pw []byte) []byte {
 	key := GetAESKey()
 	src := []byte(pw)
@@ -38,7 +38,7 @@ func EncryptPassword(pw []byte) []byte {
 	return dst
 }
 
-// Encrypt encrypts the whole model.VaultEntry struct to be stored locally on
+// EncryptVault encrypts the whole model.VaultEntry struct to be stored locally on
 // disc.
 func EncryptVault(vault []model.VaultEntry) ([]byte, error) {
 	b, err := json.Marshal(vault)
@@ -46,33 +46,11 @@ func EncryptVault(vault []model.VaultEntry) ([]byte, error) {
 		log.Fatalf("EncryptVault::Marshal json: %v", err)
 		return nil, err
 	}
-	key := GetAESKey()
 
-	cipherBlock, err := aes.NewCipher(key)
-	if err != nil {
-		log.Fatalf("EncryptVault::creating cipher block: %v", err)
-	}
-
-	aesgcm, err := cipher.NewGCM(cipherBlock)
-	if err != nil {
-		log.Fatal("EncryptVault::creating aes gcm")
-	}
-
-	nonce := GenerateNonce()
-
-	cipherText := aesgcm.Seal(nil, nonce, b, nil)
-
-	// Appending the nonce to the data bytes
-	cipherText = append(nonce, cipherText...)
-
-	dst := make([]byte, hex.EncodedLen(len(cipherText)))
-	hex.Encode(dst, cipherText)
-
-	return dst, nil
+	return Encrypt(b)
 }
 
-// TODO: This feels wrong -- maybe make it more extensible because it's the same
-// as 'EncryptVault'
+// EncryptConfig encrypts the config with AES-256 GCM
 func EncryptConfig(cfg model.Config) ([]byte, error) {
 	b, err := json.Marshal(cfg)
 	if err != nil {
@@ -80,6 +58,12 @@ func EncryptConfig(cfg model.Config) ([]byte, error) {
 		return nil, err
 	}
 
+	return Encrypt(b)
+}
+
+// Encrypt holds the encryption logic, encrypting the input bytes with AES-256
+// and returns the hex-encoded encrypted bytes.
+func Encrypt(b []byte) ([]byte, error) {
 	key := GetAESKey()
 
 	cipherBlock, err := aes.NewCipher(key)
@@ -104,29 +88,3 @@ func EncryptConfig(cfg model.Config) ([]byte, error) {
 
 	return dst, nil
 }
-
-// TODO: There seems to be some replicated code, maybe should break that out?
-
-// func encrypt(b []byte) []byte {
-// 	key := utils.GetAESKey()
-//
-// 	cipherBlock, err := aes.NewCipher(key)
-// 	if err != nil {
-// 		log.Fatalf("creating cipher block: %v", err)
-// 	}
-//
-// 	aesgcm, err := cipher.NewGCM(cipherBlock)
-// 	if err != nil {
-// 		log.Fatal("creating aes gcm")
-// 	}
-//
-// 	nonce := utils.GenerateNonce()
-//
-// 	cipherTextPass := aesgcm.Seal(nil, nonce, b, nil)
-// 	cipherTextPass = append(nonce, cipherTextPass...)
-//
-// 	dst := make([]byte, hex.EncodedLen(len(cipherTextPass)))
-// 	hex.Encode(dst, cipherTextPass)
-//
-// 	return dst
-// }
