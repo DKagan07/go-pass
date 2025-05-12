@@ -1,3 +1,5 @@
+![Image](https://github.com/user-attachments/assets/df96f0ac-a1d5-4f61-9153-e245c8a5777c)
+
 # GoPass
 
 ## GoPass is a CLI tool that help stores your passwords with security in mind.
