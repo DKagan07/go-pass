@@ -33,6 +33,7 @@ Everything is local to your computer! Nothing is stored on the internet
 - **clean**: Removes all storage of passwords
 - **completion**: Generate the autocompletion script for the specified shell
 - **delete**: Delete a specific item from your vault
+- **generate**: Generates a secure password with any length (default is 24 characters)
 - **get**: Get specific information from your vault by source name
 - **help**: Help about any command
 - **init**: Initialize all files and begins use of the app
