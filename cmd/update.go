@@ -41,7 +41,10 @@ Ex.
 	Username: <update username>
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
-		UpdateCmdHandler(cmd, args)
+		if err := UpdateCmdHandler(cmd, args); err != nil {
+			fmt.Println("Error with update")
+			return
+		}
 	},
 }
 

@@ -35,7 +35,10 @@ cryptographically secure RNG. Please modify and change that if needed.
 ***
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
-		GenerateCmdHandler(cmd, args)
+		if err := GenerateCmdHandler(cmd, args); err != nil {
+			fmt.Println("Error with generate")
+			return
+		}
 	},
 }
 

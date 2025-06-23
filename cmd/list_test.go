@@ -27,18 +27,21 @@ func TestPrintList(t *testing.T) {
 		LastVisited:    now,
 	}
 
-	AddToVault(vaultEntry1, model.UserInput{
+	err1 := AddToVault(vaultEntry1, model.UserInput{
 		Username: vaultEntry1,
 		Password: []byte(vaultEntry1),
 	}, cfg, now)
-	AddToVault(vaultEntry2, model.UserInput{
+	err2 := AddToVault(vaultEntry2, model.UserInput{
 		Username: vaultEntry2,
 		Password: []byte(vaultEntry2),
 	}, cfg, now)
-	AddToVault(vaultEntry3, model.UserInput{
+	err3 := AddToVault(vaultEntry3, model.UserInput{
 		Username: vaultEntry3,
 		Password: []byte(vaultEntry3),
 	}, cfg, now)
+	assert.NoError(err1)
+	assert.NoError(err2)
+	assert.NoError(err3)
 
 	err = PrintList("", cfg)
 	assert.NoError(err)
@@ -62,18 +65,21 @@ func TestPrintList_OneEntry(t *testing.T) {
 		LastVisited:    now,
 	}
 
-	AddToVault(vaultEntry1, model.UserInput{
+	err1 := AddToVault(vaultEntry1, model.UserInput{
 		Username: vaultEntry1,
 		Password: []byte(vaultEntry1),
 	}, cfg, now)
-	AddToVault(vaultEntry2, model.UserInput{
+	err2 := AddToVault(vaultEntry2, model.UserInput{
 		Username: vaultEntry2,
 		Password: []byte(vaultEntry2),
 	}, cfg, now)
-	AddToVault(vaultEntry3, model.UserInput{
+	err3 := AddToVault(vaultEntry3, model.UserInput{
 		Username: vaultEntry3,
 		Password: []byte(vaultEntry3),
 	}, cfg, now)
+	assert.NoError(err1)
+	assert.NoError(err2)
+	assert.NoError(err3)
 
 	err = PrintList(vaultEntry2, cfg)
 	assert.NoError(err)

@@ -28,7 +28,10 @@ event and needs to be done with clear intentions. A simple 'y' or 'n' is needed
 at the prompt.
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
-		CleanCmdHandler(cmd, args)
+		if err := CleanCmdHandler(cmd, args); err != nil {
+			fmt.Println("Error with clean")
+			return
+		}
 	},
 }
 

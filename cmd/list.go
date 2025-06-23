@@ -31,7 +31,10 @@ Ex.
 	...(etc.)
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
-		ListCmdHandler(cmd, args)
+		if err := ListCmdHandler(cmd, args); err != nil {
+			fmt.Println("Error with list")
+			return
+		}
 	},
 }
 

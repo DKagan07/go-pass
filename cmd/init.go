@@ -42,7 +42,10 @@ Ex 2.
 	Master Password: <insert master password here>
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
-		InitCmdHandler(cmd, args)
+		if err := InitCmdHandler(cmd, args); err != nil {
+			fmt.Println("Error with init")
+			return
+		}
 	},
 }
 

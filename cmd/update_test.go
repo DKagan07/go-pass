@@ -29,10 +29,11 @@ func TestUpdateEntry(t *testing.T) {
 		LastVisited:    time.Now().UnixMilli(),
 	}
 
-	AddToVault(vaultEntry1, model.UserInput{
+	err1 := AddToVault(vaultEntry1, model.UserInput{
 		Username: vaultEntry1,
 		Password: []byte(vaultEntry1),
 	}, cfg, time.Now().UnixMilli())
+	assert.NoError(t, err1)
 
 	i := Inputs{
 		Source:   true,

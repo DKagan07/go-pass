@@ -29,7 +29,10 @@ Ex.
 	$ gopass delete google
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
-		DeleteCmdHandler(cmd, args)
+		if err := DeleteCmdHandler(cmd, args); err != nil {
+			fmt.Println("Error with delete")
+			return
+		}
 	},
 }
 

@@ -29,7 +29,10 @@ counts as an initial login. To login, you will need your Master Password that
 you set when the 'init' command was ran.
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
-		LoginCmdHandler(cmd, args)
+		if err := LoginCmdHandler(cmd, args); err != nil {
+			fmt.Println("Error with login")
+			return
+		}
 	},
 }
 
