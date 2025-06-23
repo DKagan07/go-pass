@@ -56,7 +56,7 @@ func AddCmdHandler(cmd *cobra.Command, args []string) error {
 	// the value in GetString has to equal the flag that is created above
 	if len(args) != 1 {
 		return errors.New(
-			"Too many or not enough arugments for 'add'. See 'help' for correct usage.",
+			"too many or not enough arugments for 'add'. see 'help' for correct usage",
 		)
 	}
 
@@ -69,7 +69,7 @@ func AddCmdHandler(cmd *cobra.Command, args []string) error {
 	now := time.Now().UnixMilli()
 	if !utils.IsAccessBeforeLogin(cfg, now) {
 		fmt.Println("Cannot access, need to login")
-		return fmt.Errorf("Cannot access, need to login")
+		return fmt.Errorf("cannot access, need to login")
 	}
 
 	userInput, err := GetInput(os.Stdin, os.Stdin, os.Stdin)
@@ -88,7 +88,7 @@ func CheckConfig(fn string) (model.Config, error) {
 	cfgFile, ok, err := utils.OpenConfig(fn)
 	if ok && err == nil {
 		fmt.Println("A file is not found. Need to init.")
-		return model.Config{}, fmt.Errorf("File needs to be created")
+		return model.Config{}, fmt.Errorf("file needs to be created")
 	}
 	defer cfgFile.Close()
 	cfg := crypt.DecryptConfig(cfgFile)

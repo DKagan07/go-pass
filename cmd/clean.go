@@ -39,12 +39,12 @@ func init() {
 // CleanCmdHandler is the handler function for the 'clean' command.
 func CleanCmdHandler(cmd *cobra.Command, args []string) error {
 	if len(args) != 0 {
-		return errors.New("Too many arugments for 'clean'. See 'help' for correct usage.")
+		return errors.New("too many arugments for 'clean'. see 'help' for correct usage")
 	}
 
 	cfg, err := CheckConfig("")
 	if err != nil {
-		return fmt.Errorf("Config file does not exist: %v", err)
+		return fmt.Errorf("config file does not exist: %v", err)
 	}
 
 	return CleanFiles(cfg, os.Stdin)
@@ -56,7 +56,7 @@ func CleanFiles(cfg model.Config, r io.Reader) error {
 	fmt.Println("'clean' will remove your config and your vault.")
 	ans, err := utils.GetInputFromUser(r, "Are you sure? (y/n)")
 	if err != nil {
-		return fmt.Errorf("Clean: Error with user input: %v", err)
+		return fmt.Errorf("clean: error with user input: %v", err)
 	}
 
 	if strings.EqualFold(ans, "y") {
@@ -82,7 +82,7 @@ func RemoveConfig(configFP string) error {
 	}
 
 	if err := os.Remove(configFP); err != nil {
-		return fmt.Errorf("Error removing file: %v", err)
+		return fmt.Errorf("error removing file: %v", err)
 	}
 	fmt.Println("Removed config.")
 	return nil
@@ -92,7 +92,7 @@ func RemoveConfig(configFP string) error {
 // the passwords are stored.
 func RemoveVault(vaultName string) error {
 	if err := os.Remove(path.Join(utils.VAULT_PATH, vaultName)); err != nil {
-		return fmt.Errorf("Error removing vault: %v", err)
+		return fmt.Errorf("error removing vault: %v", err)
 	}
 	fmt.Println("Removed vault.")
 	return nil

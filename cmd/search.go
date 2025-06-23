@@ -1,0 +1,104 @@
+/*
+Copyright © 2025 DKagan07
+*/
+package cmd
+
+import (
+	"errors"
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/spf13/cobra"
+
+	"go-pass/crypt"
+	"go-pass/model"
+	"go-pass/utils"
+)
+
+// searchCmd represents the search command
+var searchCmd = &cobra.Command{
+	Use:   "search",
+	Short: "Search for a password in the vault",
+	Long: fmt.Sprintf(`%s
+
+'search' searches your vault for a source that matches the search term. This
+search is case insensitive, and will list all sources that match the search term.
+
+Ex.
+	$ gopass search git
+	GitHub
+	GitLab
+
+Ex. 
+	$ gopass search gitlab
+	GitLab
+`, LongDescriptionText),
+	Run: func(cmd *cobra.Command, args []string) {
+		if err := SearchCmdHandler(cmd, args); err != nil {
+			fmt.Println("Error with search")
+			return
+		}
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(searchCmd)
+}
+
+// SearchCmdHandler is the handler function that encapsulates the SearchVault
+// logic and runs some checks beforehand.
+func SearchCmdHandler(cmd *cobra.Command, args []string) error {
+	if len(args) != 1 {
+		return errors.New(
+			"too many or not enough arugments for 'search'. See 'help' for correct usage",
+		)
+	}
+
+	cfg, err := CheckConfig("")
+	if err != nil {
+		return err
+	}
+
+	now := time.Now().UnixMilli()
+	if !utils.IsAccessBeforeLogin(cfg, now) {
+		fmt.Println("Cannot access, need to login")
+		return fmt.Errorf("cannot access, need to login")
+	}
+
+	searchTerm := strings.ToLower(args[0])
+	return SearchVault(searchTerm, cfg)
+}
+
+// SearchVault is the function that searches the vault for a source that matches
+// the search term. It will print out all sources that match the search term.
+// This is a case insensitive search.
+func SearchVault(searchTerm string, cfg model.Config) error {
+	if searchTerm == "" {
+		return fmt.Errorf("no search term provided")
+	}
+
+	f := utils.OpenVault(cfg.VaultName)
+	defer f.Close()
+
+	entries := crypt.DecryptVault(f)
+
+	if len(entries) == 0 {
+		fmt.Println("Nothing in your vault!")
+		return fmt.Errorf("nothing in vault")
+	}
+
+	found := false
+	for _, e := range entries {
+		if strings.Contains(strings.ToLower(e.Name), searchTerm) {
+			found = true
+			fmt.Println(e.Name)
+		}
+	}
+
+	if !found {
+		fmt.Println("No matches found.")
+	}
+
+	return nil
+}

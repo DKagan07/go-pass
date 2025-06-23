@@ -58,12 +58,12 @@ func init() {
 func InitCmdHandler(cmd *cobra.Command, args []string) error {
 	if len(args) != 0 {
 		fmt.Println("No arguments needed. See 'help' for more information")
-		return fmt.Errorf("No arguments needed. See 'help' for more information")
+		return fmt.Errorf("no arguments needed. see 'help' for more information")
 	}
 
 	if DoesConfigExist("") {
 		fmt.Println("Cannot init")
-		return fmt.Errorf("Cannot run this command")
+		return fmt.Errorf("cannot run this command")
 	}
 
 	vaultName, err := cmd.Flags().GetString("vault-name")

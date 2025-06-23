@@ -41,10 +41,11 @@ func init() {
 	listCmd.Flags().StringP("name", "n", "", "Searches your list for the specific source")
 }
 
+// ListCmdHandler is the handler function that encapsulates the PrintList
 func ListCmdHandler(cmd *cobra.Command, args []string) error {
 	if len(args) != 0 {
 		fmt.Println("No arguments needed for 'list'. See 'help' for more guidance")
-		return fmt.Errorf("No arguments needed for 'list'. See 'help' for more guidance")
+		return fmt.Errorf("no arguments needed for 'list'. see 'help' for more guidance")
 	}
 
 	sourceName, err := cmd.Flags().GetString("name")
@@ -60,17 +61,20 @@ func ListCmdHandler(cmd *cobra.Command, args []string) error {
 	now := time.Now().UnixMilli()
 	if !utils.IsAccessBeforeLogin(cfg, now) {
 		fmt.Println("Cannot access, need to login")
-		return fmt.Errorf("Cannot access, need to login")
+		return fmt.Errorf("cannot access, need to login")
 	}
 
 	err = PrintList(sourceName, cfg)
 	if err != nil {
-		return fmt.Errorf("Error printing list: %v", err)
+		return fmt.Errorf("error printing list: %v", err)
 	}
 
 	return nil
 }
 
+// PrintList is the function that prints the list of sources in the vault.
+// If a source name is provided, it will check if the source exists in the vault.
+// If a source name is not provided, it will print all sources in the vault.
 func PrintList(sourceName string, cfg model.Config) error {
 	f := utils.OpenVault(cfg.VaultName)
 	defer f.Close()
@@ -78,7 +82,7 @@ func PrintList(sourceName string, cfg model.Config) error {
 
 	if len(entries) == 0 {
 		fmt.Println("Nothing in your vault!")
-		return fmt.Errorf("Nothing in vault")
+		return fmt.Errorf("nothing in vault")
 	}
 
 	if sourceName == "" {

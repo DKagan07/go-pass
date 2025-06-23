@@ -6,15 +6,16 @@ package cmd
 import (
 	"crypto/rand"
 	"fmt"
-	"go-pass/crypt"
-	"go-pass/model"
-	"go-pass/utils"
 	"log"
 	"math/big"
 	"os"
 	"time"
 
 	"github.com/spf13/cobra"
+
+	"go-pass/crypt"
+	"go-pass/model"
+	"go-pass/utils"
 )
 
 // generateCmd represents the generate command
@@ -45,10 +46,13 @@ func init() {
 	generateCmd.Flags().StringP("add", "a", "", "Add a newly generated password to your vault")
 }
 
+// GenerateCmdHandler is the handler function that encapsulates the GeneratePassword
+// and if the flag is provided, it will prompt the user for the required information
+// and add it to the vault.
 func GenerateCmdHandler(cmd *cobra.Command, args []string) error {
 	if len(args) != 0 {
-		fmt.Println("No arguments needed for 'list'. See 'help' for more guidance")
-		return fmt.Errorf("No arguments needed for 'list'. See 'help' for more guidance")
+		fmt.Println("no arguments needed for 'generate'. see 'help' for more guidance")
+		return fmt.Errorf("no arguments needed for 'generate'. see 'help' for more guidance")
 	}
 
 	cfg, err := CheckConfig("")
@@ -59,7 +63,7 @@ func GenerateCmdHandler(cmd *cobra.Command, args []string) error {
 	now := time.Now().UnixMilli()
 	if !utils.IsAccessBeforeLogin(cfg, now) {
 		fmt.Println("Cannot access, need to login")
-		return fmt.Errorf("Cannot access, need to login")
+		return fmt.Errorf("cannot access, need to login")
 	}
 
 	length, err := cmd.Flags().GetInt("length")
@@ -86,7 +90,7 @@ func GenerateCmdHandler(cmd *cobra.Command, args []string) error {
 
 // AddGeneratedPasswordToVault contains the logic of getting the information
 // from the user and storing the information in the vault. The source is
-// obtained from the '-a' flag, and the password is generated from the 
+// obtained from the '-a' flag, and the password is generated from the
 // 'GeneratePassword' function.
 func AddGeneratedPasswordToVault(source string, password []byte, cfg model.Config, t int64) error {
 	userInput := model.UserInput{
@@ -99,7 +103,7 @@ func AddGeneratedPasswordToVault(source string, password []byte, cfg model.Confi
 	}
 	notes, err := utils.GetInputFromUser(os.Stdin, "Notes")
 	if err != nil {
-		return  err
+		return err
 	}
 
 	userInput.Username = username
@@ -110,7 +114,7 @@ func AddGeneratedPasswordToVault(source string, password []byte, cfg model.Confi
 // GeneratePassword generates a strong password of default length 24 consisting
 // of lower case, uppercase, numbers, and special characters using the
 // crypto/rand package for cryptographically secure RNG.
-// 
+//
 // Note: There is always a chance that these passwords will not satisfy password
 // inputs, so double check that it does.
 func GeneratePassword(l int) []byte {
@@ -128,4 +132,3 @@ func GeneratePassword(l int) []byte {
 	}
 	return b
 }
-

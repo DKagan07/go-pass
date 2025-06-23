@@ -41,7 +41,7 @@ func init() {
 func DeleteCmdHandler(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
 		return errors.New(
-			"Too many or not enough arugments for 'delete'. See 'help' for correct usage.",
+			"too many or not enough arugments for 'delete'. see 'help' for correct usage",
 		)
 	}
 
@@ -54,7 +54,7 @@ func DeleteCmdHandler(cmd *cobra.Command, args []string) error {
 
 	now := time.Now().UnixMilli()
 	if !utils.IsAccessBeforeLogin(cfg, now) {
-		return fmt.Errorf("Cannot access, need to login")
+		return fmt.Errorf("cannot access, need to login")
 	}
 
 	err = DeleteItemInVault(cfg, itemToDelete)
@@ -75,7 +75,7 @@ func DeleteItemInVault(cfg model.Config, name string) error {
 
 	if len(entries) == 0 {
 		fmt.Println("Nothing in your vault")
-		return fmt.Errorf("Nothing in your vault!")
+		return fmt.Errorf("nothing in your vault")
 	}
 
 	found := false
@@ -89,7 +89,7 @@ func DeleteItemInVault(cfg model.Config, name string) error {
 
 	if !found {
 		fmt.Printf("%s not found\n", name)
-		return fmt.Errorf("%s not found in vault.", name)
+		return fmt.Errorf("%s not found in vault", name)
 	}
 
 	b, err := crypt.EncryptVault(entries)

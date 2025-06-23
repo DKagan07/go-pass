@@ -36,7 +36,10 @@ Name: Google
 	Notes: <will show if any notes are present>
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
-		GetCmdHandler(cmd, args)
+		if err := GetCmdHandler(cmd, args); err != nil {
+			fmt.Println("Error with get")
+			return
+		}
 	},
 }
 
@@ -49,7 +52,7 @@ func init() {
 func GetCmdHandler(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
 		return fmt.Errorf(
-			"Only 1 argument needed for the get command. See 'help' for correct usage",
+			"only 1 argument needed for the get command. see 'help' for correct usage",
 		)
 	}
 
@@ -64,12 +67,12 @@ func GetCmdHandler(cmd *cobra.Command, args []string) error {
 	now := time.Now().UnixMilli()
 	if !utils.IsAccessBeforeLogin(cfg, now) {
 		fmt.Println("Cannot access, need to login")
-		return fmt.Errorf("Cannot access, need to login")
+		return fmt.Errorf("cannot access, need to login")
 	}
 
 	err = GetItemFromVault(cfg, name)
 	if err != nil {
-		return fmt.Errorf("Cannot get %s from vault: %v", name, err)
+		return fmt.Errorf("cannot get %s from vault: %v", name, err)
 	}
 
 	return nil
@@ -85,7 +88,7 @@ func GetItemFromVault(cfg model.Config, name string) error {
 
 	if len(entries) == 0 {
 		fmt.Println("Nothing in your vault!")
-		return fmt.Errorf("Nothing in vault.")
+		return fmt.Errorf("nothing in vault")
 	}
 
 	for _, e := range entries {
@@ -112,5 +115,5 @@ func GetItemFromVault(cfg model.Config, name string) error {
 	}
 
 	utils.WriteToFile(f, encryptedCipherText)
-	return fmt.Errorf("'%s' not found in vault.\n", name)
+	return fmt.Errorf("'%s' not found in vault", name)
 }

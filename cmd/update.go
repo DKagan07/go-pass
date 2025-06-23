@@ -72,7 +72,7 @@ type InputSources struct {
 func UpdateCmdHandler(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
 		fmt.Println("Wrong number of arguments, need 1. Please see 'help'.")
-		return fmt.Errorf("Wrong number of arguments, need 1. Please see 'help'.")
+		return fmt.Errorf("wrong number of arguments, need 1. please see 'help'")
 	}
 
 	i, err := UpdateFlags(cmd)
@@ -85,7 +85,7 @@ func UpdateCmdHandler(cmd *cobra.Command, args []string) error {
 	cfgFile, ok, err := utils.OpenConfig("")
 	if ok && err == nil {
 		fmt.Println("A file is not found. Need to init.")
-		return fmt.Errorf("File not found: %v", err)
+		return fmt.Errorf("file not found: %v", err)
 	}
 	defer cfgFile.Close()
 	cfg := crypt.DecryptConfig(cfgFile)
@@ -93,12 +93,12 @@ func UpdateCmdHandler(cmd *cobra.Command, args []string) error {
 	now := time.Now().UnixMilli()
 	if !utils.IsAccessBeforeLogin(cfg, now) {
 		fmt.Println("Cannot access, need to login")
-		return errors.New("Need to login")
+		return errors.New("need to login")
 	}
 
 	err = UpdateEntry(i, cfg, sn, InputSources{os.Stdin, os.Stdin, os.Stdin, os.Stdin})
 	if err != nil {
-		return fmt.Errorf("Error updating entry: %v", err)
+		return fmt.Errorf("error updating entry: %v", err)
 	}
 
 	return nil
@@ -129,7 +129,7 @@ func UpdateFlags(cmd *cobra.Command) (Inputs, error) {
 
 	if !sourceBool && !usernameBool && !passwordBool && !notesBool {
 		fmt.Println("Need at least one flag. See help for more information")
-		return Inputs{}, errors.New("Need at last 1 flag")
+		return Inputs{}, errors.New("need at last 1 flag")
 	}
 
 	return Inputs{
@@ -161,7 +161,7 @@ func UpdateEntry(inputs Inputs, cfg model.Config, sourceName string, is InputSou
 	// Not found
 	if ve.Name == "" {
 		fmt.Printf("'%s' not found\n", sourceName)
-		return errors.New("Not found")
+		return errors.New("not found")
 	}
 
 	ve, err := UpdateVaultEntry(ve, inputs, is)

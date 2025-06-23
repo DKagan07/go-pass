@@ -37,36 +37,42 @@ func init() {
 	rootCmd.AddCommand(loginCmd)
 }
 
+// LoginCmdHandler is the handler function that encapsulates the LoginUser
+// logic.
 func LoginCmdHandler(cmd *cobra.Command, args []string) error {
 	if len(args) != 0 {
 		fmt.Println("No arguments needed for 'login'. See 'help' for more guidance")
-		return fmt.Errorf("No arguments needed for 'login'. See 'help' for more guidance")
+		return fmt.Errorf("no arguments needed for 'login'. see 'help' for more guidance")
 	}
 
 	err := LoginUser("", os.Stdin)
 	if err != nil {
-		return fmt.Errorf("Login user: %v", err)
+		return fmt.Errorf("login user: %v", err)
 	}
 	return nil
 }
 
+// LoginUser is the function that logs the user in. It will check if the config
+// file exists, and if it does, it will compare the password with the master
+// password. If the password is correct, it will set the last visited time and
+// return nil. If the password is incorrect, it will return an error.
 func LoginUser(cfgName string, input io.Reader) error {
 	cfgFile, ok, err := utils.OpenConfig(cfgName)
 	if ok && err == nil {
 		fmt.Println("A file is not found. Need to 'init'.")
-		return errors.New("A file is not found. Need to 'init'")
+		return errors.New("a file is not found. need to 'init'")
 	}
 	cfg := crypt.DecryptConfig(cfgFile)
 
 	pass, err := utils.GetPasswordFromUser(true, input)
 	if err != nil {
 		fmt.Println("Error getting info from user")
-		return fmt.Errorf("Getting password from user: %v", err)
+		return fmt.Errorf("getting password from user: %v", err)
 	}
 
 	if err = bcrypt.CompareHashAndPassword(cfg.MasterPassword, pass); err != nil {
 		fmt.Println("Login failed")
-		return errors.New("Login failed")
+		return errors.New("login failed")
 	}
 
 	fmt.Println("Success!")

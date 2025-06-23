@@ -39,6 +39,7 @@ Everything is local to your computer! Nothing is stored on the internet
 - **init**: Initialize all files and begins use of the app
 - **list**: Lists all the sources of your login infos
 - **login**: Login to the app
+- **search**: Insensitive-case search for sources in your vault. Will return a list of all matches
 - **update**: Updates an entry in your vault with specific flags
 
 ### Workflow:
