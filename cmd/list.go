@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -87,6 +88,11 @@ func PrintList(sourceName string, cfg model.Config) error {
 		fmt.Println("Nothing in your vault!")
 		return fmt.Errorf("nothing in vault")
 	}
+
+	// Alphabetize the entries by `Name`
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].Name < entries[j].Name
+	})
 
 	if sourceName == "" {
 		fmt.Println("Entries:")

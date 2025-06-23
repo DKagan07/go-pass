@@ -6,6 +6,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -87,6 +88,10 @@ func SearchVault(searchTerm string, cfg model.Config) error {
 		fmt.Println("Nothing in your vault!")
 		return fmt.Errorf("nothing in vault")
 	}
+
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].Name < entries[j].Name
+	})
 
 	found := false
 	for _, e := range entries {
