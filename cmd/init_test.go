@@ -28,14 +28,14 @@ func TestDoesConfigExist(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.doesConfigExists {
 				f, err := utils.CreateConfig(
-					TEST_VAULT_NAME,
-					TEST_MASTER_PASSWORD,
-					TEST_CONFIG_NAME,
+					utils.TEST_VAULT_NAME,
+					utils.TEST_MASTER_PASSWORD,
+					utils.TEST_CONFIG_NAME,
 				)
 				assert.NoError(t, err)
 				f.Close()
 			}
-			assert.Equal(t, tt.doesConfigExists, DoesConfigExist(TEST_CONFIG_NAME))
+			assert.Equal(t, tt.doesConfigExists, DoesConfigExist(utils.TEST_CONFIG_NAME))
 		})
 	}
 }
@@ -44,7 +44,7 @@ func TestCreateFiles(t *testing.T) {
 	cleanup()
 	defer cleanup()
 
-	err := CreateFiles(TEST_VAULT_NAME, TEST_CONFIG_NAME, TEST_MASTER_PASSWORD)
+	err := CreateFiles(utils.TEST_VAULT_NAME, utils.TEST_CONFIG_NAME, utils.TEST_MASTER_PASSWORD)
 	assert.NoError(t, err)
 }
 

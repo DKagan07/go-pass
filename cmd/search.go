@@ -56,7 +56,7 @@ func SearchCmdHandler(cmd *cobra.Command, args []string) error {
 		)
 	}
 
-	cfg, err := CheckConfig("")
+	cfg, err := utils.CheckConfig("")
 	if err != nil {
 		return err
 	}

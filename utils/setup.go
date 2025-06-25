@@ -13,11 +13,14 @@ import (
 )
 
 var (
-	home, _        = os.UserHomeDir()
-	VAULT_PATH     = path.Join(home, ".local", "gopass")
-	CONFIG_PATH    = path.Join(home, ".config", "gopass")
-	CONFIG_FILE    = path.Join(CONFIG_PATH, "gopass-cfg.json")
-	THIRTY_MINUTES = time.Minute.Milliseconds() * 30
+	home, _              = os.UserHomeDir()
+	VAULT_PATH           = path.Join(home, ".local", "gopass")
+	CONFIG_PATH          = path.Join(home, ".config", "gopass")
+	CONFIG_FILE          = path.Join(CONFIG_PATH, "gopass-cfg.json")
+	THIRTY_MINUTES       = time.Minute.Milliseconds() * 30
+	TEST_VAULT_NAME      = "test-vault.json"
+	TEST_CONFIG_NAME     = "test-cfg.json"
+	TEST_MASTER_PASSWORD = []byte("mastahpass")
 )
 
 // CreateVault creates a file in a default path. If directories aren't created,
@@ -172,4 +175,19 @@ func OpenConfig(fn string) (*os.File, bool, error) {
 // thirty minutes, false if otherwise
 func IsAccessBeforeLogin(cfg model.Config, t int64) bool {
 	return t <= (cfg.LastVisited + THIRTY_MINUTES)
+}
+
+// CheckConfig checks to see if the config file exists. If it does, we return
+// the model.Config.
+func CheckConfig(fn string) (model.Config, error) {
+	cfgFile, ok, err := OpenConfig(fn)
+	fmt.Printf("ok: %v\n", ok)
+	fmt.Printf("err: %v\n", err)
+	if ok && err == nil {
+		fmt.Println("A file is not found. Need to init.")
+		return model.Config{}, fmt.Errorf("file needs to be created")
+	}
+	defer cfgFile.Close()
+	cfg := crypt.DecryptConfig(cfgFile)
+	return cfg, nil
 }

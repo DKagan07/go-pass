@@ -60,7 +60,7 @@ func AddCmdHandler(cmd *cobra.Command, args []string) error {
 		)
 	}
 
-	cfg, err := CheckConfig("")
+	cfg, err := utils.CheckConfig("")
 	if err != nil {
 		fmt.Println("err: ", err)
 		return err
@@ -79,20 +79,6 @@ func AddCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 
 	return AddToVault(args[0], userInput, cfg, time.Now().UnixMilli())
-}
-
-// CheckConfig checks to see if the config file exists. If it does, we return
-// the model.Config.
-// TODO: Should probably go into utils?
-func CheckConfig(fn string) (model.Config, error) {
-	cfgFile, ok, err := utils.OpenConfig(fn)
-	if ok && err == nil {
-		fmt.Println("A file is not found. Need to init.")
-		return model.Config{}, fmt.Errorf("file needs to be created")
-	}
-	defer cfgFile.Close()
-	cfg := crypt.DecryptConfig(cfgFile)
-	return cfg, nil
 }
 
 // GetInput is a function where we get input from the user, and return it in a

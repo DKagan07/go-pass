@@ -12,18 +12,18 @@ import (
 
 func TestPrintList(t *testing.T) {
 	assert := assert.New(t)
-	c, err := utils.CreateConfig(TEST_VAULT_NAME, TEST_MASTER_PASSWORD, TEST_CONFIG_NAME)
+	c, err := utils.CreateConfig(utils.TEST_VAULT_NAME, utils.TEST_MASTER_PASSWORD, utils.TEST_CONFIG_NAME)
 	c.Close()
 	assert.NoError(err)
 
-	v, err := utils.CreateVault(TEST_VAULT_NAME)
+	v, err := utils.CreateVault(utils.TEST_VAULT_NAME)
 	v.Close()
 	assert.NoError(err)
 
 	now := time.Now().UnixMilli()
 	cfg := model.Config{
-		MasterPassword: TEST_MASTER_PASSWORD,
-		VaultName:      TEST_VAULT_NAME,
+		MasterPassword: utils.TEST_MASTER_PASSWORD,
+		VaultName:      utils.TEST_VAULT_NAME,
 		LastVisited:    now,
 	}
 
@@ -50,18 +50,18 @@ func TestPrintList(t *testing.T) {
 // This simulates having the flag present
 func TestPrintList_OneEntry(t *testing.T) {
 	assert := assert.New(t)
-	c, err := utils.CreateConfig(TEST_VAULT_NAME, TEST_MASTER_PASSWORD, TEST_CONFIG_NAME)
+	c, err := utils.CreateConfig(utils.TEST_VAULT_NAME, utils.TEST_MASTER_PASSWORD, utils.TEST_CONFIG_NAME)
 	c.Close()
 	assert.NoError(err)
 
-	v, err := utils.CreateVault(TEST_VAULT_NAME)
+	v, err := utils.CreateVault(utils.TEST_VAULT_NAME)
 	v.Close()
 	assert.NoError(err)
 
 	now := time.Now().UnixMilli()
 	cfg := model.Config{
-		MasterPassword: TEST_MASTER_PASSWORD,
-		VaultName:      TEST_VAULT_NAME,
+		MasterPassword: utils.TEST_MASTER_PASSWORD,
+		VaultName:      utils.TEST_VAULT_NAME,
 		LastVisited:    now,
 	}
 

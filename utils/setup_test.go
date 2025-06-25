@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"os"
 	"path"
 	"testing"
@@ -86,5 +87,59 @@ func TestIsAccessBeforeLogin(t *testing.T) {
 			}
 			assert.Equal(t, tt.expected, IsAccessBeforeLogin(cfg, now))
 		})
+	}
+}
+
+func TestCheckConfig(t *testing.T) {
+	cleanup()
+	tests := []struct {
+		name          string
+		configPresent bool
+	}{
+		{
+			name:          "config not created",
+			configPresent: false,
+		},
+		{
+			name:          "config is created",
+			configPresent: true,
+		},
+	}
+
+	for _, tt := range tests {
+		defer cleanup()
+		t.Run(tt.name, func(t *testing.T) {
+			assert := assert.New(t)
+			if tt.configPresent {
+				fmt.Println("Creating config")
+				f, err := CreateConfig(
+					TEST_VAULT_NAME,
+					TEST_MASTER_PASSWORD,
+					TEST_CONFIG_NAME,
+				)
+				assert.NoError(err)
+				defer f.Close()
+			}
+
+			fmt.Println("Checking config")
+			cfg, err := CheckConfig(TEST_CONFIG_NAME)
+
+			time := cfg.LastVisited
+			if tt.configPresent {
+				fmt.Println("Checking config if present")
+				assert.Equal(model.Config{
+					MasterPassword: TEST_MASTER_PASSWORD,
+					VaultName:      TEST_VAULT_NAME,
+					LastVisited:    time,
+				}, cfg)
+				assert.NoError(err)
+			} else {
+				fmt.Println("Checking config if not present")
+				assert.Error(err)
+				assert.Equal(model.Config{}, cfg)
+			}
+		})
+
+		time.Sleep(time.Millisecond * 100)
 	}
 }

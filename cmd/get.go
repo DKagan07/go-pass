@@ -58,7 +58,7 @@ func GetCmdHandler(cmd *cobra.Command, args []string) error {
 
 	name := args[0]
 
-	cfg, err := CheckConfig("")
+	cfg, err := utils.CheckConfig("")
 	if err != nil {
 		fmt.Println("Error checking config: ", err.Error())
 		return err

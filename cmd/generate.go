@@ -58,7 +58,7 @@ func GenerateCmdHandler(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("no arguments needed for 'generate'. see 'help' for more guidance")
 	}
 
-	cfg, err := CheckConfig("")
+	cfg, err := utils.CheckConfig("")
 	if err != nil {
 		return err
 	}

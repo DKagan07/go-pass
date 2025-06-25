@@ -21,18 +21,18 @@ func TestSearchVault(t *testing.T) {
 	}
 
 	defer cleanup()
-	cfgFile, err := utils.CreateConfig(TEST_VAULT_NAME, TEST_MASTER_PASSWORD, TEST_CONFIG_NAME)
+	cfgFile, err := utils.CreateConfig(utils.TEST_VAULT_NAME, utils.TEST_MASTER_PASSWORD, utils.TEST_CONFIG_NAME)
 	assert.NoError(t, err)
 	defer cfgFile.Close()
 
-	vaultFile, err := utils.CreateVault(TEST_VAULT_NAME)
+	vaultFile, err := utils.CreateVault(utils.TEST_VAULT_NAME)
 	assert.NoError(t, err)
 	defer vaultFile.Close()
 
 	now := time.Now().UnixMilli()
 	cfg := model.Config{
-		VaultName:      TEST_VAULT_NAME,
-		MasterPassword: TEST_MASTER_PASSWORD,
+		VaultName:      utils.TEST_VAULT_NAME,
+		MasterPassword: utils.TEST_MASTER_PASSWORD,
 		LastVisited:    now,
 	}
 

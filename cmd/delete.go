@@ -50,7 +50,7 @@ func DeleteCmdHandler(cmd *cobra.Command, args []string) error {
 
 	itemToDelete := args[0]
 
-	cfg, err := CheckConfig("")
+	cfg, err := utils.CheckConfig("")
 	if err != nil {
 		return err
 	}

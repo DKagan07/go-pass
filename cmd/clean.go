@@ -45,7 +45,7 @@ func CleanCmdHandler(cmd *cobra.Command, args []string) error {
 		return errors.New("too many arugments for 'clean'. see 'help' for correct usage")
 	}
 
-	cfg, err := CheckConfig("")
+	cfg, err := utils.CheckConfig("")
 	if err != nil {
 		return fmt.Errorf("config file does not exist: %v", err)
 	}

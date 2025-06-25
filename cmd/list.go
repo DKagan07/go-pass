@@ -57,7 +57,7 @@ func ListCmdHandler(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("list::getting string from flag: %v", err)
 	}
 
-	cfg, err := CheckConfig("")
+	cfg, err := utils.CheckConfig("")
 	if err != nil {
 		return err
 	}
