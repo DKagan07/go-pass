@@ -25,6 +25,9 @@ type Config struct {
 	// idea is that the user will have to re-input the password in after 30 mins
 	// of 'inactivity', for security.
 	LastVisited int64 `json:"last_visited"`
+	// Timeout is the number of minutes that the user will have to re-input the
+	// password after.
+	// Timeout int `json:"timeout"`
 }
 
 type UserInput struct {

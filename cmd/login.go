@@ -30,7 +30,7 @@ you set when the 'init' command was ran.
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := LoginCmdHandler(cmd, args); err != nil {
-			fmt.Println("Error with login")
+			fmt.Printf("Error with 'login' command: %v\n", err)
 			return
 		}
 	},
@@ -44,7 +44,6 @@ func init() {
 // logic.
 func LoginCmdHandler(cmd *cobra.Command, args []string) error {
 	if len(args) != 0 {
-		fmt.Println("No arguments needed for 'login'. See 'help' for more guidance")
 		return fmt.Errorf("no arguments needed for 'login'. see 'help' for more guidance")
 	}
 
@@ -62,19 +61,16 @@ func LoginCmdHandler(cmd *cobra.Command, args []string) error {
 func LoginUser(cfgName string, input io.Reader) error {
 	cfgFile, ok, err := utils.OpenConfig(cfgName)
 	if ok && err == nil {
-		fmt.Println("A file is not found. Need to 'init'.")
 		return errors.New("a file is not found. need to 'init'")
 	}
 	cfg := crypt.DecryptConfig(cfgFile)
 
 	pass, err := utils.GetPasswordFromUser(true, input)
 	if err != nil {
-		fmt.Println("Error getting info from user")
 		return fmt.Errorf("getting password from user: %v", err)
 	}
 
 	if err = bcrypt.CompareHashAndPassword(cfg.MasterPassword, pass); err != nil {
-		fmt.Println("Login failed")
 		return errors.New("login failed")
 	}
 

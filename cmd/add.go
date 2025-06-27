@@ -41,7 +41,7 @@ Ex.
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := AddCmdHandler(cmd, args); err != nil {
-			fmt.Println("Error with add")
+			fmt.Println("Error with 'add' command: ", err)
 			return
 		}
 	},
@@ -62,19 +62,16 @@ func AddCmdHandler(cmd *cobra.Command, args []string) error {
 
 	cfg, err := utils.CheckConfig("")
 	if err != nil {
-		fmt.Println("err: ", err)
 		return err
 	}
 
 	now := time.Now().UnixMilli()
 	if !utils.IsAccessBeforeLogin(cfg, now) {
-		fmt.Println("Cannot access, need to login")
 		return fmt.Errorf("cannot access, need to login")
 	}
 
 	userInput, err := GetInput(os.Stdin, os.Stdin, os.Stdin)
 	if err != nil {
-		fmt.Println("input err: ", err)
 		return err
 	}
 
@@ -133,7 +130,6 @@ func AddToVault(source string, ui model.UserInput, cfg model.Config, t int64) er
 
 	encryptedCipherText, err := crypt.EncryptVault(entries)
 	if err != nil {
-		fmt.Println("Error with 'add' command")
 		return fmt.Errorf("add::obtaining ciphertext: %v", err)
 	}
 

@@ -37,7 +37,6 @@ Ex.
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := SearchCmdHandler(cmd, args); err != nil {
-			fmt.Println("Error with search")
 			return
 		}
 	},
@@ -63,7 +62,6 @@ func SearchCmdHandler(cmd *cobra.Command, args []string) error {
 
 	now := time.Now().UnixMilli()
 	if !utils.IsAccessBeforeLogin(cfg, now) {
-		fmt.Println("Cannot access, need to login")
 		return fmt.Errorf("cannot access, need to login")
 	}
 
@@ -85,7 +83,6 @@ func SearchVault(searchTerm string, cfg model.Config) error {
 	entries := crypt.DecryptVault(f)
 
 	if len(entries) == 0 {
-		fmt.Println("Nothing in your vault!")
 		return fmt.Errorf("nothing in vault")
 	}
 

@@ -33,7 +33,7 @@ Ex.
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := ListCmdHandler(cmd, args); err != nil {
-			fmt.Println("Error with list")
+			fmt.Printf("Error with 'list' command: %v\n", err)
 			return
 		}
 	},
@@ -48,7 +48,6 @@ func init() {
 // ListCmdHandler is the handler function that encapsulates the PrintList
 func ListCmdHandler(cmd *cobra.Command, args []string) error {
 	if len(args) != 0 {
-		fmt.Println("No arguments needed for 'list'. See 'help' for more guidance")
 		return fmt.Errorf("no arguments needed for 'list'. see 'help' for more guidance")
 	}
 
@@ -64,7 +63,6 @@ func ListCmdHandler(cmd *cobra.Command, args []string) error {
 
 	now := time.Now().UnixMilli()
 	if !utils.IsAccessBeforeLogin(cfg, now) {
-		fmt.Println("Cannot access, need to login")
 		return fmt.Errorf("cannot access, need to login")
 	}
 
@@ -85,7 +83,6 @@ func PrintList(sourceName string, cfg model.Config) error {
 	entries := crypt.DecryptVault(f)
 
 	if len(entries) == 0 {
-		fmt.Println("Nothing in your vault!")
 		return fmt.Errorf("nothing in vault")
 	}
 
@@ -111,8 +108,7 @@ func PrintList(sourceName string, cfg model.Config) error {
 
 	encryptedCipherText, err := crypt.EncryptVault(entries)
 	if err != nil {
-		fmt.Println("Error with 'add' command")
-		return fmt.Errorf("add::obtaining ciphertext: %v", err)
+		return fmt.Errorf("list::obtaining ciphertext: %v", err)
 	}
 
 	utils.WriteToFile(f, encryptedCipherText)

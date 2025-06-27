@@ -43,7 +43,7 @@ Ex 2.
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := InitCmdHandler(cmd, args); err != nil {
-			fmt.Println("Error with init")
+			fmt.Printf("Error with 'init' command: %v\n", err)
 			return
 		}
 	},
@@ -60,13 +60,11 @@ func init() {
 // initializing the program
 func InitCmdHandler(cmd *cobra.Command, args []string) error {
 	if len(args) != 0 {
-		fmt.Println("No arguments needed. See 'help' for more information")
 		return fmt.Errorf("no arguments needed. see 'help' for more information")
 	}
 
 	if DoesConfigExist("") {
-		fmt.Println("Cannot init")
-		return fmt.Errorf("cannot run this command")
+		return fmt.Errorf("cannot init")
 	}
 
 	vaultName, err := cmd.Flags().GetString("vault-name")
@@ -125,7 +123,7 @@ func EnsureVaultName(s string) string {
 
 // CreateFiles encapsulates the logic of creating the config and vaults, and
 // closing the files
-func CreateFiles(vaultName string, cfgName string, pass []byte) error {
+func CreateFiles(vaultName string, cfgName string, pass []byte /*, timeout int*/) error {
 	f, err := utils.CreateConfig(vaultName, pass, cfgName)
 	if err != nil {
 		return err

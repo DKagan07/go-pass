@@ -30,7 +30,7 @@ Ex.
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := DeleteCmdHandler(cmd, args); err != nil {
-			fmt.Println("Error with delete")
+			fmt.Println("Error with 'delete' command: ", err)
 			return
 		}
 	},
@@ -77,7 +77,6 @@ func DeleteItemInVault(cfg model.Config, name string) error {
 	entries := crypt.DecryptVault(f)
 
 	if len(entries) == 0 {
-		fmt.Println("Nothing in your vault")
 		return fmt.Errorf("nothing in your vault")
 	}
 
@@ -91,7 +90,6 @@ func DeleteItemInVault(cfg model.Config, name string) error {
 	}
 
 	if !found {
-		fmt.Printf("%s not found\n", name)
 		return fmt.Errorf("%s not found in vault", name)
 	}
 

@@ -42,7 +42,7 @@ Ex.
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := UpdateCmdHandler(cmd, args); err != nil {
-			fmt.Println("Error with update")
+			fmt.Printf("Error with 'update' command: %v\n", err)
 			return
 		}
 	},
@@ -74,7 +74,6 @@ type InputSources struct {
 // UpdateCmdHandler is the handler function that encapsulates the update logic
 func UpdateCmdHandler(cmd *cobra.Command, args []string) error {
 	if len(args) != 1 {
-		fmt.Println("Wrong number of arguments, need 1. Please see 'help'.")
 		return fmt.Errorf("wrong number of arguments, need 1. please see 'help'")
 	}
 
@@ -87,15 +86,13 @@ func UpdateCmdHandler(cmd *cobra.Command, args []string) error {
 
 	cfgFile, ok, err := utils.OpenConfig("")
 	if ok && err == nil {
-		fmt.Println("A file is not found. Need to init.")
-		return fmt.Errorf("file not found: %v", err)
+		return errors.New("need to init")
 	}
 	defer cfgFile.Close()
 	cfg := crypt.DecryptConfig(cfgFile)
 
 	now := time.Now().UnixMilli()
 	if !utils.IsAccessBeforeLogin(cfg, now) {
-		fmt.Println("Cannot access, need to login")
 		return errors.New("need to login")
 	}
 
@@ -163,8 +160,7 @@ func UpdateEntry(inputs Inputs, cfg model.Config, sourceName string, is InputSou
 
 	// Not found
 	if ve.Name == "" {
-		fmt.Printf("'%s' not found\n", sourceName)
-		return errors.New("not found")
+		return fmt.Errorf("'%s' not found", sourceName)
 	}
 
 	ve, err := UpdateVaultEntry(ve, inputs, is)

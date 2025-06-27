@@ -29,7 +29,7 @@ at the prompt.
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := CleanCmdHandler(cmd, args); err != nil {
-			fmt.Println("Error with clean")
+			fmt.Println("Error with 'clean' command: ", err)
 			return
 		}
 	},
@@ -64,12 +64,10 @@ func CleanFiles(cfg model.Config, r io.Reader) error {
 
 	if strings.EqualFold(ans, "y") {
 		if err := RemoveConfig(""); err != nil {
-			fmt.Println("Error removing config")
-			return err
+			return fmt.Errorf("error removing config: %v", err)
 		}
 		if err := RemoveVault(cfg.VaultName); err != nil {
-			fmt.Println("Error removing vault")
-			return err
+			return fmt.Errorf("error removing vault: %v", err)
 		}
 	}
 

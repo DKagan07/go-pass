@@ -103,7 +103,7 @@ func WriteToFile(f *os.File, contents []byte) {
 }
 
 // Caller should close these open files
-func CreateConfig(vaultName string, mPass []byte, configName string) (*os.File, error) {
+func CreateConfig(vaultName string, mPass []byte, configName string /*, timeout int*/) (*os.File, error) {
 	err := os.MkdirAll(CONFIG_PATH, 0700)
 	if err != nil {
 		return nil, fmt.Errorf("CreateConfig::Err creating dir: %v", err)
@@ -119,7 +119,6 @@ func CreateConfig(vaultName string, mPass []byte, configName string) (*os.File, 
 	if !os.IsExist(err) {
 		f, err := os.OpenFile(configName, os.O_RDWR|os.O_CREATE, 0644)
 		if err != nil {
-			// log.Fatalf("CreateVault::creating file: %v", err)
 			return nil, fmt.Errorf("CreateVault::creating file: %v", err)
 		}
 
@@ -128,6 +127,7 @@ func CreateConfig(vaultName string, mPass []byte, configName string) (*os.File, 
 			MasterPassword: mPass,
 			VaultName:      vaultName,
 			LastVisited:    now,
+			// Timeout:        timeout,
 		}
 
 		cipherText, err := crypt.EncryptConfig(cfg)

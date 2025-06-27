@@ -36,7 +36,7 @@ cryptographically secure RNG. Please modify and change that if needed.
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := GenerateCmdHandler(cmd, args); err != nil {
-			fmt.Println("Error with generate")
+			fmt.Println("Error with 'generate' command: ", err)
 			return
 		}
 	},
@@ -54,7 +54,6 @@ func init() {
 // and add it to the vault.
 func GenerateCmdHandler(cmd *cobra.Command, args []string) error {
 	if len(args) != 0 {
-		fmt.Println("no arguments needed for 'generate'. see 'help' for more guidance")
 		return fmt.Errorf("no arguments needed for 'generate'. see 'help' for more guidance")
 	}
 
@@ -65,14 +64,12 @@ func GenerateCmdHandler(cmd *cobra.Command, args []string) error {
 
 	now := time.Now().UnixMilli()
 	if !utils.IsAccessBeforeLogin(cfg, now) {
-		fmt.Println("Cannot access, need to login")
 		return fmt.Errorf("cannot access, need to login")
 	}
 
 	length, err := cmd.Flags().GetInt("length")
 	if err != nil {
-		fmt.Println("getting length flag")
-		return err
+		return fmt.Errorf("getting length flag: %v", err)
 	}
 
 	strongPasswordBytes := GeneratePassword(length)
@@ -80,8 +77,7 @@ func GenerateCmdHandler(cmd *cobra.Command, args []string) error {
 
 	source, err := cmd.Flags().GetString("add")
 	if err != nil {
-		fmt.Println("getting add flag")
-		return err
+		return fmt.Errorf("getting add flag: %v", err)
 	}
 
 	if source != "" {

@@ -37,7 +37,7 @@ Name: Google
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := GetCmdHandler(cmd, args); err != nil {
-			fmt.Println("Error with get")
+			fmt.Printf("Error with 'get' command: %v\n", err)
 			return
 		}
 	},
@@ -60,13 +60,11 @@ func GetCmdHandler(cmd *cobra.Command, args []string) error {
 
 	cfg, err := utils.CheckConfig("")
 	if err != nil {
-		fmt.Println("Error checking config: ", err.Error())
-		return err
+		return fmt.Errorf("error checking config: %v", err)
 	}
 
 	now := time.Now().UnixMilli()
 	if !utils.IsAccessBeforeLogin(cfg, now) {
-		fmt.Println("Cannot access, need to login")
 		return fmt.Errorf("cannot access, need to login")
 	}
 
@@ -87,7 +85,6 @@ func GetItemFromVault(cfg model.Config, name string) error {
 	entries := crypt.DecryptVault(f)
 
 	if len(entries) == 0 {
-		fmt.Println("Nothing in your vault!")
 		return fmt.Errorf("nothing in vault")
 	}
 
@@ -110,7 +107,6 @@ func GetItemFromVault(cfg model.Config, name string) error {
 
 	encryptedCipherText, err := crypt.EncryptVault(entries)
 	if err != nil {
-		fmt.Println("Error with 'add' command")
 		return fmt.Errorf("add::obtaining ciphertext: %v", err)
 	}
 
