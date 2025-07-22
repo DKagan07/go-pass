@@ -103,7 +103,11 @@ func WriteToFile(f *os.File, contents []byte) {
 }
 
 // Caller should close these open files
-func CreateConfig(vaultName string, mPass []byte, configName string /*, timeout int*/) (*os.File, error) {
+func CreateConfig(
+	vaultName string,
+	mPass []byte,
+	configName string, /*, timeout int*/
+) (*os.File, error) {
 	err := os.MkdirAll(CONFIG_PATH, 0700)
 	if err != nil {
 		return nil, fmt.Errorf("CreateConfig::Err creating dir: %v", err)
@@ -181,8 +185,6 @@ func IsAccessBeforeLogin(cfg model.Config, t int64) bool {
 // the model.Config.
 func CheckConfig(fn string) (model.Config, error) {
 	cfgFile, ok, err := OpenConfig(fn)
-	fmt.Printf("ok: %v\n", ok)
-	fmt.Printf("err: %v\n", err)
 	if ok && err == nil {
 		fmt.Println("A file is not found. Need to init.")
 		return model.Config{}, fmt.Errorf("file needs to be created")
