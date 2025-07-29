@@ -1,33 +1,61 @@
 package cmd
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGeneratePassword(t *testing.T) {
-	tests := []struct{
-		name string
-		length int
+	defaultSpecialChars := "!@#$%^&*"
+	tests := []struct {
+		name     string
+		length   int
 		expected int
+		special  string
 	}{
 		{
-			name: "default length",
-			length: 24,
+			name:     "default length",
+			length:   24,
 			expected: 24,
+			special:  "",
 		},
 		{
-			name: "different length",
-			length: 30,
+			name:     "different length",
+			length:   30,
 			expected: 30,
+			special:  "",
+		},
+		{
+			name: "special characters",
+			// Make the length arbitrarily large to ensure that the characters
+			// are in the password
+			length:   40,
+			expected: 40,
+			special:  "()<>",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			b := GeneratePassword(tt.length)
+			specialChars := defaultSpecialChars
+			if tt.special != "" {
+				specialChars = tt.special
+			}
+
+			b := GeneratePassword(tt.length, specialChars)
+
+			doesContain := false
+			for _, letter := range strings.Split(specialChars, "") {
+				if strings.Contains(string(b), letter) {
+					doesContain = true
+					break
+				}
+			}
+
 			assert.Len(t, b, tt.expected)
+			assert.True(t, doesContain)
 		})
 	}
 }

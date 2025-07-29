@@ -18,6 +18,8 @@ import (
 	"go-pass/utils"
 )
 
+const defaultChars = "!@#$%^&*"
+
 // generateCmd represents the generate command
 var generateCmd = &cobra.Command{
 	Use:   "generate",
@@ -25,7 +27,9 @@ var generateCmd = &cobra.Command{
 	Long: fmt.Sprintf(`%s
 
 'generate' is a helper command that helps generate a strong password for you!
-It will print it out to the terminal, and is then copy-pastable.
+It will print it out to the terminal, and is then copy-pastable. The default for
+special characters are '%s'. You can adjust this in any way you like by
+using the -c flag.
 
 ***
 Note: There is always a chance that this generator doesn't return out a password
@@ -33,7 +37,7 @@ that satisfies a password input because these are created with a
 cryptographically secure RNG. Please modify and change that if needed.
 (If using the -a flag, run 'gopass update <source_name> to update the password')
 ***
-`, LongDescriptionText),
+`, LongDescriptionText, defaultChars),
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := GenerateCmdHandler(cmd, args); err != nil {
 			fmt.Println("Error with 'generate' command: ", err)
@@ -45,8 +49,11 @@ cryptographically secure RNG. Please modify and change that if needed.
 func init() {
 	rootCmd.AddCommand(generateCmd)
 
+	specialCharsStr := "List the special characters you want to add to your password generation. If adjustment is necessary, list all the special characters you want. IMPORTANT: BE SURE TO USE SINGLE QUOTES."
+
 	generateCmd.Flags().IntP("length", "l", 24, "Decides length of new password")
 	generateCmd.Flags().StringP("add", "a", "", "Add a newly generated password to your vault")
+	generateCmd.Flags().StringP("specialChars", "c", defaultChars, specialCharsStr)
 }
 
 // GenerateCmdHandler is the handler function that encapsulates the GeneratePassword
@@ -72,7 +79,12 @@ func GenerateCmdHandler(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("getting length flag: %v", err)
 	}
 
-	strongPasswordBytes := GeneratePassword(length)
+	special, err := cmd.Flags().GetString("specialChars")
+	if err != nil {
+		return fmt.Errorf("getting specialChar flag: %v", err)
+	}
+
+	strongPasswordBytes := GeneratePassword(length, special)
 	fmt.Println("Generated Password: ", string(strongPasswordBytes))
 
 	source, err := cmd.Flags().GetString("add")
@@ -116,8 +128,9 @@ func AddGeneratedPasswordToVault(source string, password []byte, cfg model.Confi
 //
 // Note: There is always a chance that these passwords will not satisfy password
 // inputs, so double check that it does.
-func GeneratePassword(l int) []byte {
-	byteSet := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+=_-[]{}|;<>:~`0123456789"
+func GeneratePassword(l int, special string) []byte {
+	baseByteSet := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	byteSet := baseByteSet + special
 	setLength := big.NewInt(int64(len(byteSet)))
 
 	b := make([]byte, l)
