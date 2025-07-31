@@ -13,6 +13,7 @@ import (
 
 func GetInputFromUser(r io.Reader, field string) (string, error) {
 	br := bufio.NewReader(r)
+	fmt.Printf("%s: ", field)
 	username, err := br.ReadString('\n')
 	if err != nil {
 		return "", err
