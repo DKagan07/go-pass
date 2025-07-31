@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -19,7 +20,11 @@ var (
 func TestDeleteItemInVault(t *testing.T) {
 	defer cleanup()
 
-	cfgFile, err := utils.CreateConfig(utils.TEST_VAULT_NAME, utils.TEST_MASTER_PASSWORD, utils.TEST_CONFIG_NAME)
+	cfgFile, err := utils.CreateConfig(
+		utils.TEST_VAULT_NAME,
+		utils.TEST_MASTER_PASSWORD,
+		utils.TEST_CONFIG_NAME,
+	)
 	assert.NoError(t, err)
 	defer cfgFile.Close()
 
@@ -50,14 +55,19 @@ func TestDeleteItemInVault(t *testing.T) {
 	}, cfg, now)
 	assert.NoError(t, err)
 
-	err = DeleteItemInVault(cfg, vaultEntry2)
+	r := strings.NewReader("y\n")
+	err = DeleteItemInVault(cfg, vaultEntry2, r)
 	assert.NoError(t, err)
 }
 
 func TestDeleteItemInVaultNotExist(t *testing.T) {
 	defer cleanup()
 
-	cfgFile, err := utils.CreateConfig(utils.TEST_VAULT_NAME, utils.TEST_MASTER_PASSWORD, utils.TEST_CONFIG_NAME)
+	cfgFile, err := utils.CreateConfig(
+		utils.TEST_VAULT_NAME,
+		utils.TEST_MASTER_PASSWORD,
+		utils.TEST_CONFIG_NAME,
+	)
 	assert.NoError(t, err)
 	defer cfgFile.Close()
 
@@ -88,6 +98,7 @@ func TestDeleteItemInVaultNotExist(t *testing.T) {
 	}, cfg, now)
 	assert.NoError(t, err)
 
-	err = DeleteItemInVault(cfg, "nonExistant")
+	r := strings.NewReader("y\n")
+	err = DeleteItemInVault(cfg, "nonExistant", r)
 	assert.Error(t, err)
 }

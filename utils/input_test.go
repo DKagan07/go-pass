@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -46,6 +47,83 @@ func TestGetPasswordFromUser(t *testing.T) {
 			assert := assert.New(t)
 			assert.Error(err)
 			assert.Nil(user)
+		})
+	}
+}
+
+func TestConfirmPrompt(t *testing.T) {
+	tests := []struct {
+		name        string
+		conf        ConfirmationPrompt
+		prompt      string
+		input       string
+		want        bool
+		shouldError bool
+	}{
+		{
+			name:        "delete yes",
+			conf:        DeletePrompt,
+			prompt:      "test",
+			input:       "y",
+			want:        true,
+			shouldError: false,
+		},
+		{
+			name:        "delete no",
+			conf:        DeletePrompt,
+			prompt:      "test",
+			input:       "n",
+			want:        false,
+			shouldError: false,
+		},
+		{
+			name:        "delete bad input",
+			conf:        DeletePrompt,
+			prompt:      "test",
+			input:       "bad",
+			want:        false,
+			shouldError: true,
+		},
+		{
+			name:        "clean yes",
+			conf:        CleanPrompt,
+			prompt:      "test",
+			input:       "y",
+			want:        true,
+			shouldError: false,
+		},
+		{
+			name:        "clean no",
+			conf:        CleanPrompt,
+			prompt:      "test",
+			input:       "n",
+			want:        false,
+			shouldError: false,
+		},
+		{
+			name:        "clean bad input",
+			conf:        CleanPrompt,
+			prompt:      "test",
+			input:       "bad",
+			want:        false,
+			shouldError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := strings.NewReader(fmt.Sprintf("%s\n", tt.input))
+
+			got, err := ConfirmPrompt(tt.conf, tt.prompt, r)
+
+			assert := assert.New(t)
+			if tt.shouldError {
+				assert.Error(err)
+			} else {
+				assert.NoError(err)
+			}
+			assert.Equal(tt.want, got)
+			fmt.Println()
 		})
 	}
 }

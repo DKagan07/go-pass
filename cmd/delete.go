@@ -6,7 +6,9 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"io"
 	"log"
+	"os"
 	"slices"
 	"time"
 
@@ -60,7 +62,7 @@ func DeleteCmdHandler(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("cannot access, need to login")
 	}
 
-	err = DeleteItemInVault(cfg, itemToDelete)
+	err = DeleteItemInVault(cfg, itemToDelete, os.Stdin)
 	if err != nil {
 		return err
 	}
@@ -70,7 +72,8 @@ func DeleteCmdHandler(cmd *cobra.Command, args []string) error {
 
 // DeleteItemInVault encapsulates the logic for deleting 'name' from the vault
 // if it exists. If not, it will error and print a message out to user.
-func DeleteItemInVault(cfg model.Config, name string) error {
+func DeleteItemInVault(cfg model.Config, name string, r io.Reader) error {
+	// TODO: should I add all the open and decrypt into the confirm conditional?
 	f := utils.OpenVault(cfg.VaultName)
 	defer f.Close()
 
@@ -80,17 +83,24 @@ func DeleteItemInVault(cfg model.Config, name string) error {
 		return fmt.Errorf("nothing in your vault")
 	}
 
-	found := false
-	for i, v := range entries {
-		if name == v.Name {
-			entries = slices.Delete(entries, i, i+1)
-			fmt.Printf("Deleted %s from your vault\n", name)
-			found = true
-		}
+	confirm, err := utils.ConfirmPrompt(utils.DeletePrompt, name, r)
+	if !confirm && err != nil {
+		return fmt.Errorf("failed to confirm deletion: %v", err)
 	}
 
-	if !found {
-		return fmt.Errorf("%s not found in vault", name)
+	if confirm {
+		found := false
+		for i, v := range entries {
+			if name == v.Name {
+				entries = slices.Delete(entries, i, i+1)
+				fmt.Printf("Deleted %s from your vault\n", name)
+				found = true
+			}
+		}
+
+		if !found {
+			return fmt.Errorf("%s not found in vault", name)
+		}
 	}
 
 	b, err := crypt.EncryptVault(entries)
