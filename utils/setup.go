@@ -17,6 +17,7 @@ var (
 	VAULT_PATH           = path.Join(home, ".local", "gopass")
 	CONFIG_PATH          = path.Join(home, ".config", "gopass")
 	CONFIG_FILE          = path.Join(CONFIG_PATH, "gopass-cfg.json")
+	BACKUP_DIR           = path.Join(home, ".local", "gopass-backup")
 	THIRTY_MINUTES       = time.Minute.Milliseconds() * 30
 	TEST_VAULT_NAME      = "test-vault.json"
 	TEST_CONFIG_NAME     = "test-cfg.json"
