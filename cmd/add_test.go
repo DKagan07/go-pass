@@ -69,9 +69,13 @@ func TestAddCheckConfig(t *testing.T) {
 func TestAddAddToVault(t *testing.T) {
 	defer cleanup()
 
-	cfgF, err := utils.CreateConfig(utils.TEST_VAULT_NAME, utils.TEST_MASTER_PASSWORD, utils.TEST_CONFIG_NAME)
+	cfgF, err := utils.CreateConfig(
+		utils.TEST_VAULT_NAME,
+		utils.TEST_MASTER_PASSWORD,
+		utils.TEST_CONFIG_NAME,
+	)
 	assert.NoError(t, err)
-	cfgF.Close()
+	defer cfgF.Close()
 
 	vaultF, err := utils.CreateVault(utils.TEST_VAULT_NAME)
 	assert.NoError(t, err)
@@ -97,6 +101,6 @@ func TestAddAddToVault(t *testing.T) {
 }
 
 func cleanup() {
-	os.Remove(path.Join(utils.VAULT_PATH, utils.TEST_VAULT_NAME))
-	os.Remove(path.Join(utils.CONFIG_PATH, utils.TEST_CONFIG_NAME))
+	_ = os.Remove(path.Join(utils.VAULT_PATH, utils.TEST_VAULT_NAME))
+	_ = os.Remove(path.Join(utils.CONFIG_PATH, utils.TEST_CONFIG_NAME))
 }

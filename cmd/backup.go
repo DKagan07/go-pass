@@ -64,18 +64,17 @@ func BackupCmdHandler(cmd *cobra.Command, args []string) error {
 		)
 	}
 
-	// checking if user is logged in
 	cfg, err := utils.CheckConfig("")
 	if err != nil {
 		return err
 	}
 
-	now := time.Now().UnixMilli()
-	if !utils.IsAccessBeforeLogin(cfg, now) {
+	now := time.Now()
+	if !utils.IsAccessBeforeLogin(cfg, now.UnixMilli()) {
 		return fmt.Errorf("cannot access, need to login")
 	}
 
-	return BackupVault("", cfg.VaultName)
+	return BackupVault("", cfg.VaultName, now)
 }
 
 // BackupVault contains the logic of creating the backup directory, if it
@@ -83,12 +82,12 @@ func BackupCmdHandler(cmd *cobra.Command, args []string) error {
 // `backup__YYYY-MM-DD_HH-MM-SS.json`. It then copies the contents of the vault
 // to the backup file.
 // TODO: Look into making better error handling
-func BackupVault(configName, vaultName string) error {
+func BackupVault(configName, vaultName string, now time.Time) error {
 	if err := os.MkdirAll(utils.BACKUP_DIR, 0700); err != nil {
 		return err
 	}
 
-	fn := fmt.Sprintf(BACKUP_FILE_NAME, time.Now().Format(DATE_FORMAT_STRING))
+	fn := fmt.Sprintf(BACKUP_FILE_NAME, now.Format(DATE_FORMAT_STRING))
 
 	backupFilePath := path.Join(utils.BACKUP_DIR, fn)
 	backupFp, err := os.Create(backupFilePath)
