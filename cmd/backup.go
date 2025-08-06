@@ -30,12 +30,11 @@ var backupCmd = &cobra.Command{
 	Long: fmt.Sprintf(`%s
 
 'backup' backups your vault to a directory. These backups are encrypted in the
-same way as your vault, and can be decrypted with the 'restore' command. 
-
-Backup essentially copies the contents of your vault to a backup file.
+same way as your vault, and can be restored with the 'restore' command. 
 
 Ex.
 	$ gopass backup
+	Backup YYYY-MM-DD_HH-MM-SS created successfully
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := BackupCmdHandler(cmd, args); err != nil {
