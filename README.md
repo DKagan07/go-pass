@@ -30,6 +30,7 @@ Everything is local to your computer! Nothing is stored on the internet
 ### Commands (`gopass <command>`)
 
 - **add**: Add a new password to the vault
+- **backup**: Backups up your vault
 - **clean**: Removes all storage of passwords
 - **completion**: Generate the autocompletion script for the specified shell
 - **delete**: Delete a specific item from your vault
@@ -39,6 +40,7 @@ Everything is local to your computer! Nothing is stored on the internet
 - **init**: Initialize all files and begins use of the app
 - **list**: Lists all the sources of your login infos
 - **login**: Login to the app
+- **restore**: Restores your vault from a chosen backup
 - **search**: Insensitive-case search for sources in your vault. Will return a list of all matches
 - **update**: Updates an entry in your vault with specific flags
 
