@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 	"time"
@@ -43,17 +44,13 @@ func init() {
 	rootCmd.AddCommand(listCmd)
 
 	listCmd.Flags().StringP("name", "n", "", "Searches your list for the specific source")
+	listCmd.Flags().BoolP("backups", "b", false, "Lists your backups")
 }
 
 // ListCmdHandler is the handler function that encapsulates the PrintList
 func ListCmdHandler(cmd *cobra.Command, args []string) error {
 	if len(args) != 0 {
 		return fmt.Errorf("no arguments needed for 'list'. see 'help' for more guidance")
-	}
-
-	sourceName, err := cmd.Flags().GetString("name")
-	if err != nil {
-		return fmt.Errorf("list::getting string from flag: %v", err)
 	}
 
 	cfg, err := utils.CheckConfig("")
@@ -66,9 +63,25 @@ func ListCmdHandler(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("cannot access, need to login")
 	}
 
-	err = PrintList(sourceName, cfg)
+	sourceName, err := cmd.Flags().GetString("name")
 	if err != nil {
-		return fmt.Errorf("error printing list: %v", err)
+		return fmt.Errorf("list::getting string from flag: %v", err)
+	}
+
+	backups, err := cmd.Flags().GetBool("backups")
+	if err != nil {
+		return fmt.Errorf("list::getting bool from flag: %v", err)
+	}
+
+	if !backups {
+		err = PrintList(sourceName, cfg)
+		if err != nil {
+			return fmt.Errorf("error printing list: %v", err)
+		}
+	} else {
+		if err = PrintBackups(); err != nil {
+			return fmt.Errorf("error printing backups: %v", err)
+		}
 	}
 
 	return nil
@@ -115,5 +128,23 @@ func PrintList(sourceName string, cfg model.Config) error {
 	}
 
 	utils.WriteToFile(f, encryptedCipherText)
+	return nil
+}
+
+func PrintBackups() error {
+	dirEntries, err := os.ReadDir(utils.BACKUP_DIR)
+	if err != nil {
+		return err
+	}
+
+	if len(dirEntries) == 0 {
+		fmt.Println("No backups found")
+		return nil
+	}
+
+	for _, v := range dirEntries {
+		fmt.Printf("%s\n", v.Name())
+	}
+
 	return nil
 }
