@@ -78,7 +78,10 @@ func ListCmdHandler(cmd *cobra.Command, args []string) error {
 // If a source name is provided, it will check if the source exists in the vault.
 // If a source name is not provided, it will print all sources in the vault.
 func PrintList(sourceName string, cfg model.Config) error {
-	f := utils.OpenVault(cfg.VaultName)
+	f, err := utils.OpenVault(cfg.VaultName)
+	if err != nil {
+		return fmt.Errorf("opening vault: %v", err)
+	}
 	defer f.Close()
 	entries := crypt.DecryptVault(f)
 

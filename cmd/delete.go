@@ -74,7 +74,10 @@ func DeleteCmdHandler(cmd *cobra.Command, args []string) error {
 // if it exists. If not, it will error and print a message out to user.
 func DeleteItemInVault(cfg model.Config, name string, r io.Reader) error {
 	// TODO: should I add all the open and decrypt into the confirm conditional?
-	f := utils.OpenVault(cfg.VaultName)
+	f, err := utils.OpenVault(cfg.VaultName)
+	if err != nil {
+		return fmt.Errorf("opening vault: %v", err)
+	}
 	defer f.Close()
 
 	entries := crypt.DecryptVault(f)

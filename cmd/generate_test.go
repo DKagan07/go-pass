@@ -3,6 +3,7 @@ package cmd
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -54,6 +55,7 @@ func TestGeneratePassword(t *testing.T) {
 				}
 			}
 
+			time.Sleep(time.Millisecond * 10)
 			assert.Len(t, b, tt.expected)
 			assert.True(t, doesContain)
 		})

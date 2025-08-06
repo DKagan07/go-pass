@@ -143,7 +143,10 @@ func UpdateFlags(cmd *cobra.Command) (Inputs, error) {
 // UpdateEntry contains the logic of actually updating the vault entry and
 // storing it in the vault.
 func UpdateEntry(inputs Inputs, cfg model.Config, sourceName string, is InputSources) error {
-	f := utils.OpenVault(cfg.VaultName)
+	f, err := utils.OpenVault(cfg.VaultName)
+	if err != nil {
+		return fmt.Errorf("opening vault: %v", err)
+	}
 	defer f.Close()
 	entries := crypt.DecryptVault(f)
 
@@ -163,7 +166,7 @@ func UpdateEntry(inputs Inputs, cfg model.Config, sourceName string, is InputSou
 		return fmt.Errorf("'%s' not found", sourceName)
 	}
 
-	ve, err := UpdateVaultEntry(ve, inputs, is)
+	ve, err = UpdateVaultEntry(ve, inputs, is)
 	if err != nil {
 		return err
 	}

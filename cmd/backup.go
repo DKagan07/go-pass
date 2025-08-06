@@ -6,13 +6,13 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path"
 	"time"
 
 	"github.com/spf13/cobra"
 
+	"go-pass/crypt"
 	"go-pass/utils"
 )
 
@@ -90,18 +90,27 @@ func BackupVault(configName, vaultName string, now time.Time) error {
 	fn := fmt.Sprintf(BACKUP_FILE_NAME, now.Format(DATE_FORMAT_STRING))
 
 	backupFilePath := path.Join(utils.BACKUP_DIR, fn)
-	backupFp, err := os.Create(backupFilePath)
+	_, err := os.Create(backupFilePath)
 	if err != nil {
 		return err
 	}
 
-	currentVault := utils.OpenVault(vaultName)
+	currentVault, err := utils.OpenVault(vaultName)
+	if err != nil {
+		return err
+	}
 	defer currentVault.Close()
 
-	_, err = io.Copy(backupFp, currentVault)
+	entries := crypt.DecryptVault(currentVault)
+	b, err := crypt.EncryptVault(entries)
 	if err != nil {
 		return err
 	}
 
+	if err = os.WriteFile(backupFilePath, b, 0600); err != nil {
+		return err
+	}
+
+	fmt.Printf("Backup %s created successfully", fn)
 	return nil
 }

@@ -113,7 +113,10 @@ func AddToVault(source string, ui model.UserInput, cfg model.Config, t int64) er
 		UpdatedAt: t,
 	}
 
-	f := utils.OpenVault(cfg.VaultName)
+	f, err := utils.OpenVault(cfg.VaultName)
+	if err != nil {
+		return fmt.Errorf("opening vault: %v", err)
+	}
 	defer f.Close()
 
 	fStat, err := f.Stat()

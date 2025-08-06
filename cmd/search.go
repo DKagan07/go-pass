@@ -77,7 +77,10 @@ func SearchVault(searchTerm string, cfg model.Config) error {
 		return fmt.Errorf("no search term provided")
 	}
 
-	f := utils.OpenVault(cfg.VaultName)
+	f, err := utils.OpenVault(cfg.VaultName)
+	if err != nil {
+		return fmt.Errorf("opening vault: %v", err)
+	}
 	defer f.Close()
 
 	entries := crypt.DecryptVault(f)

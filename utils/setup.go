@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -70,18 +71,21 @@ func CreateVault(name string) (*os.File, error) {
 
 // OpenVault opens the vault file in which the passwords are stored. It is up to
 // the caller to close the opened file.
-func OpenVault(name string) *os.File {
+func OpenVault(name string) (*os.File, error) {
 	fName := name
 	if name == "" {
 		fName = "pass.json"
 	}
 	vaultPath := path.Join(VAULT_PATH, fName)
 	f, err := os.OpenFile(vaultPath, os.O_RDWR, 0644)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, fmt.Errorf("OpenVault::vault file does not exist")
+	}
 	if err != nil {
-		log.Fatalf("OpenVault::Error reading file %s: %v", vaultPath, err)
+		return nil, fmt.Errorf("OpenVault::Error reading file %s: %v", vaultPath, err)
 	}
 
-	return f
+	return f, nil
 }
 
 // WriteToFile takes a *os.File and the contents wanted in the file, in []byte,
