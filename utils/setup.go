@@ -23,6 +23,7 @@ var (
 	TEST_VAULT_NAME      = "test-vault.json"
 	TEST_CONFIG_NAME     = "test-cfg.json"
 	TEST_MASTER_PASSWORD = []byte("mastahpass")
+	TEST_BACKUP_NAME     = "test-backup__%s.json"
 )
 
 // CreateVault creates a file in a default path. If directories aren't created,

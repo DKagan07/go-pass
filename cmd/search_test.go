@@ -17,11 +17,15 @@ func TestSearchVault(t *testing.T) {
 		error bool
 	}{
 		{name: "no args", args: "", error: true},
-		{name: "one arg", args: "git", error: false},
+		{name: "one arg", args: "test2", error: false},
 	}
-
 	defer cleanup()
-	cfgFile, err := utils.CreateConfig(utils.TEST_VAULT_NAME, utils.TEST_MASTER_PASSWORD, utils.TEST_CONFIG_NAME)
+
+	cfgFile, err := utils.CreateConfig(
+		utils.TEST_VAULT_NAME,
+		utils.TEST_MASTER_PASSWORD,
+		utils.TEST_CONFIG_NAME,
+	)
 	assert.NoError(t, err)
 	defer cfgFile.Close()
 
@@ -35,6 +39,19 @@ func TestSearchVault(t *testing.T) {
 		MasterPassword: utils.TEST_MASTER_PASSWORD,
 		LastVisited:    now,
 	}
+
+	err1 := AddToVault(vaultEntry1, model.UserInput{
+		Username: vaultEntry1,
+		Password: []byte(vaultEntry1),
+	}, cfg, now)
+
+	err2 := AddToVault(vaultEntry2, model.UserInput{
+		Username: vaultEntry2,
+		Password: []byte(vaultEntry2),
+	}, cfg, now)
+
+	assert.NoError(t, err1)
+	assert.NoError(t, err2)
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

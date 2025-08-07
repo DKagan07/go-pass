@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/huh"
@@ -69,10 +70,10 @@ func RestoreCmdHandler(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("cannot access, need to login")
 	}
 
-	return RestoreVault(cfg.VaultName)
+	return RestoreVault(cfg.VaultName, false)
 }
 
-func RestoreVault(vaultName string) error {
+func RestoreVault(vaultName string, test bool) error {
 	// need to make sure the vault is not present
 	_, err := utils.OpenVault(vaultName)
 	if err == nil {
@@ -89,9 +90,20 @@ func RestoreVault(vaultName string) error {
 		backupFileNames = append(backupFileNames, entry.Name())
 	}
 
-	selection, err := getSelection(backupFileNames)
-	if err != nil {
-		return err
+	var selection string
+	// This is jank, but because I dont' know how to mock the testing of 'huh',
+	// I'm just doing this for now
+	if !test {
+		selection, err = getSelection(backupFileNames)
+		if err != nil {
+			return err
+		}
+	} else {
+		for _, entry := range backupFileNames {
+			if strings.Contains(entry, "test") {
+				selection = entry
+			}
+		}
 	}
 
 	restorePath := path.Join(utils.BACKUP_DIR, selection)

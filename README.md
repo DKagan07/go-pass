@@ -7,6 +7,16 @@
 This application encrypts, hashes, and stores passwords.
 Everything is local to your computer! Nothing is stored on the internet
 
+### Features
+
+- Secure storage of passwords locally
+- Encryption of passwords with AES-256-GCM algorithm
+- Hashing of passwords with bcrypt
+- Encrypted Backups
+- Restores form backups
+- Searching through your vault
+- Secure password generation
+
 ### Get Started
 
 1. Ensure you have Golang installed on your system.
