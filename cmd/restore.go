@@ -23,12 +23,23 @@ var restoreCmd = &cobra.Command{
 	Use:   "restore",
 	Short: "Restore restores a backup to your pirmary vault",
 	// TODO: Add a long description here.
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Long: fmt.Sprintf(`%s
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+restore restores a selected backup to become your vault. This is useful for if 
+anything were to happen to your primary vault, or if you wanted to restore a
+previous state, you can.
+
+Use the arrow keys to navigate the backup to be restore, and then press
+'enter' to select it. To cancel, press 'Esc'.
+
+Ex.
+	$ gopass restore
+	Select a backup to restore
+		> backup__YYYY-MM-DD_HH-MM-SS.json
+		backup__YYYY-MM-DD_HH-MM-SS.json
+
+		Vault restored successfully
+`, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := RestoreCmdHandler(cmd, args); err != nil {
 			fmt.Println("Error with 'restore' command: ", err)
@@ -41,18 +52,9 @@ to quickly create a Cobra application.`,
 
 func init() {
 	rootCmd.AddCommand(restoreCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// restoreCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// restoreCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
+// RestoreCmdHandler is the handler for the 'restore' command
 func RestoreCmdHandler(cmd *cobra.Command, args []string) error {
 	if len(args) != 0 {
 		return errors.New(
@@ -73,6 +75,9 @@ func RestoreCmdHandler(cmd *cobra.Command, args []string) error {
 	return RestoreVault(cfg.VaultName, false)
 }
 
+// RestoreVault encapsulates the logic for the 'restore' command. It ensure that
+// the vault is not present, creates one, decrypts the backup, encrypts the
+// contents and writes it to the new vault.
 func RestoreVault(vaultName string, test bool) error {
 	// need to make sure the vault is not present
 	_, err := utils.OpenVault(vaultName)
@@ -91,8 +96,8 @@ func RestoreVault(vaultName string, test bool) error {
 	}
 
 	var selection string
-	// This is jank, but because I dont' know how to mock the testing of 'huh',
-	// I'm just doing this for now
+	// This feels jank, but because I dont' know how to mock the testing of
+	// 'huh', I'm just doing this for now.
 	if !test {
 		selection, err = getSelection(backupFileNames)
 		if err != nil {
@@ -129,9 +134,12 @@ func RestoreVault(vaultName string, test bool) error {
 
 	utils.WriteToFile(v, backupBytes)
 
+	fmt.Printf("Vault restored successfully")
 	return nil
 }
 
+// getSelection is a helper function that handles the 'huh' functionality for
+// selecting the backup file to restore
 func getSelection(entryNames []string) (string, error) {
 	var selection string
 	form := huh.NewForm(

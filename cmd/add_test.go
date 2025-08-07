@@ -100,6 +100,8 @@ func TestAddAddToVault(t *testing.T) {
 	assert.Greater(t, fStat.Size(), int64(2))
 }
 
+// cleanup is a helper function to delete the vault and config files in the cmd
+// tests
 func cleanup() {
 	_ = os.Remove(path.Join(utils.VAULT_PATH, utils.TEST_VAULT_NAME))
 	_ = os.Remove(path.Join(utils.CONFIG_PATH, utils.TEST_CONFIG_NAME))
