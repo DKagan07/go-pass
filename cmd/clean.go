@@ -9,7 +9,6 @@ import (
 	"io"
 	"os"
 	"path"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -56,13 +55,12 @@ func CleanCmdHandler(cmd *cobra.Command, args []string) error {
 // Clean files separates the logic from the handler. This prompts the user and
 // deletes the files if the user says yes.
 func CleanFiles(cfg model.Config, r io.Reader) error {
-	fmt.Println("'clean' will remove your config and your vault.")
-	ans, err := utils.GetInputFromUser(r, "Are you sure? (y/n)")
+	clean, err := utils.ConfirmPrompt(utils.CleanPrompt, "", os.Stdin)
 	if err != nil {
-		return fmt.Errorf("clean: error with user input: %v", err)
+		return fmt.Errorf("failed to confirm clean: %v", err)
 	}
 
-	if strings.EqualFold(ans, "y") {
+	if clean {
 		if err := RemoveConfig(""); err != nil {
 			return fmt.Errorf("error removing config: %v", err)
 		}
