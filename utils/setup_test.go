@@ -46,8 +46,8 @@ func TestOpenVault(t *testing.T) {
 	f.Close()
 
 	f2, err := OpenVault(TEST_FILE_NAME)
-	defer f2.Close()
 	assert.NoError(err)
+	defer f2.Close()
 
 	fPath := path.Join(VAULT_PATH, TEST_FILE_NAME)
 
