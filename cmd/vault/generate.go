@@ -1,7 +1,7 @@
 /*
 Copyright © 2025 DKagan07
 */
-package cmd
+package vault
 
 import (
 	"crypto/rand"
@@ -18,15 +18,13 @@ import (
 	"go-pass/utils"
 )
 
-const defaultChars = "!@#$%^&*"
+var DefaultChars = "!@#$%^&*"
 
 // generateCmd represents the generate command
-var generateCmd = &cobra.Command{
+var GenerateCmd = &cobra.Command{
 	Use:   "generate",
 	Short: "Generate generates a secure password for you",
-	Long: fmt.Sprintf(`%s
-
-'generate' is a helper command that helps generate a strong password for you!
+	Long: `'generate' is a helper command that helps generate a strong password for you!
 It will print it out to the terminal, and is then copy-pastable. The default for
 special characters are '%s'. You can adjust this in any way you like by
 using the -c flag.
@@ -37,23 +35,13 @@ that satisfies a password input because these are created with a
 cryptographically secure RNG. Please modify and change that if needed.
 (If using the -a flag, run 'gopass update <source_name> to update the password')
 ***
-`, LongDescriptionText, defaultChars),
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := GenerateCmdHandler(cmd, args); err != nil {
 			fmt.Println("Error with 'generate' command: ", err)
 			return
 		}
 	},
-}
-
-func init() {
-	rootCmd.AddCommand(generateCmd)
-
-	specialCharsStr := "List the special characters you want to add to your password generation. If adjustment is necessary, list all the special characters you want. IMPORTANT: BE SURE TO USE SINGLE QUOTES."
-
-	generateCmd.Flags().IntP("length", "l", 24, "Decides length of new password")
-	generateCmd.Flags().StringP("add", "a", "", "Add a newly generated password to your vault")
-	generateCmd.Flags().StringP("specialChars", "c", defaultChars, specialCharsStr)
 }
 
 // GenerateCmdHandler is the handler function that encapsulates the GeneratePassword

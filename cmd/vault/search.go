@@ -1,7 +1,7 @@
 /*
 Copyright © 2025 DKagan07
 */
-package cmd
+package vault
 
 import (
 	"errors"
@@ -18,12 +18,10 @@ import (
 )
 
 // searchCmd represents the search command
-var searchCmd = &cobra.Command{
+var SearchCmd = &cobra.Command{
 	Use:   "search",
 	Short: "Search for a password in the vault",
-	Long: fmt.Sprintf(`%s
-
-'search' searches your vault for a source that matches the search term. This
+	Long: `'search' searches your vault for a source that matches the search term. This
 search is case insensitive, and will list all sources that match the search term.
 
 Ex.
@@ -34,7 +32,7 @@ Ex.
 Ex. 
 	$ gopass search gitlab
 	GitLab
-`, LongDescriptionText),
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := SearchCmdHandler(cmd, args); err != nil {
 			return
@@ -42,9 +40,9 @@ Ex.
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(searchCmd)
-}
+// func init() {
+// 	rootCmd.AddCommand(searchCmd)
+// }
 
 // SearchCmdHandler is the handler function that encapsulates the SearchVault
 // logic and runs some checks beforehand.

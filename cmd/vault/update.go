@@ -1,7 +1,7 @@
 /*
 Copyright © 2025 DKagan07
 */
-package cmd
+package vault
 
 import (
 	"errors"
@@ -19,12 +19,10 @@ import (
 )
 
 // updateCmd represents the update command
-var updateCmd = &cobra.Command{
+var UpdateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Updates an entry in your vault with specific flags",
-	Long: fmt.Sprintf(`%s
-
-'update' updates a current entry in your vault. The command takes in the name
+	Long: `'update' updates a current entry in your vault. The command takes in the name
 of your entry. To update the entry, at least 1 flag is required. There are 4
 flags, each of them to update part of the entry. Minimum of 1, but can have
 multiple if multiple fields needs updating.
@@ -39,22 +37,13 @@ Ex.
 	$ gopass update github -u -s
 	Source name: <updated name for entry>
 	Username: <update username>
-`, LongDescriptionText),
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := UpdateCmdHandler(cmd, args); err != nil {
 			fmt.Printf("Error with 'update' command: %v\n", err)
 			return
 		}
 	},
-}
-
-func init() {
-	rootCmd.AddCommand(updateCmd)
-
-	updateCmd.Flags().BoolP("source", "s", false, "Update the source name")
-	updateCmd.Flags().BoolP("username", "u", false, "Update the login username")
-	updateCmd.Flags().BoolP("password", "p", false, "Update the password")
-	updateCmd.Flags().BoolP("notes", "n", false, "Update the notes")
 }
 
 type Inputs struct {

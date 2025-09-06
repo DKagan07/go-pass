@@ -1,7 +1,7 @@
 /*
 Copyright © 2025 DKagan07
 */
-package cmd
+package vault
 
 import (
 	"errors"
@@ -19,12 +19,10 @@ import (
 )
 
 // addCmd represents the add command
-var addCmd = &cobra.Command{
+var AddCmd = &cobra.Command{
 	Use:   "add",
 	Short: "Add a new password to the vault",
-	Long: fmt.Sprintf(`%s
-
-'add' adds a new password to the vault. The passwords are encrypted and
+	Long: `'add' adds a new password to the vault. The passwords are encrypted and
 stored securely. 'add' takes a source, and then you are prompted to add a
 username and password, and some notes. This notes section is for extra
 information needed for any login. If multiple pieces of information are needed,
@@ -34,11 +32,11 @@ information.
 NOTE: Entries are case sensitive in order to retreive. When you use the list
 cmd, that is NOT case sensitive.
 Ex.
-	$ gopass add github
+	$ gopass vault add github
 	Username: me@example.com
 	Password: ********
 	Notes: <any extra notes, can be empty>
-`, LongDescriptionText),
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := AddCmdHandler(cmd, args); err != nil {
 			fmt.Println("Error with 'add' command: ", err)
@@ -47,9 +45,9 @@ Ex.
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(addCmd)
-}
+// func init() {
+// 	rootCmd.AddCommand(addCmd)
+// }
 
 // AddCmdHandler is the handler that orchestrates the 'add' command.
 func AddCmdHandler(cmd *cobra.Command, args []string) error {

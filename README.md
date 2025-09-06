@@ -35,24 +35,37 @@ Everything is local to your computer! Nothing is stored on the internet
 
    a. If you want to move this binary to another custom path, you can run `make PREFIX=/custom/path`. Ensure this has a `bin` directory, and is in your `$PATH`.
 
-6. You can now run `gopass <command>`!
+6. You can now run `gopass <command> <sub_command>`!
 
-### Commands (`gopass <command>`)
+### Commands
+
+Commands are divided into different categories. The main category are 'vault' related commands
+
+#### Vault Commands
 
 - **add**: Add a new password to the vault
 - **backup**: Backups up your vault
-- **clean**: Removes all storage of passwords
-- **completion**: Generate the autocompletion script for the specified shell
 - **delete**: Delete a specific item from your vault
 - **generate**: Generates a secure password with any length (default is 24 characters)
 - **get**: Get specific information from your vault by source name
-- **help**: Help about any command
-- **init**: Initialize all files and begins use of the app
 - **list**: Lists all the sources of your login infos
-- **login**: Login to the app
 - **restore**: Restores your vault from a chosen backup
 - **search**: Insensitive-case search for sources in your vault. Will return a list of all matches
 - **update**: Updates an entry in your vault with specific flags
+
+#### General Commands
+
+- **clean**: Removes all storage of passwords
+- **completion**: Generate the autocompletion script for the specified shell
+- **init**: Initialize all files and begins use of the app
+- **login**: Login to the app
+- **help**: Help for all commands and sub_commands
+
+#### Config Commands
+
+TODO
+
+- **change-masterpass**: Change the master password, used for logging in
 
 ### Workflow:
 

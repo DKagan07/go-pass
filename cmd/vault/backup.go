@@ -1,7 +1,7 @@
 /*
 Copyright © 2025 DKagan07
 */
-package cmd
+package vault
 
 import (
 	"errors"
@@ -24,18 +24,16 @@ const (
 )
 
 // backupCmd represents the backup command
-var backupCmd = &cobra.Command{
+var BackupCmd = &cobra.Command{
 	Use:   "backup",
 	Short: "Backup your vault",
-	Long: fmt.Sprintf(`%s
-
-'backup' backups your vault to a directory. These backups are encrypted in the
+	Long: `'backup' backups your vault to a directory. These backups are encrypted in the
 same way as your vault, and can be restored with the 'restore' command. 
 
 Ex.
-	$ gopass backup
+	$ gopass vault backup
 	Backup YYYY-MM-DD_HH-MM-SS created successfully
-`, LongDescriptionText),
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := BackupCmdHandler(cmd, args); err != nil {
 			fmt.Println("Error with 'backup' command: ", err)
@@ -44,14 +42,9 @@ Ex.
 	},
 }
 
-func init() {
-	rootCmd.AddCommand(backupCmd)
-
-	// TODO: Think about any sort of flags that could be added
-
-	// ex.
-	// backupCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-}
+// TODO: Think about any sort of flags that could be added
+// ex.
+// backupCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
 // BackupCmdHandler is the handler function that encapsulates the logic of
 // creating a backup of the vault. This is stored in a different directory

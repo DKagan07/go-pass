@@ -1,7 +1,7 @@
 /*
 Copyright © 2025 DKagan07
 */
-package cmd
+package vault
 
 import (
 	"errors"
@@ -19,13 +19,10 @@ import (
 )
 
 // restoreCmd represents the restore command
-var restoreCmd = &cobra.Command{
+var RestoreCmd = &cobra.Command{
 	Use:   "restore",
 	Short: "Restore restores a backup to your pirmary vault",
-	// TODO: Add a long description here.
-	Long: fmt.Sprintf(`%s
-
-restore restores a selected backup to become your vault. This is useful for if 
+	Long: `'restore' restores a selected backup to become your vault. This is useful for if 
 anything were to happen to your primary vault, or if you wanted to restore a
 previous state, you can.
 
@@ -33,13 +30,13 @@ Use the arrow keys to navigate the backup to be restore, and then press
 'enter' to select it. To cancel, press 'Esc'.
 
 Ex.
-	$ gopass restore
+	$ gopass vault restore
 	Select a backup to restore
 		> backup__YYYY-MM-DD_HH-MM-SS.json
 		backup__YYYY-MM-DD_HH-MM-SS.json
 
 		Vault restored successfully
-`, LongDescriptionText),
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := RestoreCmdHandler(cmd, args); err != nil {
 			fmt.Println("Error with 'restore' command: ", err)
@@ -48,10 +45,6 @@ Ex.
 
 		fmt.Println("restore called")
 	},
-}
-
-func init() {
-	rootCmd.AddCommand(restoreCmd)
 }
 
 // RestoreCmdHandler is the handler for the 'restore' command

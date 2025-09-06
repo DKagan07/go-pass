@@ -1,4 +1,4 @@
-package cmd
+package vault
 
 import (
 	"fmt"
@@ -13,8 +13,15 @@ import (
 	"go-pass/utils"
 )
 
-func TestRestoreVault(t *testing.T) {
-	defer cleanup()
+var (
+	vaultEntry1 = "test1"
+	vaultEntry2 = "test2"
+	vaultEntry3 = "test3"
+)
+
+func TestBackupVault(t *testing.T) {
+	// removes the config and vault
+	defer utils.TestCleanup()
 	assert := assert.New(t)
 
 	cfgFile, err := utils.CreateConfig(
@@ -52,18 +59,26 @@ func TestRestoreVault(t *testing.T) {
 	}, cfg, now.UnixMilli())
 	assert.NoError(err)
 
+	vaultStat, err := vaultFile.Stat()
+	assert.NoError(err)
+	vaultSize := vaultStat.Size()
+
 	err = BackupVault(utils.TEST_CONFIG_NAME, utils.TEST_VAULT_NAME, utils.TEST_BACKUP_NAME, now)
 	assert.NoError(err)
 
-	backupFn := fmt.Sprintf(utils.TEST_BACKUP_NAME, now.Format(DATE_FORMAT_STRING))
-	// cleanup the backup file after the test is done
-	defer os.Remove(path.Join(utils.BACKUP_DIR, backupFn))
-
-	// need to remove the test vault
-	testVault := path.Join(utils.VAULT_PATH, utils.TEST_VAULT_NAME)
-	err = os.Remove(testVault)
+	backupFileName := fmt.Sprintf(utils.TEST_BACKUP_NAME, now.Format(DATE_FORMAT_STRING))
+	backupFile, err := os.Open(
+		path.Join(utils.BACKUP_DIR, backupFileName),
+	)
 	assert.NoError(err)
+	defer backupFile.Close()
 
-	err = RestoreVault(utils.TEST_VAULT_NAME, true)
+	backupStat, err := backupFile.Stat()
+	assert.NoError(err)
+	assert.Greater(backupStat.Size(), int64(0))
+	assert.Equal(backupStat.Size(), vaultSize)
+
+	// backup cleanup
+	err = os.Remove(path.Join(utils.BACKUP_DIR, backupFileName))
 	assert.NoError(err)
 }

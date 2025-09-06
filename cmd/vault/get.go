@@ -1,7 +1,7 @@
 /*
 Copyright © 2025 DKagan07
 */
-package cmd
+package vault
 
 import (
 	"fmt"
@@ -15,12 +15,10 @@ import (
 )
 
 // getCmd represents the get command
-var getCmd = &cobra.Command{
+var GetCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get specific information from your vault by source name",
-	Long: fmt.Sprintf(`%s
-
-'get' gets a specific source, case SENSITIVE, from the vault and returns the
+	Long: `'get' gets a specific source, case SENSITIVE, from the vault and returns the
 credentials from the name of the source. If the source name has a <Space> in it,
 you have to surround the source name with double quotes.
 
@@ -29,22 +27,18 @@ If you want to see if a specific source is in the vault, you can use the:
 command.
 
 Ex.
-$ gopass get Google
+$ gopass vault get Google
 Name: Google
 	Username: <username>
 	Password: <human-readable password>
 	Notes: <will show if any notes are present>
-`, LongDescriptionText),
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := GetCmdHandler(cmd, args); err != nil {
 			fmt.Printf("Error with 'get' command: %v\n", err)
 			return
 		}
 	},
-}
-
-func init() {
-	rootCmd.AddCommand(getCmd)
 }
 
 // GetCmdHandler is the handler function that encapsulates the GetItemsFromVault

@@ -1,4 +1,4 @@
-package cmd
+package vault
 
 import (
 	"strings"
@@ -11,14 +11,8 @@ import (
 	"go-pass/utils"
 )
 
-var (
-	vaultEntry1 = "test1"
-	vaultEntry2 = "test2"
-	vaultEntry3 = "test3"
-)
-
 func TestDeleteItemInVault(t *testing.T) {
-	defer cleanup()
+	defer utils.TestCleanup()
 
 	cfgFile, err := utils.CreateConfig(
 		utils.TEST_VAULT_NAME,
@@ -61,7 +55,7 @@ func TestDeleteItemInVault(t *testing.T) {
 }
 
 func TestDeleteItemInVaultNotExist(t *testing.T) {
-	defer cleanup()
+	defer utils.TestCleanup()
 
 	cfgFile, err := utils.CreateConfig(
 		utils.TEST_VAULT_NAME,

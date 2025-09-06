@@ -1,7 +1,7 @@
 /*
 Copyright © 2025 DKagan07
 */
-package cmd
+package vault
 
 import (
 	"errors"
@@ -20,26 +20,20 @@ import (
 )
 
 // deleteCmd represents the delete command
-var deleteCmd = &cobra.Command{
+var DeleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete a specific item frmo your vault",
-	Long: fmt.Sprintf(`%s
-
-'delete' deletes a specific source name from your vault. This HAS to be case
+	Long: `'delete' deletes a specific source name from your vault. This HAS to be case
 sensitive.
 Ex.
-	$ gopass delete google
-`, LongDescriptionText),
+	$ gopass vault delete google
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := DeleteCmdHandler(cmd, args); err != nil {
 			fmt.Println("Error with 'delete' command: ", err)
 			return
 		}
 	},
-}
-
-func init() {
-	rootCmd.AddCommand(deleteCmd)
 }
 
 // DeleteCmdHandler is the handler function that encapsulates the delete logic

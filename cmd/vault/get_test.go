@@ -1,4 +1,4 @@
-package cmd
+package vault
 
 import (
 	"testing"
@@ -12,8 +12,12 @@ import (
 )
 
 func TestGetItemFromVault_HappyPath(t *testing.T) {
-	defer cleanup()
-	cfgFile, err := utils.CreateConfig(utils.TEST_VAULT_NAME, utils.TEST_MASTER_PASSWORD, utils.TEST_CONFIG_NAME)
+	defer utils.TestCleanup()
+	cfgFile, err := utils.CreateConfig(
+		utils.TEST_VAULT_NAME,
+		utils.TEST_MASTER_PASSWORD,
+		utils.TEST_CONFIG_NAME,
+	)
 	assert.NoError(t, err)
 	defer cfgFile.Close()
 
@@ -49,8 +53,12 @@ func TestGetItemFromVault_HappyPath(t *testing.T) {
 }
 
 func TestGetItemFromVault_NotExist(t *testing.T) {
-	defer cleanup()
-	cfgFile, err := utils.CreateConfig(utils.TEST_VAULT_NAME, utils.TEST_MASTER_PASSWORD, utils.TEST_CONFIG_NAME)
+	defer utils.TestCleanup()
+	cfgFile, err := utils.CreateConfig(
+		utils.TEST_VAULT_NAME,
+		utils.TEST_MASTER_PASSWORD,
+		utils.TEST_CONFIG_NAME,
+	)
 	assert.NoError(t, err)
 	defer cfgFile.Close()
 	vaultFile, err := utils.CreateVault(utils.TEST_VAULT_NAME)

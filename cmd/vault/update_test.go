@@ -1,4 +1,4 @@
-package cmd
+package vault
 
 import (
 	"strings"
@@ -12,8 +12,8 @@ import (
 )
 
 func TestUpdateEntry(t *testing.T) {
-	cleanup()
-	defer cleanup()
+	utils.TestCleanup()
+	defer utils.TestCleanup()
 
 	cF, err := utils.CreateConfig(utils.TEST_VAULT_NAME, utils.TEST_MASTER_PASSWORD, utils.TEST_CONFIG_NAME)
 	assert.NoError(t, err)

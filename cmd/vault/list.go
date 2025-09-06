@@ -1,7 +1,7 @@
 /*
 Copyright © 2025 DKagan07
 */
-package cmd
+package vault
 
 import (
 	"fmt"
@@ -18,33 +18,24 @@ import (
 )
 
 // listCmd represents the list command
-var listCmd = &cobra.Command{
+var ListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "Lists all the sources of your login infos",
-	Long: fmt.Sprintf(`%s
-
-'list' lists all the sources of login info that's currently in your vault. A
+	Long: `'list' lists all the sources of login info that's currently in your vault. A
 source is, for example, 'Google', when it comes to what username and password
 are stored with it.
 Ex.
-	$ gopass list
+	$ gopass vault list
 	Google
 	Github
 	...(etc.)
-`, LongDescriptionText),
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := ListCmdHandler(cmd, args); err != nil {
 			fmt.Printf("Error with 'list' command: %v\n", err)
 			return
 		}
 	},
-}
-
-func init() {
-	rootCmd.AddCommand(listCmd)
-
-	listCmd.Flags().StringP("name", "n", "", "Searches your list for the specific source")
-	listCmd.Flags().BoolP("backups", "b", false, "Lists your backups")
 }
 
 // ListCmdHandler is the handler function that encapsulates the PrintList

@@ -41,8 +41,8 @@ func TestDoesConfigExist(t *testing.T) {
 }
 
 func TestCreateFiles(t *testing.T) {
-	cleanup()
-	defer cleanup()
+	utils.TestCleanup()
+	defer utils.TestCleanup()
 
 	err := CreateFiles(utils.TEST_VAULT_NAME, utils.TEST_CONFIG_NAME, utils.TEST_MASTER_PASSWORD)
 	assert.NoError(t, err)

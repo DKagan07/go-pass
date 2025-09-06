@@ -1,4 +1,4 @@
-package cmd
+package vault
 
 import (
 	"testing"
@@ -19,7 +19,7 @@ func TestSearchVault(t *testing.T) {
 		{name: "no args", args: "", error: true},
 		{name: "one arg", args: "test2", error: false},
 	}
-	defer cleanup()
+	defer utils.TestCleanup()
 
 	cfgFile, err := utils.CreateConfig(
 		utils.TEST_VAULT_NAME,

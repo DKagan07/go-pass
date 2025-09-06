@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const LongDescriptionText = `GoPass is a CLI tool that help stores your passwords with security in mind.
+var LongDescriptionText = `GoPass is a CLI tool that help stores your passwords with security in mind.
 This application encrypts, hashes, and stores passwords.
 Everything is local to your computer! Nothing is stored on the internet.`
 

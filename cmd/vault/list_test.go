@@ -1,4 +1,4 @@
-package cmd
+package vault
 
 import (
 	"testing"
@@ -12,7 +12,11 @@ import (
 
 func TestPrintList(t *testing.T) {
 	assert := assert.New(t)
-	c, err := utils.CreateConfig(utils.TEST_VAULT_NAME, utils.TEST_MASTER_PASSWORD, utils.TEST_CONFIG_NAME)
+	c, err := utils.CreateConfig(
+		utils.TEST_VAULT_NAME,
+		utils.TEST_MASTER_PASSWORD,
+		utils.TEST_CONFIG_NAME,
+	)
 	c.Close()
 	assert.NoError(err)
 
@@ -50,7 +54,11 @@ func TestPrintList(t *testing.T) {
 // This simulates having the flag present
 func TestPrintList_OneEntry(t *testing.T) {
 	assert := assert.New(t)
-	c, err := utils.CreateConfig(utils.TEST_VAULT_NAME, utils.TEST_MASTER_PASSWORD, utils.TEST_CONFIG_NAME)
+	c, err := utils.CreateConfig(
+		utils.TEST_VAULT_NAME,
+		utils.TEST_MASTER_PASSWORD,
+		utils.TEST_CONFIG_NAME,
+	)
 	c.Close()
 	assert.NoError(err)
 

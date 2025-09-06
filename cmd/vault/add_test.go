@@ -1,8 +1,6 @@
-package cmd
+package vault
 
 import (
-	"os"
-	"path"
 	"testing"
 	"time"
 
@@ -13,7 +11,7 @@ import (
 )
 
 func TestAddCheckConfig(t *testing.T) {
-	cleanup()
+	utils.TestCleanup()
 	tests := []struct {
 		name          string
 		configPresent bool
@@ -59,7 +57,7 @@ func TestAddCheckConfig(t *testing.T) {
 				assert.Error(err)
 				assert.Equal(model.Config{}, cfg)
 			}
-			cleanup()
+			utils.TestCleanup()
 		})
 
 		time.Sleep(time.Millisecond * 100)
@@ -67,7 +65,7 @@ func TestAddCheckConfig(t *testing.T) {
 }
 
 func TestAddAddToVault(t *testing.T) {
-	defer cleanup()
+	defer utils.TestCleanup()
 
 	cfgF, err := utils.CreateConfig(
 		utils.TEST_VAULT_NAME,
@@ -98,11 +96,4 @@ func TestAddAddToVault(t *testing.T) {
 
 	fStat, _ := vaultF.Stat()
 	assert.Greater(t, fStat.Size(), int64(2))
-}
-
-// cleanup is a helper function to delete the vault and config files in the cmd
-// tests
-func cleanup() {
-	_ = os.Remove(path.Join(utils.VAULT_PATH, utils.TEST_VAULT_NAME))
-	_ = os.Remove(path.Join(utils.CONFIG_PATH, utils.TEST_CONFIG_NAME))
 }
