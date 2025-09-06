@@ -18,7 +18,7 @@ var configCmd = &cobra.Command{
 	Long: fmt.Sprintf(`%s
 
 'config' is acting as a parent command for config-related commands.
-Please use the 'help' flag for additional information
+Please use the 'help' flag for additional information.
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("config called")
