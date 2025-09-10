@@ -33,10 +33,17 @@ func GetInputFromUser(r io.Reader, field string) (string, error) {
 	return cleanString(username), nil
 }
 
-func GetPasswordFromUser(master bool, r io.Reader) ([]byte, error) {
+// GetPasswordFromUser reads the password using the 'term' package from r.
+// 'again' is an optional parameter specifically used by change_masterpass to
+// change the prompt.
+func GetPasswordFromUser(master bool, r io.Reader, again ...bool) ([]byte, error) {
 	phrase := "Password: "
 	if master {
 		phrase = "Master Password: "
+
+		if len(again) > 0 && again[0] {
+			phrase = "New Master Password again: "
+		}
 	}
 
 	fmt.Print(phrase)
@@ -47,7 +54,7 @@ func GetPasswordFromUser(master bool, r io.Reader) ([]byte, error) {
 	b, err := term.ReadPassword(int(fd.Fd()))
 	fmt.Println()
 	if len(b) == 0 {
-		return nil, errors.New("Must enter a password")
+		return nil, errors.New("must enter a password")
 	}
 	return b, err
 }

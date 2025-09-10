@@ -4,36 +4,115 @@ Copyright © 2025 DKagan07
 package config
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
+	"os"
+	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/crypto/bcrypt"
+
+	"go-pass/crypt"
+	"go-pass/model"
+	"go-pass/utils"
 )
 
 // changeMasterpassCmd represents the changeMasterpass command
 var ChangeMasterpassCmd = &cobra.Command{
 	Use:   "change_masterpass",
 	Short: "Changes your master password, used for logging in",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Long: `'change_masterpass' changes the master password, used to login
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+Ex. 
+	$gopass config change_masterpass
+	Master Password: <master_pass>
+	Master Password: <new_master_pass>
+	Input Master Password again: <new_master_pass>
+	Success! Master Password changed.
+`,
+
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("changeMasterpass called")
+		if err := ChangeMasterpassCmdHandler(cmd, args); err != nil {
+			fmt.Println("Error with 'change_masterpass' command: ", err)
+			return
+		}
 	},
 }
 
-func init() {
-	// ConfigCmd.AddCommand(changeMasterpassCmd)
+func ChangeMasterpassCmdHandler(cmd *cobra.Command, args []string) error {
+	cfg, err := utils.CheckConfig("")
+	if err != nil {
+		return err
+	}
 
-	// Here you will define your flags and configuration settings.
+	now := time.Now().UnixMilli()
+	if !utils.IsAccessBeforeLogin(cfg, now) {
+		return errors.New("cannot access, need to login")
+	}
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// changeMasterpassCmd.PersistentFlags().String("foo", "", "A help for foo")
+	err = ChangeMasterpass(cfg)
+	if err != nil {
+		return fmt.Errorf("error: %w", err)
+	}
+	return nil
+}
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// changeMasterpassCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+func ChangeMasterpass(cfg model.Config) error {
+	fmt.Println(strings.Repeat("*", 24))
+	fmt.Println("Input current password:")
+	fmt.Println(strings.Repeat("*", 24))
+	password, err := utils.GetPasswordFromUser(true, os.Stdin)
+	if err != nil {
+		return err
+	}
+
+	if err := bcrypt.CompareHashAndPassword(cfg.MasterPassword, password); err != nil {
+		fmt.Println("passwords don't match")
+		return errors.New("passwords don't match")
+	}
+
+	fmt.Println("Passwords match!")
+
+	fmt.Println()
+	fmt.Println(strings.Repeat("*", 20))
+	fmt.Println("New Master Password")
+	fmt.Println(strings.Repeat("*", 20))
+
+	newPass, err := utils.GetPasswordFromUser(true, os.Stdin)
+	if err != nil {
+		return err
+	}
+
+	confirmedNewPass, err := utils.GetPasswordFromUser(true, os.Stdin, true)
+	if err != nil {
+		return err
+	}
+
+	if !bytes.Equal(newPass, confirmedNewPass) {
+		return errors.New("passwords do not match")
+	}
+
+	bNewPass, err := bcrypt.GenerateFromPassword(newPass, bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	cfg.MasterPassword = bNewPass
+	cfgB, err := crypt.EncryptConfig(cfg)
+	if err != nil {
+		return err
+	}
+
+	cfgFile, err := os.OpenFile(utils.CONFIG_FILE, os.O_RDWR, 0644)
+	if err != nil {
+		return err
+	}
+	defer cfgFile.Close()
+
+	utils.WriteToFile(cfgFile, cfgB)
+
+	fmt.Println("Success! Master Password changed.")
+	return nil
 }
