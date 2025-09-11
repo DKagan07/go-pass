@@ -51,6 +51,7 @@ func TestAddCheckConfig(t *testing.T) {
 					MasterPassword: utils.TEST_MASTER_PASSWORD,
 					VaultName:      utils.TEST_VAULT_NAME,
 					LastVisited:    time,
+					Timeout:        utils.THIRTY_MINUTES,
 				}, cfg)
 				assert.NoError(err)
 			} else {

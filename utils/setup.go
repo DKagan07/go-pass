@@ -112,7 +112,7 @@ func WriteToFile(f *os.File, contents []byte) {
 func CreateConfig(
 	vaultName string,
 	mPass []byte,
-	configName string, /*, timeout int*/
+	configName string,
 ) (*os.File, error) {
 	err := os.MkdirAll(CONFIG_PATH, 0700)
 	if err != nil {
@@ -137,7 +137,7 @@ func CreateConfig(
 			MasterPassword: mPass,
 			VaultName:      vaultName,
 			LastVisited:    now,
-			// Timeout:        timeout,
+			Timeout:        THIRTY_MINUTES,
 		}
 
 		cipherText, err := crypt.EncryptConfig(cfg)
@@ -182,9 +182,9 @@ func OpenConfig(fn string) (*os.File, bool, error) {
 }
 
 // IsAccessBeforeLogin returns true if the command being run is before the
-// thirty minutes, false if otherwise
-func IsAccessBeforeLogin(cfg model.Config, t int64) bool {
-	return t <= (cfg.LastVisited + THIRTY_MINUTES)
+// timeout time in the config, in other words, 'logged in', false if otherwise
+func IsAccessBeforeLogin(cfg model.Config, now int64) bool {
+	return now <= (cfg.LastVisited + cfg.Timeout)
 }
 
 // CheckConfig checks to see if the config file exists. If it does, we return

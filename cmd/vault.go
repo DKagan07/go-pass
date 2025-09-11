@@ -37,10 +37,10 @@ func init() {
 	vaultCmd.AddCommand(vault.SearchCmd)
 	vaultCmd.AddCommand(vault.UpdateCmd)
 
-	initFlags()
+	initVaultFlags()
 }
 
-func initFlags() {
+func initVaultFlags() {
 	// Generate Command
 	specialCharsStr := "List the special characters you want to add to your password generation. If adjustment is necessary, list all the special characters you want. IMPORTANT: BE SURE TO USE SINGLE QUOTES."
 	vault.GenerateCmd.Flags().IntP("length", "l", 24, "Decides length of new password")

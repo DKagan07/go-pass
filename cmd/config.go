@@ -29,13 +29,14 @@ func init() {
 	rootCmd.AddCommand(configCmd)
 
 	configCmd.AddCommand(config.ChangeMasterpassCmd)
-	// Here you will define your flags and configuration settings.
+	configCmd.AddCommand(config.UpdateTimeoutCmd)
+	configCmd.AddCommand(config.ViewCmd)
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// configCmd.PersistentFlags().String("foo", "", "A help for foo")
+	initConfigFlags()
+}
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// configCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+func initConfigFlags() {
+	config.UpdateTimeoutCmd.Flags().IntP("hours", "q", 0, "the hours you want to add to timeout")
+	config.UpdateTimeoutCmd.Flags().
+		IntP("minutes", "m", 30, "the minutes you want to add to timeout")
 }

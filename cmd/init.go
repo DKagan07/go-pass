@@ -123,7 +123,7 @@ func EnsureVaultName(s string) string {
 
 // CreateFiles encapsulates the logic of creating the config and vaults, and
 // closing the files
-func CreateFiles(vaultName string, cfgName string, pass []byte /*, timeout int*/) error {
+func CreateFiles(vaultName string, cfgName string, pass []byte) error {
 	f, err := utils.CreateConfig(vaultName, pass, cfgName)
 	if err != nil {
 		return err

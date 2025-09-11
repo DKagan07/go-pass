@@ -63,17 +63,39 @@ func TestOpenVault(t *testing.T) {
 func TestIsAccessBeforeLogin(t *testing.T) {
 	tests := []struct {
 		name     string
-		now      int64
+		config   model.Config
 		expected bool
 	}{
 		{
-			name:     "time is before 30 mins",
-			now:      time.Now().UnixMilli(),
+			name: "time is before 30 mins",
+			config: model.Config{
+				LastVisited: time.Now().Add(time.Minute * -12).UnixMilli(),
+				Timeout:     THIRTY_MINUTES,
+			},
 			expected: true,
 		},
 		{
-			name:     "time is after 30 mins",
-			now:      time.Now().UnixMilli() - time.Hour.Milliseconds(),
+			name: "time is more than 30 mins",
+			config: model.Config{
+				LastVisited: time.Now().Add(time.Minute * -45).UnixMilli(),
+				Timeout:     THIRTY_MINUTES,
+			},
+			expected: false,
+		},
+		{
+			name: "different timeout in config before 30 mins",
+			config: model.Config{
+				LastVisited: time.Now().Add(time.Minute * -45).UnixMilli(),
+				Timeout:     time.Hour.Milliseconds(),
+			},
+			expected: true,
+		},
+		{
+			name: "different timeout in config after range",
+			config: model.Config{
+				LastVisited: time.Now().Add(time.Hour * -2).UnixMilli(),
+				Timeout:     time.Hour.Milliseconds(),
+			},
 			expected: false,
 		},
 	}
@@ -81,12 +103,7 @@ func TestIsAccessBeforeLogin(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			now := time.Now().UnixMilli()
-			cfg := model.Config{
-				MasterPassword: []byte("test"),
-				VaultName:      "pass.json",
-				LastVisited:    tt.now,
-			}
-			assert.Equal(t, tt.expected, IsAccessBeforeLogin(cfg, now))
+			assert.Equal(t, tt.expected, IsAccessBeforeLogin(tt.config, now))
 		})
 	}
 }
@@ -108,9 +125,9 @@ func TestCheckConfig(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		defer cleanup()
 		t.Run(tt.name, func(t *testing.T) {
 			assert := assert.New(t)
+
 			if tt.configPresent {
 				fmt.Println("Creating config")
 				f, err := CreateConfig(
@@ -132,6 +149,7 @@ func TestCheckConfig(t *testing.T) {
 					MasterPassword: TEST_MASTER_PASSWORD,
 					VaultName:      TEST_VAULT_NAME,
 					LastVisited:    time,
+					Timeout:        THIRTY_MINUTES,
 				}, cfg)
 				assert.NoError(err)
 			} else {
@@ -141,6 +159,7 @@ func TestCheckConfig(t *testing.T) {
 			}
 		})
 
+		cleanup()
 		time.Sleep(time.Millisecond * 100)
 	}
 }

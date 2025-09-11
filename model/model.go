@@ -27,7 +27,7 @@ type Config struct {
 	LastVisited int64 `json:"last_visited"`
 	// Timeout is the number of minutes that the user will have to re-input the
 	// password after.
-	// Timeout int `json:"timeout"`
+	Timeout int64 `json:"timeout"`
 }
 
 type UserInput struct {
