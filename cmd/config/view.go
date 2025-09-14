@@ -26,7 +26,6 @@ Ex.
 	$ gopass config view
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("view called")
 		if err := ViewCmdHandler(cmd, args); err != nil {
 			fmt.Printf("error with view: %v\n", err)
 			return
