@@ -22,7 +22,7 @@ import (
 // deleteCmd represents the delete command
 var DeleteCmd = &cobra.Command{
 	Use:   "delete",
-	Short: "Delete a specific item frmo your vault",
+	Short: "Delete a specific item from your vault",
 	Long: `'delete' deletes a specific source name from your vault. This HAS to be case
 sensitive.
 Ex.

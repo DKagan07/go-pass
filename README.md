@@ -53,6 +53,12 @@ Commands are divided into different categories. The main category are 'vault' re
 - **search**: Insensitive-case search for sources in your vault. Will return a list of all matches
 - **update**: Updates an entry in your vault with specific flags
 
+#### Config Commands
+
+- **change_timeout**: Change the timeout of your session -> the longer the time, the longer time to pass before you need to log in
+- **change-masterpass**: Change the master password, used for logging in
+- **view**: Views the current state of your config without showing the Master Password
+
 #### General Commands
 
 - **clean**: Removes all storage of passwords
@@ -60,12 +66,6 @@ Commands are divided into different categories. The main category are 'vault' re
 - **init**: Initialize all files and begins use of the app
 - **login**: Login to the app
 - **help**: Help for all commands and sub_commands
-
-#### Config Commands
-
-TODO
-
-- **change-masterpass**: Change the master password, used for logging in
 
 ### Workflow:
 
@@ -77,4 +77,4 @@ TODO
 
 3. `gopass login` takes the master password and unlocks use of the app.
 
-   a. If the app is not in use for >30 minutes, you will need to login.
+   a. If the app is not in use for your timeout time (default is 30 mins), you will need to login.
