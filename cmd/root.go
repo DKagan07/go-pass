@@ -4,6 +4,7 @@ Copyright © 2025 DKagan07
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -20,12 +21,28 @@ var rootCmd = &cobra.Command{
 	Long:  LongDescriptionText,
 }
 
+var isOther bool
+
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	err := rootCmd.Execute()
-	if err != nil {
+	rootCmd.Flags().
+		BoolVarP(&isOther, "isOther", "o", false, "Use other framework instead of the default")
+
+	if err := rootCmd.ParseFlags(os.Args[1:]); err != nil {
+		fmt.Printf("Error parsing flags: %v\n", err)
 		os.Exit(1)
+	}
+
+	if !isOther {
+		fmt.Println("not other: ", isOther)
+		err := rootCmd.Execute()
+		if err != nil {
+			os.Exit(1)
+		}
+	} else {
+		fmt.Println("other: ", isOther)
+		TviewRun()
 	}
 }
 
