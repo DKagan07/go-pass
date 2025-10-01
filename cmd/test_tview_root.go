@@ -24,12 +24,11 @@ func TviewRun() {
 		panic(err)
 	}
 
-	l := tview.NewList()
-
 	// Problem here v
 	vaultF, _ := utils.OpenVault(cfg.VaultName)
 	vault := crypt.DecryptVault(vaultF)
 
+	l := tview.NewList()
 	for _, v := range vault {
 		l.AddItem(v.Name, "", 0, nil)
 	}
@@ -37,6 +36,13 @@ func TviewRun() {
 	l.SetBorder(true)
 	l.SetTitle("Vault")
 	l.SetBackgroundColor(tcell.ColorBlack)
+
+	box := tview.NewBox().SetBackgroundColor(tcell.ColorBlack)
+	middleL := tview.NewFlex().
+		SetDirection(tview.FlexColumn).
+		AddItem(box, 0, 1, false).
+		AddItem(l, 0, 1, true).
+		AddItem(box, 0, 1, false)
 
 	help := tview.NewTextView().
 		SetText(helpText).
@@ -46,7 +52,7 @@ func TviewRun() {
 
 	container := tview.NewFlex().
 		SetDirection(tview.FlexRow).
-		AddItem(l, 0, 1, true).
+		AddItem(middleL, 0, 1, true).
 		AddItem(help, 3, 1, false)
 	container.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if event.Key() == tcell.KeyEsc {
