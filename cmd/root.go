@@ -35,13 +35,11 @@ func Execute() {
 	}
 
 	if !isOther {
-		fmt.Println("not other: ", isOther)
 		err := rootCmd.Execute()
 		if err != nil {
 			os.Exit(1)
 		}
 	} else {
-		fmt.Println("other: ", isOther)
 		TviewRun()
 	}
 }

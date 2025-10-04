@@ -1,10 +1,13 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
 	"go-pass/crypt"
+	"go-pass/model"
 	"go-pass/utils"
 )
 
@@ -62,6 +65,11 @@ func TviewRun() {
 		return event
 	})
 
+	l.SetSelectedFunc(func(itemIdx int, primaryText, secondaryText string, _ rune) {
+		modal := modalVaultInfo(vault[itemIdx], app, container)
+		app.SetRoot(modal, false)
+	})
+
 	if err := app.SetRoot(container, true).Run(); err != nil {
 		panic(err)
 	}
@@ -71,3 +79,29 @@ func TviewRun() {
 // 	now := time.Now().UnixMilli()
 // 	return !utils.IsAccessBeforeLogin(cfg, now)
 // }
+
+func modalVaultInfo(
+	vaultEntry model.VaultEntry,
+	app *tview.Application,
+	root *tview.Flex,
+) *tview.Modal {
+	// get the vault entry
+
+	text := fmt.Sprintf(`
+	Name: %s
+	Password: %s
+	Notes: %s
+	`, vaultEntry.Name, crypt.DecryptPassword(vaultEntry.Password), vaultEntry.Notes)
+	modal := tview.NewModal().
+		AddButtons([]string{"OK"}).
+		SetBackgroundColor(tcell.ColorBlack)
+
+	modal.SetTitle("Vault Info")
+	modal.SetText(text)
+	modal.SetBorder(true)
+	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+		app.SetRoot(root, true)
+	})
+
+	return modal
+}
