@@ -20,78 +20,54 @@ var helpText = "Commands"
 // CONFIG_PATH = path.Join(home, ".config", "gopass")
 // CONFIG_FILE = path.Join(CONFIG_PATH, "gopass-cfg.json")
 
-func TviewRun() {
-	app := tview.NewApplication()
-	cfg, err := utils.CheckConfig("")
-	if err != nil {
-		panic(err)
+type App struct {
+	App   *tview.Application
+	Vault []model.VaultEntry
+	Cfg   model.Config
+
+	VaultList *tview.List
+	Root      *tview.Flex
+}
+
+func (a *App) PopulateVaultList() {
+	a.VaultList = tview.NewList()
+	for _, v := range a.Vault {
+		a.VaultList.AddItem(v.Name, "", 0, nil)
 	}
 
-	// Problem here v
-	vaultF, _ := utils.OpenVault(cfg.VaultName)
-	vault := crypt.DecryptVault(vaultF)
-
-	l := tview.NewList()
-	for _, v := range vault {
-		l.AddItem(v.Name, "", 0, nil)
-	}
-
-	l.SetBorder(true)
-	l.SetTitle("Vault")
-	l.SetBackgroundColor(tcell.ColorBlack)
-
-	box := tview.NewBox().SetBackgroundColor(tcell.ColorBlack)
-	middleL := tview.NewFlex().
-		SetDirection(tview.FlexColumn).
-		AddItem(box, 0, 1, false).
-		AddItem(l, 0, 1, true).
-		AddItem(box, 0, 1, false)
-
-	help := tview.NewTextView().
-		SetText(helpText).
-		SetDynamicColors(true).
-		SetTextAlign(tview.AlignCenter)
-	help.SetBorder(true).SetTitle(" Help ")
-
-	container := tview.NewFlex().
-		SetDirection(tview.FlexRow).
-		AddItem(middleL, 0, 1, true).
-		AddItem(help, 3, 1, false)
-	container.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Key() == tcell.KeyEsc {
-			app.Stop()
-			return nil
+	a.VaultList.SetBorder(true)
+	a.VaultList.SetTitle("Vault")
+	a.VaultList.SetBackgroundColor(tcell.ColorBlack)
+	a.VaultList.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		// TODO: Add keys to proceed with vault actions
+		switch event.Rune() {
+		// case 'a':
+		// 	AddToVault()
 		}
 		return event
 	})
 
-	l.SetSelectedFunc(func(itemIdx int, primaryText, secondaryText string, _ rune) {
-		modal := modalVaultInfo(vault[itemIdx], app, container)
-		app.SetRoot(modal, false)
+	a.VaultList.SetSelectedFunc(func(itemIdx int, primaryText, secondaryText string, _ rune) {
+		modal := a.ModalVaultInfo(itemIdx)
+		a.App.SetRoot(modal, false)
 	})
-
-	if err := app.SetRoot(container, true).Run(); err != nil {
-		panic(err)
-	}
 }
 
-// func isUserLoggedIn(cfg model.Config) bool {
-// 	now := time.Now().UnixMilli()
-// 	return !utils.IsAccessBeforeLogin(cfg, now)
-// }
+func (a *App) VaultListView() *tview.Flex {
+	box := tview.NewBox().SetBackgroundColor(tcell.ColorBlack)
+	return tview.NewFlex().
+		SetDirection(tview.FlexColumn).
+		AddItem(box, 0, 1, false).
+		AddItem(a.VaultList, 0, 1, true).
+		AddItem(box, 0, 1, false)
+}
 
-func modalVaultInfo(
-	vaultEntry model.VaultEntry,
-	app *tview.Application,
-	root *tview.Flex,
-) *tview.Modal {
-	// get the vault entry
-
+func (a *App) ModalVaultInfo(idx int) *tview.Modal {
 	text := fmt.Sprintf(`
 	Name: %s
 	Password: %s
 	Notes: %s
-	`, vaultEntry.Name, crypt.DecryptPassword(vaultEntry.Password), vaultEntry.Notes)
+	`, a.Vault[idx].Name, crypt.DecryptPassword(a.Vault[idx].Password), a.Vault[idx].Notes)
 	modal := tview.NewModal().
 		AddButtons([]string{"OK"}).
 		SetBackgroundColor(tcell.ColorBlack)
@@ -100,8 +76,56 @@ func modalVaultInfo(
 	modal.SetText(text)
 	modal.SetBorder(true)
 	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
-		app.SetRoot(root, true)
+		a.App.SetRoot(a.Root, true)
 	})
 
 	return modal
 }
+
+func NewApp() *App {
+	return &App{}
+}
+
+func TviewRun() {
+	app := NewApp()
+	app.App = tview.NewApplication()
+	cfg, err := utils.CheckConfig("")
+	if err != nil {
+		panic(err)
+	}
+	app.Cfg = cfg
+
+	vaultF, _ := utils.OpenVault(cfg.VaultName)
+	vault := crypt.DecryptVault(vaultF)
+	app.Vault = vault
+
+	app.PopulateVaultList()
+
+	help := tview.NewTextView().
+		SetText(helpText).
+		SetDynamicColors(true).
+		SetTextAlign(tview.AlignCenter)
+	help.SetBorder(true).SetTitle(" Help ")
+
+	root := tview.NewFlex().
+		SetDirection(tview.FlexRow).
+		AddItem(app.VaultListView(), 0, 1, true).
+		AddItem(help, 3, 1, false)
+	root.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyEsc {
+			app.App.Stop()
+			return nil
+		}
+		return event
+	})
+	app.Root = root
+
+	if err := app.App.SetRoot(app.Root, true).Run(); err != nil {
+		panic(err)
+	}
+}
+
+// func isUserLoggedIn(cfg model.Config) bool {
+// 	now := time.Now().UnixMilli()
+// 	return !utils.IsAccessBeforeLogin(cfg, now)
+// }
