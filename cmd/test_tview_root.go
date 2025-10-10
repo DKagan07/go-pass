@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"sort"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -33,6 +34,11 @@ type App struct {
 }
 
 func (a *App) PopulateVaultList() {
+	// Alphebetize the vault by name
+	sort.Slice(a.Vault, func(i, j int) bool {
+		return a.Vault[i].Name < a.Vault[j].Name
+	})
+
 	a.VaultList = tview.NewList()
 	for _, v := range a.Vault {
 		a.VaultList.AddItem(v.Name, "", 0, nil)
@@ -45,7 +51,8 @@ func (a *App) PopulateVaultList() {
 		// TODO: Add keys to proceed with vault actions
 		switch event.Rune() {
 		case 'a':
-			a.ModalAddVault()
+			flex := a.ModalAddVault()
+			a.App.SetRoot(flex, true)
 		}
 		return event
 	})
@@ -85,12 +92,7 @@ func (a *App) ModalVaultInfo(idx int) *tview.Modal {
 	return modal
 }
 
-// TODO: Figure out which is better, returning a tview.Primitive, or nothing and
-// handling setting the root in the caller.
-// TODO: Figure out how to do this in a modal? Or maybe flex is just better.
-// And get this fucntionality working
-
-func (a *App) ModalAddVault() {
+func (a *App) ModalAddVault() *tview.Flex {
 	inputForm := tview.NewForm().
 		AddInputField("Name", "", 0, nil, nil).
 		AddInputField("Username", "", 0, nil, nil).
@@ -98,16 +100,15 @@ func (a *App) ModalAddVault() {
 		AddInputField("Notes", "", 0, nil, nil)
 
 	inputForm.AddButton("Save", func() {
-		formName := inputForm.GetFormItemByLabel("Name").GetLabel()
-		formUsername := inputForm.GetFormItemByLabel("Username").GetLabel()
-		formPassword := inputForm.GetFormItemByLabel("Password").GetLabel()
-		formNotes := inputForm.GetFormItemByLabel("Notes").GetLabel()
+		formName := inputForm.GetFormItem(0).(*tview.InputField).GetText()
+		formUsername := inputForm.GetFormItem(1).(*tview.InputField).GetText()
+		formPassword := inputForm.GetFormItem(2).(*tview.InputField).GetText()
+		formNotes := inputForm.GetFormItem(3).(*tview.InputField).GetText()
 
-		fmt.Println("formName: ", formName)
-		fmt.Println("formUsername: ", formUsername)
-		fmt.Println("formPassword: ", formPassword)
-		fmt.Println("formNotes: ", formNotes)
+		a.AddToVault(formName, formNotes, formUsername, formPassword)
 
+		a.PopulateVaultList()
+		a.RefreshRoot()
 		a.App.SetRoot(a.Root, true)
 	})
 	inputForm.SetTitle("Add Vault")
@@ -122,26 +123,51 @@ func (a *App) ModalAddVault() {
 		AddItem(inputForm, 0, 1, true).
 		AddItem(nil, 0, 1, false)
 
-	a.App.SetRoot(flex, true)
+	return flex
 }
 
-func (a *App) AddToVault(name, notes, username string, password []byte) {
+func (a *App) AddToVault(name, notes, username, password string) {
+	passwordBytes := []byte(password)
+	encryptedPassword := crypt.EncryptPassword(passwordBytes)
 	now := time.Now().UnixMilli()
+
 	vault := model.VaultEntry{
 		Name:      name,
 		Username:  username,
 		Notes:     notes,
-		Password:  password,
+		Password:  encryptedPassword,
 		UpdatedAt: now,
 	}
-
 	a.Vault = append(a.Vault, vault)
 
 	encryptedCipherText, err := crypt.EncryptVault(a.Vault)
 	if err != nil {
 		panic(err)
 	}
+
 	utils.WriteToFile(a.VaultFile, encryptedCipherText)
+}
+
+func (a *App) RefreshRoot() {
+	help := tview.NewTextView().
+		SetText(helpText).
+		SetDynamicColors(true).
+		SetTextAlign(tview.AlignCenter)
+	help.SetBorder(true).SetTitle(" Help ")
+
+	root := tview.NewFlex().
+		SetDirection(tview.FlexRow).
+		AddItem(a.VaultListView(), 0, 1, true).
+		AddItem(help, 3, 1, false)
+	root.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyEsc {
+			a.App.Stop()
+			return nil
+		}
+		return event
+	})
+
+	a.Root = root
 }
 
 func NewApp() *App {
@@ -187,8 +213,3 @@ func TviewRun() {
 		panic(err)
 	}
 }
-
-// func isUserLoggedIn(cfg model.Config) bool {
-// 	now := time.Now().UnixMilli()
-// 	return !utils.IsAccessBeforeLogin(cfg, now)
-// }
