@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -53,6 +54,12 @@ func (a *App) PopulateVaultList() {
 		case 'a':
 			flex := a.ModalAddVault()
 			a.App.SetRoot(flex, true)
+		case 'd':
+			currentIndex := a.VaultList.GetCurrentItem()
+			if currentIndex >= 0 && currentIndex < len(a.Vault) {
+				modal := a.DeleteVaultModal(currentIndex)
+				a.App.SetRoot(modal, false)
+			}
 		}
 		return event
 	})
@@ -146,6 +153,36 @@ func (a *App) AddToVault(name, notes, username, password string) {
 	}
 
 	utils.WriteToFile(a.VaultFile, encryptedCipherText)
+}
+
+func (a *App) DeleteVaultModal(i int) *tview.Modal {
+	modal := tview.NewModal().
+		SetBackgroundColor(tcell.ColorBlack).
+		AddButtons([]string{"Yes", "No"}).
+		SetButtonBackgroundColor(tcell.Color103).
+		SetText(fmt.Sprintf("Are you sure you want to delete %s?", a.Vault[i].Name)).
+		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+			if strings.EqualFold(buttonLabel, "Yes") {
+				a.DeleteFromVault(i)
+
+				a.PopulateVaultList()
+				a.RefreshRoot()
+				a.App.SetRoot(a.Root, true)
+				return
+			}
+			a.App.SetRoot(a.Root, true)
+		})
+
+	modal.SetTitle("Delete Vault")
+	modal.SetBorder(true)
+	modal.SetBorderStyle(tcell.StyleDefault.Background(tcell.ColorBlack))
+	return modal
+}
+
+func (a *App) DeleteFromVault(vaultIdx int) {
+	// TODO: Implement
+
+	// a.Vault = slices.Delete(a.Vault, vaultIdx, vaultIdx+1)
 }
 
 func (a *App) RefreshRoot() {
