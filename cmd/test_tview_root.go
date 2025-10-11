@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -15,7 +16,7 @@ import (
 	"go-pass/utils"
 )
 
-var helpText = "a: Add | Commands"
+var helpText = "a: Add | d: Delete"
 
 // inputPassword string
 // passwordInput *tview.InputField
@@ -80,11 +81,14 @@ func (a *App) VaultListView() *tview.Flex {
 }
 
 func (a *App) ModalVaultInfo(idx int) *tview.Modal {
+	entry := a.Vault[idx]
+	decryptedPassword := crypt.DecryptPassword(entry.Password)
 	text := fmt.Sprintf(`
 	Name: %s
+	Username: %s
 	Password: %s
 	Notes: %s
-	`, a.Vault[idx].Name, crypt.DecryptPassword(a.Vault[idx].Password), a.Vault[idx].Notes)
+	`, entry.Name, entry.Username, decryptedPassword, entry.Notes)
 	modal := tview.NewModal().
 		AddButtons([]string{"OK"}).
 		SetBackgroundColor(tcell.ColorBlack)
@@ -92,6 +96,7 @@ func (a *App) ModalVaultInfo(idx int) *tview.Modal {
 	modal.SetTitle("Vault Info")
 	modal.SetText(text)
 	modal.SetBorder(true)
+	modal.SetBorderStyle(tcell.StyleDefault.Background(tcell.ColorBlack))
 	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 		a.App.SetRoot(a.Root, true)
 	})
@@ -111,6 +116,11 @@ func (a *App) ModalAddVault() *tview.Flex {
 		formUsername := inputForm.GetFormItem(1).(*tview.InputField).GetText()
 		formPassword := inputForm.GetFormItem(2).(*tview.InputField).GetText()
 		formNotes := inputForm.GetFormItem(3).(*tview.InputField).GetText()
+
+		// TODO: Really need to add some validation to make sure that:
+		// 1. Name is not empty and unique
+		// 2. Username is not empty
+		// 3. Password is not empty
 
 		a.AddToVault(formName, formNotes, formUsername, formPassword)
 
@@ -146,13 +156,7 @@ func (a *App) AddToVault(name, notes, username, password string) {
 		UpdatedAt: now,
 	}
 	a.Vault = append(a.Vault, vault)
-
-	encryptedCipherText, err := crypt.EncryptVault(a.Vault)
-	if err != nil {
-		panic(err)
-	}
-
-	utils.WriteToFile(a.VaultFile, encryptedCipherText)
+	a.SaveVault()
 }
 
 func (a *App) DeleteVaultModal(i int) *tview.Modal {
@@ -162,7 +166,7 @@ func (a *App) DeleteVaultModal(i int) *tview.Modal {
 		SetButtonBackgroundColor(tcell.Color103).
 		SetText(fmt.Sprintf("Are you sure you want to delete %s?", a.Vault[i].Name)).
 		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
-			if strings.EqualFold(buttonLabel, "Yes") {
+			if strings.EqualFold(buttonLabel, "Yes") { // This is the validation
 				a.DeleteFromVault(i)
 
 				a.PopulateVaultList()
@@ -180,9 +184,9 @@ func (a *App) DeleteVaultModal(i int) *tview.Modal {
 }
 
 func (a *App) DeleteFromVault(vaultIdx int) {
-	// TODO: Implement
-
-	// a.Vault = slices.Delete(a.Vault, vaultIdx, vaultIdx+1)
+	a.Vault = slices.Delete(a.Vault, vaultIdx, vaultIdx+1)
+	a.SaveVault()
+	a.PopulateVaultList()
 }
 
 func (a *App) RefreshRoot() {
@@ -205,6 +209,15 @@ func (a *App) RefreshRoot() {
 	})
 
 	a.Root = root
+}
+
+func (a *App) SaveVault() {
+	encryptedCipherText, err := crypt.EncryptVault(a.Vault)
+	if err != nil {
+		panic(err)
+	}
+
+	utils.WriteToFile(a.VaultFile, encryptedCipherText)
 }
 
 func NewApp() *App {
