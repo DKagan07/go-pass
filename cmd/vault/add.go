@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -45,18 +46,16 @@ Ex.
 	},
 }
 
-// func init() {
-// 	rootCmd.AddCommand(addCmd)
-// }
-
 // AddCmdHandler is the handler that orchestrates the 'add' command.
 func AddCmdHandler(cmd *cobra.Command, args []string) error {
 	// the value in GetString has to equal the flag that is created above
-	if len(args) != 1 {
+	if len(args) < 1 {
 		return errors.New(
-			"too many or not enough arugments for 'add'. see 'help' for correct usage",
+			"must have at least one argument",
 		)
 	}
+
+	totalStr := strings.Join(args, " ")
 
 	cfg, err := utils.CheckConfig("")
 	if err != nil {
@@ -73,7 +72,7 @@ func AddCmdHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return AddToVault(args[0], userInput, cfg, time.Now().UnixMilli())
+	return AddToVault(totalStr, userInput, cfg, time.Now().UnixMilli())
 }
 
 // GetInput is a function where we get input from the user, and return it in a

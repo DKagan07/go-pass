@@ -4,7 +4,6 @@ Copyright © 2025 DKagan07
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -28,11 +27,6 @@ var isOther bool
 func Execute() {
 	rootCmd.Flags().
 		BoolVarP(&isOther, "isOther", "o", false, "Use other framework instead of the default")
-
-	if err := rootCmd.ParseFlags(os.Args[1:]); err != nil {
-		fmt.Printf("Error parsing flags: %v\n", err)
-		os.Exit(1)
-	}
 
 	if !isOther {
 		err := rootCmd.Execute()

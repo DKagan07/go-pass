@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -62,16 +63,21 @@ type InputSources struct {
 
 // UpdateCmdHandler is the handler function that encapsulates the update logic
 func UpdateCmdHandler(cmd *cobra.Command, args []string) error {
-	if len(args) != 1 {
-		return fmt.Errorf("wrong number of arguments, need 1. please see 'help'")
+	if len(args) < 1 {
+		return fmt.Errorf("wrong number of arguments, need at least 1. please see 'help'")
 	}
+	fmt.Printf("args: %+v\n", args)
+
+	totalStr := strings.Join(args, " ")
+
+	fmt.Printf("totalStr: '%s'\n", totalStr)
 
 	i, err := UpdateFlags(cmd)
 	if err != nil {
 		return err
 	}
 
-	sn := args[0]
+	fmt.Printf("flags: %+v\n", i)
 
 	cfgFile, ok, err := utils.OpenConfig("")
 	if ok && err == nil {
@@ -85,7 +91,7 @@ func UpdateCmdHandler(cmd *cobra.Command, args []string) error {
 		return errors.New("need to login")
 	}
 
-	err = UpdateEntry(i, cfg, sn, InputSources{os.Stdin, os.Stdin, os.Stdin, os.Stdin})
+	err = UpdateEntry(i, cfg, totalStr, InputSources{os.Stdin, os.Stdin, os.Stdin, os.Stdin})
 	if err != nil {
 		return fmt.Errorf("error updating entry: %v", err)
 	}
@@ -96,6 +102,8 @@ func UpdateCmdHandler(cmd *cobra.Command, args []string) error {
 // UpdateFlags consolidates the different flags that may or may not be present.
 // It returns a type Input and error
 func UpdateFlags(cmd *cobra.Command) (Inputs, error) {
+	fmt.Printf("cmd flags: %+v\n", cmd.Flags())
+
 	sourceBool, err := cmd.Flags().GetBool("source")
 	if err != nil {
 		return Inputs{}, err
@@ -115,6 +123,11 @@ func UpdateFlags(cmd *cobra.Command) (Inputs, error) {
 	if err != nil {
 		return Inputs{}, err
 	}
+
+	fmt.Printf("sourceBool: %v\n", sourceBool)
+	fmt.Printf("usernameBool: %v\n", usernameBool)
+	fmt.Printf("passwordBool: %v\n", passwordBool)
+	fmt.Printf("notesBool: %v\n", notesBool)
 
 	if !sourceBool && !usernameBool && !passwordBool && !notesBool {
 		fmt.Println("Need at least one flag. See help for more information")

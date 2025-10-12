@@ -5,6 +5,7 @@ package vault
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -44,13 +45,13 @@ Name: Google
 // GetCmdHandler is the handler function that encapsulates the GetItemsFromVault
 // logic and runs some checks beforehand.
 func GetCmdHandler(cmd *cobra.Command, args []string) error {
-	if len(args) != 1 {
+	if len(args) < 1 {
 		return fmt.Errorf(
-			"only 1 argument needed for the get command. see 'help' for correct usage",
+			"at least 1 argument needed for the get command. see 'help' for correct usage",
 		)
 	}
 
-	name := args[0]
+	name := strings.Join(args, " ")
 
 	cfg, err := utils.CheckConfig("")
 	if err != nil {

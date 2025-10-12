@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -38,13 +39,13 @@ Ex.
 
 // DeleteCmdHandler is the handler function that encapsulates the delete logic
 func DeleteCmdHandler(cmd *cobra.Command, args []string) error {
-	if len(args) != 1 {
+	if len(args) < 1 {
 		return errors.New(
-			"too many or not enough arugments for 'delete'. see 'help' for correct usage",
+			"too not enough arugments for 'delete'. see 'help' for correct usage",
 		)
 	}
 
-	itemToDelete := args[0]
+	itemToDelete := strings.Join(args, " ")
 
 	cfg, err := utils.CheckConfig("")
 	if err != nil {
