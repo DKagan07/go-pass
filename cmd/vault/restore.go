@@ -21,7 +21,7 @@ import (
 // restoreCmd represents the restore command
 var RestoreCmd = &cobra.Command{
 	Use:   "restore",
-	Short: "Restore restores a backup to your pirmary vault",
+	Short: "Restore restores a backup to your primary vault",
 	Long: `'restore' restores a selected backup to become your vault. This is useful for if 
 anything were to happen to your primary vault, or if you wanted to restore a
 previous state, you can.
