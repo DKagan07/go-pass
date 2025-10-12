@@ -18,6 +18,15 @@ var rootCmd = &cobra.Command{
 	Use:   "gopass",
 	Short: "Stores and encrypts all of your sensitive passwords",
 	Long:  LongDescriptionText,
+	Run: func(cmd *cobra.Command, args []string) {
+		if isOther {
+			TviewRun()
+		} else {
+			if err := cmd.Help(); err != nil {
+				panic(err)
+			}
+		}
+	},
 }
 
 var isOther bool
@@ -28,13 +37,9 @@ func Execute() {
 	rootCmd.Flags().
 		BoolVarP(&isOther, "isOther", "o", false, "Use other framework instead of the default")
 
-	if !isOther {
-		err := rootCmd.Execute()
-		if err != nil {
-			os.Exit(1)
-		}
-	} else {
-		TviewRun()
+	err := rootCmd.Execute()
+	if err != nil {
+		os.Exit(1)
 	}
 }
 
