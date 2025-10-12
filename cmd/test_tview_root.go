@@ -117,10 +117,23 @@ func (a *App) ModalAddVault() *tview.Flex {
 		formPassword := inputForm.GetFormItem(2).(*tview.InputField).GetText()
 		formNotes := inputForm.GetFormItem(3).(*tview.InputField).GetText()
 
-		// TODO: Really need to add some validation to make sure that:
-		// 1. Name is not empty and unique
-		// 2. Username is not empty
-		// 3. Password is not empty
+		if strings.EqualFold(formName, "") {
+			modal := a.ErrorModal("Name cannot be empty")
+			a.App.SetRoot(modal, false)
+			return
+		}
+
+		if strings.EqualFold(formUsername, "") {
+			modal := a.ErrorModal("Username cannot be empty")
+			a.App.SetRoot(modal, false)
+			return
+		}
+
+		if strings.EqualFold(formPassword, "") {
+			modal := a.ErrorModal("Password cannot be empty")
+			a.App.SetRoot(modal, false)
+			return
+		}
 
 		a.AddToVault(formName, formNotes, formUsername, formPassword)
 
@@ -218,6 +231,24 @@ func (a *App) SaveVault() {
 	}
 
 	utils.WriteToFile(a.VaultFile, encryptedCipherText)
+}
+
+func (a *App) ErrorModal(errMsg string) *tview.Modal {
+	modal := tview.NewModal().
+		SetBackgroundColor(tcell.ColorBlack).
+		AddButtons([]string{"OK"}).
+		SetButtonBackgroundColor(tcell.ColorBlack).
+		SetText(errMsg).
+		SetTextColor(tcell.ColorRed).
+		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+			a.App.SetRoot(a.Root, true)
+		})
+
+	modal.SetTitle("Error!")
+	modal.SetTitleColor(tcell.ColorRed)
+	modal.SetBorder(true)
+	modal.SetBorderStyle(tcell.StyleDefault.Background(tcell.ColorBlack))
+	return modal
 }
 
 func NewApp() *App {
