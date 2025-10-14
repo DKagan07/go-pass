@@ -16,7 +16,7 @@ import (
 	"go-pass/utils"
 )
 
-var helpText = "a: Add | d: Delete"
+var helpText = " a: Add | d: Delete | u: Update "
 
 // inputPassword string
 // passwordInput *tview.InputField
@@ -47,7 +47,7 @@ func (a *App) PopulateVaultList() {
 	}
 
 	a.VaultList.SetBorder(true)
-	a.VaultList.SetTitle("Vault")
+	a.VaultList.SetTitle(" Vault ")
 	a.VaultList.SetBackgroundColor(tcell.ColorBlack)
 	a.VaultList.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		// TODO: Add keys to proceed with vault actions
@@ -60,6 +60,12 @@ func (a *App) PopulateVaultList() {
 			if currentIndex >= 0 && currentIndex < len(a.Vault) {
 				modal := a.DeleteVaultModal(currentIndex)
 				a.App.SetRoot(modal, false)
+			}
+		case 'u':
+			currentIndex := a.VaultList.GetCurrentItem()
+			if currentIndex >= 0 && currentIndex < len(a.Vault) {
+				flex := a.UpdateVaultModal(currentIndex)
+				a.App.SetRoot(flex, true)
 			}
 		}
 		return event
@@ -93,7 +99,7 @@ func (a *App) ModalVaultInfo(idx int) *tview.Modal {
 		AddButtons([]string{"OK"}).
 		SetBackgroundColor(tcell.ColorBlack)
 
-	modal.SetTitle("Vault Info")
+	modal.SetTitle(" Vault Info ")
 	modal.SetText(text)
 	modal.SetBorder(true)
 	modal.SetBorderStyle(tcell.StyleDefault.Background(tcell.ColorBlack))
@@ -141,7 +147,7 @@ func (a *App) ModalAddVault() *tview.Flex {
 		a.RefreshRoot()
 		a.App.SetRoot(a.Root, true)
 	})
-	inputForm.SetTitle("Add Vault")
+	inputForm.SetTitle(" Add Vault ")
 	inputForm.SetBorder(true)
 	inputForm.SetBackgroundColor(tcell.ColorBlack)
 	inputForm.SetFieldBackgroundColor(tcell.ColorBlack)
@@ -190,7 +196,7 @@ func (a *App) DeleteVaultModal(i int) *tview.Modal {
 			a.App.SetRoot(a.Root, true)
 		})
 
-	modal.SetTitle("Delete Vault")
+	modal.SetTitle(" Delete Vault ")
 	modal.SetBorder(true)
 	modal.SetBorderStyle(tcell.StyleDefault.Background(tcell.ColorBlack))
 	return modal
@@ -200,6 +206,72 @@ func (a *App) DeleteFromVault(vaultIdx int) {
 	a.Vault = slices.Delete(a.Vault, vaultIdx, vaultIdx+1)
 	a.SaveVault()
 	a.PopulateVaultList()
+}
+
+func (a *App) UpdateVaultModal(currIdx int) *tview.Flex {
+	entry := a.Vault[currIdx]
+
+	form := tview.NewForm().
+		AddInputField("Name", entry.Name, 0, nil, nil).
+		AddInputField("Username", entry.Username, 0, nil, nil).
+		AddInputField("Password", string(crypt.DecryptPassword(entry.Password)), 0, nil, nil).
+		AddInputField("Notes", entry.Notes, 0, nil, nil)
+	form.AddButton("Save", func() {
+		formName := form.GetFormItem(0).(*tview.InputField).GetText()
+		formUsername := form.GetFormItem(1).(*tview.InputField).GetText()
+		formPassword := form.GetFormItem(2).(*tview.InputField).GetText()
+		formNotes := form.GetFormItem(3).(*tview.InputField).GetText()
+
+		if strings.EqualFold(formName, "") {
+			modal := a.ErrorModal("Name cannot be empty")
+			a.App.SetRoot(modal, false)
+			return
+		}
+
+		if strings.EqualFold(formUsername, "") {
+			modal := a.ErrorModal("Username cannot be empty")
+			a.App.SetRoot(modal, false)
+			return
+		}
+
+		if strings.EqualFold(formPassword, "") {
+			modal := a.ErrorModal("Password cannot be empty")
+			a.App.SetRoot(modal, false)
+			return
+		}
+
+		newEntry := model.VaultEntry{
+			Name:      formName,
+			Username:  formUsername,
+			Notes:     formNotes,
+			Password:  crypt.EncryptPassword([]byte(formPassword)),
+			UpdatedAt: entry.UpdatedAt,
+		}
+
+		a.UpdateVaultEntry(currIdx, newEntry)
+		a.App.SetRoot(a.Root, true)
+	})
+
+	form.SetTitle(" Update Vault ")
+	form.SetBorder(true)
+	form.SetBackgroundColor(tcell.ColorBlack)
+	form.SetFieldBackgroundColor(tcell.ColorBlack)
+	form.SetButtonBackgroundColor(tcell.Color103)
+
+	flex := tview.NewFlex().
+		SetDirection(tview.FlexRow).
+		AddItem(nil, 0, 1, false).
+		AddItem(form, 0, 1, true).
+		AddItem(nil, 0, 1, false)
+
+	return flex
+}
+
+func (a *App) UpdateVaultEntry(currIdx int, newEntry model.VaultEntry) {
+	a.Vault[currIdx] = newEntry
+	a.SaveVault()
+	a.PopulateVaultList()
+	a.RefreshRoot()
 }
 
 func (a *App) RefreshRoot() {
@@ -244,7 +316,7 @@ func (a *App) ErrorModal(errMsg string) *tview.Modal {
 			a.App.SetRoot(a.Root, true)
 		})
 
-	modal.SetTitle("Error!")
+	modal.SetTitle(" Error! ")
 	modal.SetTitleColor(tcell.ColorRed)
 	modal.SetBorder(true)
 	modal.SetBorderStyle(tcell.StyleDefault.Background(tcell.ColorBlack))
