@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"slices"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"golang.org/x/crypto/bcrypt"
 
 	"go-pass/crypt"
 	"go-pass/model"
@@ -124,19 +126,19 @@ func (a *App) ModalAddVault() *tview.Flex {
 		formNotes := inputForm.GetFormItem(3).(*tview.InputField).GetText()
 
 		if strings.EqualFold(formName, "") {
-			modal := a.ErrorModal("Name cannot be empty")
+			modal := a.ErrorModal("Name cannot be empty", a.Root)
 			a.App.SetRoot(modal, false)
 			return
 		}
 
 		if strings.EqualFold(formUsername, "") {
-			modal := a.ErrorModal("Username cannot be empty")
+			modal := a.ErrorModal("Username cannot be empty", a.Root)
 			a.App.SetRoot(modal, false)
 			return
 		}
 
 		if strings.EqualFold(formPassword, "") {
-			modal := a.ErrorModal("Password cannot be empty")
+			modal := a.ErrorModal("Password cannot be empty", a.Root)
 			a.App.SetRoot(modal, false)
 			return
 		}
@@ -223,19 +225,19 @@ func (a *App) UpdateVaultModal(currIdx int) *tview.Flex {
 		formNotes := form.GetFormItem(3).(*tview.InputField).GetText()
 
 		if strings.EqualFold(formName, "") {
-			modal := a.ErrorModal("Name cannot be empty")
+			modal := a.ErrorModal("Name cannot be empty", a.Root)
 			a.App.SetRoot(modal, false)
 			return
 		}
 
 		if strings.EqualFold(formUsername, "") {
-			modal := a.ErrorModal("Username cannot be empty")
+			modal := a.ErrorModal("Username cannot be empty", a.Root)
 			a.App.SetRoot(modal, false)
 			return
 		}
 
 		if strings.EqualFold(formPassword, "") {
-			modal := a.ErrorModal("Password cannot be empty")
+			modal := a.ErrorModal("Password cannot be empty", a.Root)
 			a.App.SetRoot(modal, false)
 			return
 		}
@@ -305,7 +307,7 @@ func (a *App) SaveVault() {
 	utils.WriteToFile(a.VaultFile, encryptedCipherText)
 }
 
-func (a *App) ErrorModal(errMsg string) *tview.Modal {
+func (a *App) ErrorModal(errMsg string, dest tview.Primitive) *tview.Modal {
 	modal := tview.NewModal().
 		SetBackgroundColor(tcell.ColorBlack).
 		AddButtons([]string{"OK"}).
@@ -313,7 +315,7 @@ func (a *App) ErrorModal(errMsg string) *tview.Modal {
 		SetText(errMsg).
 		SetTextColor(tcell.ColorRed).
 		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
-			a.App.SetRoot(a.Root, true)
+			a.App.SetRoot(dest, true)
 		})
 
 	modal.SetTitle(" Error! ")
@@ -330,10 +332,12 @@ func NewApp() *App {
 func TviewRun() {
 	app := NewApp()
 	app.App = tview.NewApplication()
-	cfg, err := utils.CheckConfig("")
-	if err != nil {
-		panic(err)
+	cfgFile, ok, err := utils.OpenConfig("")
+	if ok && err == nil {
+		panic(errors.New("a file is not found. need to 'init'"))
+		// TODO: implement 'init'
 	}
+	cfg := crypt.DecryptConfig(cfgFile)
 	app.Cfg = cfg
 
 	vaultF, _ := utils.OpenVault(cfg.VaultName)
@@ -362,7 +366,47 @@ func TviewRun() {
 	})
 	app.Root = root
 
-	if err := app.App.SetRoot(app.Root, true).Run(); err != nil {
-		panic(err)
+	now := time.Now().UnixMilli()
+	if !utils.IsAccessBeforeLogin(cfg, now) {
+		loginForm := tview.NewForm().
+			AddPasswordField("Master Password", "", 0, '*', nil)
+
+		loginForm.SetTitle(" Login ")
+		loginForm.SetBorder(true)
+		loginForm.SetBackgroundColor(tcell.ColorBlack)
+		loginForm.SetFieldBackgroundColor(tcell.ColorBlack)
+		loginForm.SetButtonBackgroundColor(tcell.Color103)
+		loginForm.AddButton("Login", func() {
+			masterPassword := loginForm.GetFormItem(0).(*tview.InputField).GetText()
+			// if err is not nil, then the user has input the wrong password
+			err := bcrypt.CompareHashAndPassword(cfg.MasterPassword, []byte(masterPassword))
+			if err != nil {
+				modal := app.ErrorModal("Incorrect Master Password", loginForm)
+				loginForm.GetFormItem(0).(*tview.InputField).SetText("")
+				app.App.SetRoot(modal, false)
+				return
+			}
+
+			cfg.LastVisited = now
+			encryptedCfg, err := crypt.EncryptConfig(cfg)
+			if err != nil {
+				panic(err)
+			}
+			utils.WriteToFile(cfgFile, encryptedCfg)
+			app.App.SetRoot(app.Root, true)
+		})
+
+		loginPage := tview.NewFlex().
+			SetDirection(tview.FlexRow).
+			AddItem(loginForm, 0, 1, true).
+			AddItem(help, 3, 1, false)
+
+		if err := app.App.SetRoot(loginPage, true).Run(); err != nil {
+			panic(err)
+		}
+	} else {
+		if err := app.App.SetRoot(app.Root, true).Run(); err != nil {
+			panic(err)
+		}
 	}
 }
