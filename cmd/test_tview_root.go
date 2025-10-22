@@ -35,6 +35,7 @@ type App struct {
 
 	VaultList *tview.List
 	Root      *tview.Flex
+	SearchBar *tview.InputField
 }
 
 func (a *App) PopulateVaultList() {
@@ -69,7 +70,10 @@ func (a *App) PopulateVaultList() {
 				flex := a.UpdateVaultModal(currentIndex)
 				a.App.SetRoot(flex, true)
 			}
+		case '\t':
+			a.App.SetFocus(a.SearchBar)
 		}
+
 		return event
 	})
 
@@ -77,6 +81,40 @@ func (a *App) PopulateVaultList() {
 		modal := a.ModalVaultInfo(itemIdx)
 		a.App.SetRoot(modal, false)
 	})
+}
+
+func (a *App) CreateSearchBar() *tview.InputField {
+	search := tview.NewInputField().
+		SetLabel("Search: ").
+		SetFieldBackgroundColor(tcell.ColorBlack)
+	search.SetBackgroundColor(tcell.ColorBlack)
+	search.SetChangedFunc(func(text string) {
+		a.VaultList.Clear()
+		for _, v := range a.Vault {
+			if strings.Contains(strings.ToLower(v.Name), strings.ToLower(text)) {
+				a.VaultList.AddItem(v.Name, "", 0, nil)
+			}
+		}
+	})
+
+	search.SetDoneFunc(func(key tcell.Key) {
+		if key == tcell.KeyEnter {
+			itemIdx := a.VaultList.GetCurrentItem()
+			modal := a.ModalVaultInfo(itemIdx)
+			a.App.SetRoot(modal, false)
+		}
+	})
+
+	search.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyTab, tcell.KeyDown:
+			a.App.SetFocus(a.VaultListView())
+		}
+		return event
+	})
+
+	a.SearchBar = search
+	return search
 }
 
 func (a *App) VaultListView() *tview.Flex {
@@ -125,6 +163,7 @@ func (a *App) ModalAddVault() *tview.Flex {
 		formPassword := inputForm.GetFormItem(2).(*tview.InputField).GetText()
 		formNotes := inputForm.GetFormItem(3).(*tview.InputField).GetText()
 
+		// Validation
 		if strings.EqualFold(formName, "") {
 			modal := a.ErrorModal("Name cannot be empty", a.Root)
 			a.App.SetRoot(modal, false)
@@ -207,7 +246,6 @@ func (a *App) DeleteVaultModal(i int) *tview.Modal {
 func (a *App) DeleteFromVault(vaultIdx int) {
 	a.Vault = slices.Delete(a.Vault, vaultIdx, vaultIdx+1)
 	a.SaveVault()
-	a.PopulateVaultList()
 }
 
 func (a *App) UpdateVaultModal(currIdx int) *tview.Flex {
@@ -251,6 +289,8 @@ func (a *App) UpdateVaultModal(currIdx int) *tview.Flex {
 		}
 
 		a.UpdateVaultEntry(currIdx, newEntry)
+		a.PopulateVaultList()
+		a.RefreshRoot()
 		a.App.SetRoot(a.Root, true)
 	})
 
@@ -272,8 +312,6 @@ func (a *App) UpdateVaultModal(currIdx int) *tview.Flex {
 func (a *App) UpdateVaultEntry(currIdx int, newEntry model.VaultEntry) {
 	a.Vault[currIdx] = newEntry
 	a.SaveVault()
-	a.PopulateVaultList()
-	a.RefreshRoot()
 }
 
 func (a *App) RefreshRoot() {
@@ -355,6 +393,7 @@ func TviewRun() {
 
 	root := tview.NewFlex().
 		SetDirection(tview.FlexRow).
+		AddItem(app.CreateSearchBar(), 3, 1, true).
 		AddItem(app.VaultListView(), 0, 1, true).
 		AddItem(help, 3, 1, false)
 	root.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
