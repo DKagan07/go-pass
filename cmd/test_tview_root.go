@@ -18,14 +18,7 @@ import (
 	"go-pass/utils"
 )
 
-var helpText = " a: Add | d: Delete | u: Update "
-
-// inputPassword string
-// passwordInput *tview.InputField
-//
-// home, _     = os.UserHomeDir()
-// CONFIG_PATH = path.Join(home, ".config", "gopass")
-// CONFIG_FILE = path.Join(CONFIG_PATH, "gopass-cfg.json")
+var helpText = " a: Add | d: Delete | u: Update | tab: Switch between Search and Vault "
 
 type App struct {
 	App       *tview.Application
@@ -35,7 +28,7 @@ type App struct {
 
 	VaultList *tview.List
 	Root      *tview.Flex
-	SearchBar *tview.InputField
+	SearchBar *tview.Flex
 }
 
 func (a *App) PopulateVaultList() {
@@ -83,7 +76,8 @@ func (a *App) PopulateVaultList() {
 	})
 }
 
-func (a *App) CreateSearchBar() *tview.InputField {
+func (a *App) CreateSearchBar() *tview.Flex {
+	box := tview.NewBox().SetBackgroundColor(tcell.ColorBlack)
 	search := tview.NewInputField().
 		SetLabel("Search: ").
 		SetFieldBackgroundColor(tcell.ColorBlack)
@@ -107,14 +101,22 @@ func (a *App) CreateSearchBar() *tview.InputField {
 
 	search.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
-		case tcell.KeyTab, tcell.KeyDown:
+		case tcell.KeyTab:
 			a.App.SetFocus(a.VaultListView())
 		}
 		return event
 	})
 
-	a.SearchBar = search
-	return search
+	search.SetBorder(true)
+
+	searchbar := tview.NewFlex().
+		SetDirection(tview.FlexColumn).
+		AddItem(box, 0, 1, false).
+		AddItem(search, 0, 1, true).
+		AddItem(box, 0, 1, false)
+
+	a.SearchBar = searchbar
+	return searchbar
 }
 
 func (a *App) VaultListView() *tview.Flex {
