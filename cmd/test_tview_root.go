@@ -196,6 +196,13 @@ func (a *App) ModalAddVault() *tview.Flex {
 	inputForm.SetFieldBackgroundColor(tcell.ColorBlack)
 	inputForm.SetButtonBackgroundColor(tcell.Color103)
 
+	inputForm.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyEsc {
+			a.App.SetRoot(a.Root, true)
+		}
+		return event
+	})
+
 	flex := tview.NewFlex().
 		SetDirection(tview.FlexRow).
 		AddItem(nil, 0, 1, false).
