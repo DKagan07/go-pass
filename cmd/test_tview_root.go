@@ -21,14 +21,16 @@ import (
 var helpText = " a: Add | d: Delete | u: Update | tab: Switch between Search and Vault "
 
 type App struct {
-	App       *tview.Application
-	VaultFile *os.File
-	Vault     []model.VaultEntry
-	Cfg       model.Config
+	App           *tview.Application
+	VaultFile     *os.File
+	Vault         []model.VaultEntry
+	FilteredVault []model.VaultEntry
+	Cfg           model.Config
 
-	VaultList *tview.List
-	Root      *tview.Flex
-	SearchBar *tview.Flex
+	VaultList   *tview.List
+	Root        *tview.Flex
+	SearchBar   *tview.Flex
+	SearchInput *tview.InputField
 }
 
 func (a *App) PopulateVaultList() {
@@ -39,7 +41,11 @@ func (a *App) PopulateVaultList() {
 
 	a.VaultList = tview.NewList()
 	for _, v := range a.Vault {
-		a.VaultList.AddItem(v.Name, "", 0, nil)
+		vault := v
+		a.VaultList.AddItem(vault.Name, "", 0, func() {
+			m := a.ModalVaultInfoByVault(vault)
+			a.App.SetRoot(m, false)
+		})
 	}
 
 	a.VaultList.SetBorder(true)
@@ -64,16 +70,42 @@ func (a *App) PopulateVaultList() {
 				a.App.SetRoot(flex, true)
 			}
 		case '\t':
-			a.App.SetFocus(a.SearchBar)
+			a.App.SetFocus(a.SearchInput)
+			return nil
 		}
 
 		return event
 	})
 
 	a.VaultList.SetSelectedFunc(func(itemIdx int, primaryText, secondaryText string, _ rune) {
-		modal := a.ModalVaultInfo(itemIdx)
-		a.App.SetRoot(modal, false)
+		if itemIdx >= 0 && itemIdx < len(a.FilteredVault) {
+			modal := a.ModalVaultInfoByVault(a.FilteredVault[itemIdx])
+			a.App.SetRoot(modal, false)
+		}
 	})
+}
+
+func (a *App) ModalVaultInfoByVault(ve model.VaultEntry) *tview.Modal {
+	decryptedPassword := crypt.DecryptPassword(ve.Password)
+	text := fmt.Sprintf(`
+	Name: %s
+	Username: %s
+	Password: %s
+	Notes: %s
+	`, ve.Name, ve.Username, decryptedPassword, ve.Notes)
+	modal := tview.NewModal().
+		AddButtons([]string{"OK"}).
+		SetBackgroundColor(tcell.ColorBlack)
+
+	modal.SetTitle(" Vault Info ")
+	modal.SetText(text)
+	modal.SetBorder(true)
+	modal.SetBorderStyle(tcell.StyleDefault.Background(tcell.ColorBlack))
+	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+		a.App.SetRoot(a.Root, true)
+	})
+
+	return modal
 }
 
 func (a *App) CreateSearchBar() *tview.Flex {
@@ -82,27 +114,30 @@ func (a *App) CreateSearchBar() *tview.Flex {
 		SetLabel("Search: ").
 		SetFieldBackgroundColor(tcell.ColorBlack)
 	search.SetBackgroundColor(tcell.ColorBlack)
+	a.SearchInput = search
+
 	search.SetChangedFunc(func(text string) {
 		a.VaultList.Clear()
+		a.FilteredVault = nil
+
 		for _, v := range a.Vault {
 			if strings.Contains(strings.ToLower(v.Name), strings.ToLower(text)) {
-				a.VaultList.AddItem(v.Name, "", 0, nil)
-			}
-		}
-	})
+				vault := v
+				a.FilteredVault = append(a.FilteredVault, vault)
 
-	search.SetDoneFunc(func(key tcell.Key) {
-		if key == tcell.KeyEnter {
-			itemIdx := a.VaultList.GetCurrentItem()
-			modal := a.ModalVaultInfo(itemIdx)
-			a.App.SetRoot(modal, false)
+				a.VaultList.AddItem(vault.Name, "", 0, func() {
+					m := a.ModalVaultInfoByVault(vault)
+					a.App.SetRoot(m, false)
+				})
+			}
 		}
 	})
 
 	search.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyTab:
-			a.App.SetFocus(a.VaultListView())
+			a.App.SetFocus(a.VaultList)
+			return nil
 		}
 		return event
 	})
@@ -128,7 +163,7 @@ func (a *App) VaultListView() *tview.Flex {
 		AddItem(box, 0, 1, false)
 }
 
-func (a *App) ModalVaultInfo(idx int) *tview.Modal {
+func (a *App) ModalVaultInfoByIdx(idx int) *tview.Modal {
 	entry := a.Vault[idx]
 	decryptedPassword := crypt.DecryptPassword(entry.Password)
 	text := fmt.Sprintf(`
