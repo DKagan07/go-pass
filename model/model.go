@@ -39,3 +39,13 @@ type UserInput struct {
 	// Notes is the single string of notes that we get from the user.
 	Notes string
 }
+
+// DecryptedEntry is the decrypted vault entry, including password in plain text
+// This is most likely a placeholder of sorts
+type DecryptedEntry struct {
+	Name      string
+	Username  string
+	Password  string
+	Notes     string
+	UpdatedAt int64
+}
