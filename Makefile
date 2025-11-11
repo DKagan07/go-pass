@@ -6,7 +6,7 @@ build:
 	sudo mv gopass $(BINDIR)
 	
 test:
-	go test ./... -v
+	go test -p 1 -count=1 ./...
 
 remove:
 	rm -rf ~/.local/gopass && rm -rf ~/.config/gopass

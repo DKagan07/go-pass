@@ -8,32 +8,42 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"go-pass/model"
+	"go-pass/testutils"
 	"go-pass/utils"
 )
 
 func TestUpdateEntry(t *testing.T) {
-	utils.TestCleanup()
-	defer utils.TestCleanup()
+	testutils.TestCleanup(string(testutils.TEST_MASTER_PASSWORD))
+	defer testutils.TestCleanup(string(testutils.TEST_MASTER_PASSWORD))
+	assert := assert.New(t)
 
-	cF, err := utils.CreateConfig(utils.TEST_VAULT_NAME, utils.TEST_MASTER_PASSWORD, utils.TEST_CONFIG_NAME)
-	assert.NoError(t, err)
+	key, err := testutils.InitTestKeyring(string(testutils.TEST_MASTER_PASSWORD))
+	assert.NoError(err)
+
+	cF, err := utils.CreateConfig(
+		testutils.TEST_VAULT_NAME,
+		testutils.TEST_MASTER_PASSWORD,
+		testutils.TEST_CONFIG_NAME,
+		key,
+	)
+	assert.NoError(err)
 	cF.Close()
 
-	vF, err := utils.CreateVault(utils.TEST_VAULT_NAME)
-	assert.NoError(t, err)
+	vF, err := utils.CreateVault(testutils.TEST_VAULT_NAME, key)
+	assert.NoError(err)
 	vF.Close()
 
 	cfg := model.Config{
-		VaultName:      utils.TEST_VAULT_NAME,
-		MasterPassword: utils.TEST_MASTER_PASSWORD,
+		VaultName:      testutils.TEST_VAULT_NAME,
+		MasterPassword: testutils.TEST_MASTER_PASSWORD,
 		LastVisited:    time.Now().UnixMilli(),
 	}
 
 	err1 := AddToVault(vaultEntry1, model.UserInput{
 		Username: vaultEntry1,
 		Password: []byte(vaultEntry1),
-	}, cfg, time.Now().UnixMilli())
-	assert.NoError(t, err1)
+	}, cfg, time.Now().UnixMilli(), key)
+	assert.NoError(err1)
 
 	i := Inputs{
 		Source:   true,
@@ -47,17 +57,24 @@ func TestUpdateEntry(t *testing.T) {
 		Username: strings.NewReader("newUsername\n"),
 		Notes:    strings.NewReader("newNotes\n"),
 	}
-	err = UpdateEntry(i, cfg, vaultEntry1, is)
-	assert.NoError(t, err)
+	err = UpdateEntry(i, cfg, vaultEntry1, is, key)
+	assert.NoError(err)
 
-	err = PrintList("newSource", cfg)
-	assert.NoError(t, err)
+	err = PrintList("newSource", cfg, key)
+	assert.NoError(err)
 
-	err = PrintList(vaultEntry1, cfg)
-	assert.Error(t, err)
+	err = PrintList(vaultEntry1, cfg, key)
+	assert.Error(err)
 }
 
 func TestUpdateVaultEntry(t *testing.T) {
+	testutils.TestCleanup(string(testutils.TEST_MASTER_PASSWORD))
+	defer testutils.TestCleanup(string(testutils.TEST_MASTER_PASSWORD))
+	assert := assert.New(t)
+
+	key, err := testutils.InitTestKeyring(string(testutils.TEST_MASTER_PASSWORD))
+	assert.NoError(err)
+
 	now := time.Now().UnixMilli()
 	ve := model.VaultEntry{
 		Name:      vaultEntry1,
@@ -87,7 +104,7 @@ func TestUpdateVaultEntry(t *testing.T) {
 		UpdatedAt: newNow,
 	}
 
-	updatedVe, err := UpdateVaultEntry(ve, i, is)
-	assert.NoError(t, err)
-	assert.Equal(t, expected, updatedVe)
+	updatedVe, err := UpdateVaultEntry(ve, i, is, key)
+	assert.NoError(err)
+	assert.Equal(expected, updatedVe)
 }

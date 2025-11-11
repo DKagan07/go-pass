@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"go-pass/model"
+	"go-pass/testutils"
 )
 
 func TestDecryptVault(t *testing.T) {
@@ -29,11 +30,13 @@ func TestDecryptVault(t *testing.T) {
 		},
 	}
 
-	t.Run("decrypt vault from file", func(t *testing.T) {
-		assert := assert.New(t)
+	key, err := testutils.InitTestKeyring(string(testutils.TEST_MASTER_PASSWORD))
+	assert := assert.New(t)
+	assert.NoError(err)
 
+	t.Run("decrypt vault from file", func(t *testing.T) {
 		// Encrypt vault
-		encrypted, err := EncryptVault(originalVault)
+		encrypted, err := EncryptVault(originalVault, key)
 		assert.NoError(err)
 		assert.NotNil(encrypted)
 
@@ -44,7 +47,7 @@ func TestDecryptVault(t *testing.T) {
 		defer tmpFile.Close()
 
 		// Write encrypted data to file
-		_, err = tmpFile.Write(encrypted)
+		_, err = tmpFile.Write([]byte(encrypted))
 		assert.NoError(err)
 
 		// Close and reopen file for reading
@@ -54,7 +57,7 @@ func TestDecryptVault(t *testing.T) {
 		defer file.Close()
 
 		// Decrypt vault from file
-		decryptedVault := DecryptVault(file)
+		decryptedVault := DecryptVault(file, key, false)
 
 		// Verify the decrypted vault matches the original
 		assert.Len(decryptedVault, len(originalVault))
@@ -76,11 +79,13 @@ func TestDecryptConfig(t *testing.T) {
 		LastVisited:    time.Now().UnixMilli(),
 	}
 
-	t.Run("decrypt config from file", func(t *testing.T) {
-		assert := assert.New(t)
+	key, err := testutils.InitTestKeyring(string(testutils.TEST_MASTER_PASSWORD))
+	assert := assert.New(t)
+	assert.NoError(err)
 
+	t.Run("decrypt config from file", func(t *testing.T) {
 		// Encrypt config
-		encrypted, err := EncryptConfig(originalConfig)
+		encrypted, err := EncryptConfig(originalConfig, key)
 		assert.NoError(err)
 		assert.NotNil(encrypted)
 
@@ -91,7 +96,7 @@ func TestDecryptConfig(t *testing.T) {
 		defer tmpFile.Close()
 
 		// Write encrypted data to file
-		_, err = tmpFile.Write(encrypted)
+		_, err = tmpFile.Write([]byte(encrypted))
 		assert.NoError(err)
 
 		// Close and reopen file for reading
@@ -101,7 +106,7 @@ func TestDecryptConfig(t *testing.T) {
 		defer file.Close()
 
 		// Decrypt config from file
-		decryptedConfig := DecryptConfig(file)
+		decryptedConfig := DecryptConfig(file, key, false)
 
 		// Verify the decrypted config matches the original
 		assert.Equal(originalConfig.MasterPassword, decryptedConfig.MasterPassword)
@@ -111,14 +116,16 @@ func TestDecryptConfig(t *testing.T) {
 }
 
 func TestDecryptVault_Empty(t *testing.T) {
-	t.Run("decrypt empty vault", func(t *testing.T) {
-		assert := assert.New(t)
+	key, err := testutils.InitTestKeyring(string(testutils.TEST_MASTER_PASSWORD))
+	assert := assert.New(t)
+	assert.NoError(err)
 
+	t.Run("decrypt empty vault", func(t *testing.T) {
 		// Create empty vault
 		emptyVault := []model.VaultEntry{}
 
 		// Encrypt empty vault
-		encrypted, err := EncryptVault(emptyVault)
+		encrypted, err := EncryptVault(emptyVault, key)
 		assert.NoError(err)
 		assert.NotNil(encrypted)
 
@@ -129,7 +136,7 @@ func TestDecryptVault_Empty(t *testing.T) {
 		defer tmpFile.Close()
 
 		// Write encrypted data to file
-		_, err = tmpFile.Write(encrypted)
+		_, err = tmpFile.Write([]byte(encrypted))
 		assert.NoError(err)
 
 		// Close and reopen file for reading
@@ -139,7 +146,7 @@ func TestDecryptVault_Empty(t *testing.T) {
 		defer file.Close()
 
 		// Decrypt vault from file
-		decryptedVault := DecryptVault(file)
+		decryptedVault := DecryptVault(file, key, false)
 
 		// Verify the decrypted vault is empty
 		assert.Len(decryptedVault, 0)
@@ -158,11 +165,13 @@ func TestDecryptVault_VaultEntryLargeData(t *testing.T) {
 		},
 	}
 
-	t.Run("decrypt vault with large data", func(t *testing.T) {
-		assert := assert.New(t)
+	key, err := testutils.InitTestKeyring(string(testutils.TEST_MASTER_PASSWORD))
+	assert := assert.New(t)
+	assert.NoError(err)
 
+	t.Run("decrypt vault with large data", func(t *testing.T) {
 		// Encrypt vault
-		encrypted, err := EncryptVault(largeVault)
+		encrypted, err := EncryptVault(largeVault, key)
 		assert.NoError(err)
 		assert.NotNil(encrypted)
 
@@ -173,7 +182,7 @@ func TestDecryptVault_VaultEntryLargeData(t *testing.T) {
 		defer tmpFile.Close()
 
 		// Write encrypted data to file
-		_, err = tmpFile.Write(encrypted)
+		_, err = tmpFile.Write([]byte(encrypted))
 		assert.NoError(err)
 
 		// Close and reopen file for reading
@@ -183,7 +192,7 @@ func TestDecryptVault_VaultEntryLargeData(t *testing.T) {
 		defer file.Close()
 
 		// Decrypt vault from file
-		decryptedVault := DecryptVault(file)
+		decryptedVault := DecryptVault(file, key, false)
 
 		// Verify the decrypted vault matches the original
 		assert.Len(decryptedVault, len(largeVault))
@@ -222,14 +231,17 @@ func TestDecryptPasswordEdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			key, err := testutils.InitTestKeyring(string(testutils.TEST_MASTER_PASSWORD))
 			assert := assert.New(t)
+			assert.NoError(err)
 
 			// Encrypt password
-			encrypted := EncryptPassword([]byte(tt.password))
+			encrypted, err := EncryptPassword([]byte(tt.password), key)
+			assert.NoError(err)
 			assert.NotNil(encrypted)
 
 			// Decrypt password
-			decrypted := DecryptPassword(encrypted)
+			decrypted := DecryptPassword([]byte(encrypted), key, false)
 			assert.Equal(tt.password, decrypted)
 		})
 	}

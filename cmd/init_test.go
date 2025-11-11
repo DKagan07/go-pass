@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"go-pass/testutils"
 	"go-pass/utils"
 )
 
@@ -26,26 +27,43 @@ func TestDoesConfigExist(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			testutils.TestCleanup(string(testutils.TEST_MASTER_PASSWORD))
+			defer testutils.TestCleanup(string(testutils.TEST_MASTER_PASSWORD))
+			assert := assert.New(t)
+
+			key, err := testutils.InitTestKeyring(string(testutils.TEST_MASTER_PASSWORD))
+			assert.NoError(err)
+
 			if tt.doesConfigExists {
 				f, err := utils.CreateConfig(
-					utils.TEST_VAULT_NAME,
-					utils.TEST_MASTER_PASSWORD,
-					utils.TEST_CONFIG_NAME,
+					testutils.TEST_VAULT_NAME,
+					testutils.TEST_MASTER_PASSWORD,
+					testutils.TEST_CONFIG_NAME,
+					key,
 				)
-				assert.NoError(t, err)
+				assert.NoError(err)
 				f.Close()
 			}
-			assert.Equal(t, tt.doesConfigExists, DoesConfigExist(utils.TEST_CONFIG_NAME))
+			assert.Equal(tt.doesConfigExists, DoesConfigExist(testutils.TEST_CONFIG_NAME))
 		})
 	}
 }
 
 func TestCreateFiles(t *testing.T) {
-	utils.TestCleanup()
-	defer utils.TestCleanup()
+	testutils.TestCleanup(string(testutils.TEST_MASTER_PASSWORD))
+	defer testutils.TestCleanup(string(testutils.TEST_MASTER_PASSWORD))
+	assert := assert.New(t)
 
-	err := CreateFiles(utils.TEST_VAULT_NAME, utils.TEST_CONFIG_NAME, utils.TEST_MASTER_PASSWORD)
-	assert.NoError(t, err)
+	key, err := testutils.InitTestKeyring(string(testutils.TEST_MASTER_PASSWORD))
+	assert.NoError(err)
+
+	err = CreateFiles(
+		testutils.TEST_VAULT_NAME,
+		testutils.TEST_CONFIG_NAME,
+		testutils.TEST_MASTER_PASSWORD,
+		key,
+	)
+	assert.NoError(err)
 }
 
 func TestEnsureVaultName(t *testing.T) {

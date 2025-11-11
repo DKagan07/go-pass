@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/bcrypt"
 
+	"go-pass/model"
 	"go-pass/utils"
 )
 
@@ -83,12 +84,17 @@ func InitCmdHandler(cmd *cobra.Command, args []string) error {
 		log.Fatalf("init::failed to get password: %v", err)
 	}
 
+	km := model.NewMasterAESKeyManager(string(password))
+	if err := km.InitializeKeychain(); err != nil {
+		return fmt.Errorf("failed to initialize keychain")
+	}
+
 	bPassword, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
 	if err != nil {
 		return fmt.Errorf("bcrypting password: %v", err)
 	}
 
-	err = CreateFiles(vaultName, "", bPassword)
+	err = CreateFiles(vaultName, "", bPassword, km)
 	if err != nil {
 		return fmt.Errorf("failed creating files: %v", err)
 	}
@@ -123,14 +129,19 @@ func EnsureVaultName(s string) string {
 
 // CreateFiles encapsulates the logic of creating the config and vaults, and
 // closing the files
-func CreateFiles(vaultName string, cfgName string, pass []byte) error {
-	f, err := utils.CreateConfig(vaultName, pass, cfgName)
+func CreateFiles(
+	vaultName string,
+	cfgName string,
+	pass []byte,
+	km *model.MasterAESKeyManager,
+) error {
+	f, err := utils.CreateConfig(vaultName, pass, cfgName, km)
 	if err != nil {
 		return err
 	}
 	f.Close()
 
-	vf, err := utils.CreateVault(vaultName)
+	vf, err := utils.CreateVault(vaultName, km)
 	if err != nil {
 		return err
 	}

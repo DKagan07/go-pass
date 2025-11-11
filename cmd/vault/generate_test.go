@@ -55,7 +55,7 @@ func TestGeneratePassword(t *testing.T) {
 				}
 			}
 
-			time.Sleep(time.Millisecond * 10)
+			time.Sleep(time.Millisecond * 30)
 			assert.Len(t, b, tt.expected)
 			assert.True(t, doesContain)
 		})

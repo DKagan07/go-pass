@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -14,35 +15,31 @@ import (
 )
 
 var (
-	home, _              = os.UserHomeDir()
-	VAULT_PATH           = path.Join(home, ".local", "gopass")
-	CONFIG_PATH          = path.Join(home, ".config", "gopass")
-	CONFIG_FILE          = path.Join(CONFIG_PATH, "gopass-cfg.json")
-	BACKUP_DIR           = path.Join(home, ".local", "gopass-backup")
-	THIRTY_MINUTES       = time.Minute.Milliseconds() * 30
-	TEST_VAULT_NAME      = "test-vault.json"
-	TEST_CONFIG_NAME     = "test-cfg.json"
-	TEST_MASTER_PASSWORD = []byte("mastahpass")
-	TEST_BACKUP_NAME     = "test-backup__%s.json"
+	home, _        = os.UserHomeDir()
+	VAULT_PATH     = path.Join(home, ".local", "gopass")
+	CONFIG_PATH    = path.Join(home, ".config", "gopass")
+	CONFIG_FILE    = path.Join(CONFIG_PATH, "gopass-cfg.json")
+	BACKUP_DIR     = path.Join(home, ".local", "gopass-backup")
+	THIRTY_MINUTES = time.Minute.Milliseconds() * 30
 )
 
 // CreateVault creates a file in a default path. If directories aren't created,
 // this function will create them.
-func CreateVault(name string) (*os.File, error) {
+func CreateVault(name string, key *model.MasterAESKeyManager) (*os.File, error) {
 	fName := name
 	if name == "" {
 		fName = "pass.json"
 	}
 
-	err := os.MkdirAll(VAULT_PATH, 0700)
+	err := os.MkdirAll(VAULT_PATH, 0o700)
 	if err != nil {
 		return nil, fmt.Errorf("CreateVault::Error creating dir: %v\n", err)
 	}
 
 	vaultPath := path.Join(VAULT_PATH, fName)
-	f, err := os.OpenFile(vaultPath, os.O_RDWR, 0644)
+	f, err := os.OpenFile(vaultPath, os.O_RDWR, 0o644)
 	if !os.IsExist(err) {
-		f, err := os.OpenFile(vaultPath, os.O_RDWR|os.O_CREATE, 0644)
+		f, err := os.OpenFile(vaultPath, os.O_RDWR|os.O_CREATE, 0o644)
 		if err != nil {
 			return nil, fmt.Errorf("CreateVault::creating file: %v", err)
 		}
@@ -54,11 +51,15 @@ func CreateVault(name string) (*os.File, error) {
 
 		if fileStat.Size() == 0 {
 			ve := []model.VaultEntry{}
-			b, err := crypt.EncryptVault(ve)
+			b, err := json.Marshal(ve)
 			if err != nil {
-				panic("init::encrypt ve")
+				return nil, err
 			}
-			WriteToFile(f, b)
+			plaintext, err := key.Encrypt(b)
+			if err != nil {
+				return nil, err
+			}
+			WriteToFile(f, plaintext)
 		}
 
 		return f, nil
@@ -78,7 +79,7 @@ func OpenVault(name string) (*os.File, error) {
 		fName = "pass.json"
 	}
 	vaultPath := path.Join(VAULT_PATH, fName)
-	f, err := os.OpenFile(vaultPath, os.O_RDWR, 0644)
+	f, err := os.OpenFile(vaultPath, os.O_RDWR, 0o644)
 	if errors.Is(err, os.ErrNotExist) {
 		return nil, fmt.Errorf("OpenVault::vault file does not exist")
 	}
@@ -92,7 +93,7 @@ func OpenVault(name string) (*os.File, error) {
 // WriteToFile takes a *os.File and the contents wanted in the file, in []byte,
 // and writes it to the file. It is up to the caller of this function that the
 // file is closed.
-func WriteToFile(f *os.File, contents []byte) {
+func WriteToFile(f *os.File, contents string) {
 	// Reset the file
 	if _, err := f.Seek(0, io.SeekStart); err != nil {
 		log.Fatalf("WriteToFile::seek: %v", err)
@@ -103,7 +104,7 @@ func WriteToFile(f *os.File, contents []byte) {
 	}
 
 	// Write to the file
-	if _, err := f.Write(contents); err != nil {
+	if _, err := f.WriteString(contents); err != nil {
 		log.Fatalf("WriteToFile::write: %v", err)
 	}
 }
@@ -113,8 +114,9 @@ func CreateConfig(
 	vaultName string,
 	mPass []byte,
 	configName string,
+	keychain *model.MasterAESKeyManager,
 ) (*os.File, error) {
-	err := os.MkdirAll(CONFIG_PATH, 0700)
+	err := os.MkdirAll(CONFIG_PATH, 0o700)
 	if err != nil {
 		return nil, fmt.Errorf("CreateConfig::Err creating dir: %v", err)
 	}
@@ -125,9 +127,9 @@ func CreateConfig(
 		configName = CONFIG_FILE
 	}
 
-	f, err := os.OpenFile(configName, os.O_RDWR, 0644)
+	f, err := os.OpenFile(configName, os.O_RDWR, 0o644)
 	if !os.IsExist(err) {
-		f, err := os.OpenFile(configName, os.O_RDWR|os.O_CREATE, 0644)
+		f, err := os.OpenFile(configName, os.O_RDWR|os.O_CREATE, 0o644)
 		if err != nil {
 			return nil, fmt.Errorf("CreateVault::creating file: %v", err)
 		}
@@ -140,9 +142,8 @@ func CreateConfig(
 			Timeout:        THIRTY_MINUTES,
 		}
 
-		cipherText, err := crypt.EncryptConfig(cfg)
+		cipherText, err := crypt.EncryptConfig(cfg, keychain)
 		if err != nil {
-			// fmt.Println("err in creating cfg ciphertext: ", err)
 			return nil, fmt.Errorf("err in creating cfg ciphertext: %v", err)
 		}
 
@@ -171,7 +172,7 @@ func OpenConfig(fn string) (*os.File, bool, error) {
 		fn = CONFIG_FILE
 	}
 
-	f, err := os.OpenFile(fn, os.O_RDWR, 0644)
+	f, err := os.OpenFile(fn, os.O_RDWR, 0o644)
 	if os.IsNotExist(err) {
 		return nil, true, nil
 	}
@@ -189,13 +190,17 @@ func IsAccessBeforeLogin(cfg model.Config, now int64) bool {
 
 // CheckConfig checks to see if the config file exists. If it does, we return
 // the model.Config.
-func CheckConfig(fn string) (model.Config, error) {
+func CheckConfig(fn string, key *model.MasterAESKeyManager) (model.Config, error) {
+	if key == nil {
+		return model.Config{}, nil
+	}
+
 	cfgFile, ok, err := OpenConfig(fn)
 	if ok && err == nil {
 		fmt.Println("A file is not found. Need to init.")
 		return model.Config{}, fmt.Errorf("file needs to be created")
 	}
 	defer cfgFile.Close()
-	cfg := crypt.DecryptConfig(cfgFile)
+	cfg := crypt.DecryptConfig(cfgFile, key, false)
 	return cfg, nil
 }

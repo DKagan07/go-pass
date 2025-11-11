@@ -6,6 +6,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -34,7 +35,14 @@ Ex.
 }
 
 func ViewCmdHandler(cmd *cobra.Command, args []string) error {
-	cfg, err := utils.CheckConfig("")
+	passB, err := utils.GetPasswordFromUser(true, os.Stdin)
+	if err != nil {
+		return err
+	}
+
+	keyring := model.NewMasterAESKeyManager(string(passB))
+
+	cfg, err := utils.CheckConfig("", keyring)
 	if err != nil {
 		return err
 	}

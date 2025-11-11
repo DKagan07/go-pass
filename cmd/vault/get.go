@@ -5,6 +5,7 @@ package vault
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -53,7 +54,13 @@ func GetCmdHandler(cmd *cobra.Command, args []string) error {
 
 	name := strings.Join(args, " ")
 
-	cfg, err := utils.CheckConfig("")
+	passB, err := utils.GetPasswordFromUser(true, os.Stdin)
+	if err != nil {
+		return err
+	}
+	keyring := model.NewMasterAESKeyManager(string(passB))
+
+	cfg, err := utils.CheckConfig("", keyring)
 	if err != nil {
 		return fmt.Errorf("error checking config: %v", err)
 	}
@@ -63,7 +70,7 @@ func GetCmdHandler(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("cannot access, need to login")
 	}
 
-	err = GetItemFromVault(cfg, name)
+	err = GetItemFromVault(cfg, name, keyring)
 	if err != nil {
 		return fmt.Errorf("cannot get %s from vault: %v", name, err)
 	}
@@ -73,14 +80,14 @@ func GetCmdHandler(cmd *cobra.Command, args []string) error {
 
 // GetItemFromVault retreies the 'name' from the vault. If it doesn't exist, an
 // error gets returned.
-func GetItemFromVault(cfg model.Config, name string) error {
+func GetItemFromVault(cfg model.Config, name string, keyring *model.MasterAESKeyManager) error {
 	f, err := utils.OpenVault(cfg.VaultName)
 	if err != nil {
 		return fmt.Errorf("opening vault: %v", err)
 	}
 	defer f.Close()
 
-	entries := crypt.DecryptVault(f)
+	entries := crypt.DecryptVault(f, keyring, false)
 
 	if len(entries) == 0 {
 		return fmt.Errorf("nothing in vault")
@@ -92,7 +99,10 @@ func GetItemFromVault(cfg model.Config, name string) error {
 			fmt.Println("From vault:")
 			fmt.Println("Name: ", e.Name)
 			fmt.Println("\tUsername: \t", e.Username)
-			fmt.Println("\tPassword: \t", crypt.DecryptPassword(e.Password))
+			fmt.Println(
+				"\tPassword: \t",
+				crypt.DecryptPassword(e.Password, keyring, false),
+			)
 
 			if len(e.Notes) > 0 {
 				fmt.Println("\tNotes: \t\t", e.Notes)
@@ -103,7 +113,7 @@ func GetItemFromVault(cfg model.Config, name string) error {
 
 	fmt.Printf("'%s' not found.\n", name)
 
-	encryptedCipherText, err := crypt.EncryptVault(entries)
+	encryptedCipherText, err := crypt.EncryptVault(entries, keyring)
 	if err != nil {
 		return fmt.Errorf("add::obtaining ciphertext: %v", err)
 	}

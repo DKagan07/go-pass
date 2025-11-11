@@ -6,6 +6,7 @@ package vault
 import (
 	"errors"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 	"time"
@@ -53,7 +54,14 @@ func SearchCmdHandler(cmd *cobra.Command, args []string) error {
 		)
 	}
 
-	cfg, err := utils.CheckConfig("")
+	passB, err := utils.GetPasswordFromUser(true, os.Stdin)
+	if err != nil {
+		return err
+	}
+
+	keyring := model.NewMasterAESKeyManager(string(passB))
+
+	cfg, err := utils.CheckConfig("", keyring)
 	if err != nil {
 		return err
 	}
@@ -64,13 +72,13 @@ func SearchCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 
 	searchTerm := strings.ToLower(args[0])
-	return SearchVault(searchTerm, cfg)
+	return SearchVault(searchTerm, cfg, keyring)
 }
 
 // SearchVault is the function that searches the vault for a source that matches
 // the search term. It will print out all sources that match the search term.
 // This is a case insensitive search.
-func SearchVault(searchTerm string, cfg model.Config) error {
+func SearchVault(searchTerm string, cfg model.Config, key *model.MasterAESKeyManager) error {
 	if searchTerm == "" {
 		return fmt.Errorf("no search term provided")
 	}
@@ -81,7 +89,7 @@ func SearchVault(searchTerm string, cfg model.Config) error {
 	}
 	defer f.Close()
 
-	entries := crypt.DecryptVault(f)
+	entries := crypt.DecryptVault(f, key, false)
 
 	if len(entries) == 0 {
 		return fmt.Errorf("nothing in vault")

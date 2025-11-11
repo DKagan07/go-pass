@@ -23,8 +23,9 @@ var cleanCmd = &cobra.Command{
 	Long: fmt.Sprintf(`%s
 
 'clean' removes your config and vault from your computer. This is a permanent
-event and needs to be done with clear intentions. A simple 'y' or 'n' is needed
-at the prompt.
+event and needs to be done with clear intentions.
+NOTE: This is a nuclear option. Be Careful.
+A simple 'y' or 'n' is needed at the prompt.
 `, LongDescriptionText),
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := CleanCmdHandler(cmd, args); err != nil {
@@ -44,12 +45,7 @@ func CleanCmdHandler(cmd *cobra.Command, args []string) error {
 		return errors.New("too many arugments for 'clean'. see 'help' for correct usage")
 	}
 
-	cfg, err := utils.CheckConfig("")
-	if err != nil {
-		return fmt.Errorf("config file does not exist: %v", err)
-	}
-
-	return CleanFiles(cfg, os.Stdin)
+	return CleanFiles(model.Config{}, os.Stdin)
 }
 
 // Clean files separates the logic from the handler. This prompts the user and
@@ -64,7 +60,7 @@ func CleanFiles(cfg model.Config, r io.Reader) error {
 		if err := RemoveConfig(""); err != nil {
 			return fmt.Errorf("error removing config: %v", err)
 		}
-		if err := RemoveVault(cfg.VaultName); err != nil {
+		if err := RemoveVault(""); err != nil {
 			return fmt.Errorf("error removing vault: %v", err)
 		}
 	}
@@ -90,9 +86,21 @@ func RemoveConfig(configFP string) error {
 // RemoveVault encapsulates the logic of removing the vault, or the place where
 // the passwords are stored.
 func RemoveVault(vaultName string) error {
-	if err := os.Remove(path.Join(utils.VAULT_PATH, vaultName)); err != nil {
-		return fmt.Errorf("error removing vault: %v", err)
+	dirEntrys, err := os.ReadDir(utils.VAULT_PATH)
+	if err != nil {
+		return err
 	}
+
+	for _, de := range dirEntrys {
+		fmt.Printf("dirEntry: %+v\n", de)
+		if err := os.Remove(path.Join(utils.VAULT_PATH, de.Name())); err != nil {
+			return err
+		}
+	}
+
+	// if err := os.Remove(path.Join(utils.VAULT_PATH, vaultName)); err != nil {
+	// 	return fmt.Errorf("error removing vault: %v", err)
+	// }
 	fmt.Println("Removed vault.")
 	return nil
 }

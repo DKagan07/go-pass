@@ -35,7 +35,14 @@ Ex.
 }
 
 func UpdateTimeoutCmdHandler(cmd *cobra.Command, args []string) error {
-	cfg, err := utils.CheckConfig("")
+	passB, err := utils.GetPasswordFromUser(true, os.Stdin)
+	if err != nil {
+		return err
+	}
+
+	keyring := model.NewMasterAESKeyManager(string(passB))
+
+	cfg, err := utils.CheckConfig("", keyring)
 	if err != nil {
 		return err
 	}
@@ -49,12 +56,12 @@ func UpdateTimeoutCmdHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	encryptedConfig, err := crypt.EncryptConfig(cfg)
+	encryptedConfig, err := crypt.EncryptConfig(cfg, keyring)
 	if err != nil {
 		return err
 	}
 
-	cfgFile, err := os.OpenFile(utils.CONFIG_FILE, os.O_RDWR, 0644)
+	cfgFile, err := os.OpenFile(utils.CONFIG_FILE, os.O_RDWR, 0o644)
 	if err != nil {
 		return err
 	}

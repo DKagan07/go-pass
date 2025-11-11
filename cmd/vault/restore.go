@@ -15,6 +15,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"go-pass/crypt"
+	"go-pass/model"
 	"go-pass/utils"
 )
 
@@ -55,7 +56,14 @@ func RestoreCmdHandler(cmd *cobra.Command, args []string) error {
 		)
 	}
 
-	cfg, err := utils.CheckConfig("")
+	passB, err := utils.GetPasswordFromUser(true, os.Stdin)
+	if err != nil {
+		return err
+	}
+
+	keyring := model.NewMasterAESKeyManager(string(passB))
+
+	cfg, err := utils.CheckConfig("", keyring)
 	if err != nil {
 		return err
 	}
@@ -65,13 +73,13 @@ func RestoreCmdHandler(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("cannot access, need to login")
 	}
 
-	return RestoreVault(cfg.VaultName, false)
+	return RestoreVault(cfg.VaultName, false, keyring)
 }
 
 // RestoreVault encapsulates the logic for the 'restore' command. It ensure that
 // the vault is not present, creates one, decrypts the backup, encrypts the
 // contents and writes it to the new vault.
-func RestoreVault(vaultName string, test bool) error {
+func RestoreVault(vaultName string, test bool, key *model.MasterAESKeyManager) error {
 	// need to make sure the vault is not present
 	_, err := utils.OpenVault(vaultName)
 	if err == nil {
@@ -113,14 +121,14 @@ func RestoreVault(vaultName string, test bool) error {
 	defer restoreFp.Close()
 
 	// Get plaintext from file
-	backupEntries := crypt.DecryptVault(restoreFp)
+	backupEntries := crypt.DecryptVault(restoreFp, key, false)
 	// Encrypt with new nonce
-	backupBytes, err := crypt.EncryptVault(backupEntries)
+	backupBytes, err := crypt.EncryptVault(backupEntries, key)
 	if err != nil {
 		return err
 	}
 
-	v, err := utils.CreateVault(vaultName)
+	v, err := utils.CreateVault(vaultName, key)
 	if err != nil {
 		return err
 	}

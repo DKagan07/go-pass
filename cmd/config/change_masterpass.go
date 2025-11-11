@@ -42,7 +42,14 @@ Ex.
 }
 
 func ChangeMasterpassCmdHandler(cmd *cobra.Command, args []string) error {
-	cfg, err := utils.CheckConfig("")
+	passB, err := utils.GetPasswordFromUser(true, os.Stdin)
+	if err != nil {
+		return err
+	}
+
+	keyring := model.NewMasterAESKeyManager(string(passB))
+
+	cfg, err := utils.CheckConfig("", keyring)
 	if err != nil {
 		return err
 	}
@@ -52,14 +59,14 @@ func ChangeMasterpassCmdHandler(cmd *cobra.Command, args []string) error {
 		return errors.New("cannot access, need to login")
 	}
 
-	err = ChangeMasterpass(cfg)
+	err = ChangeMasterpass(cfg, keyring)
 	if err != nil {
 		return fmt.Errorf("error: %w", err)
 	}
 	return nil
 }
 
-func ChangeMasterpass(cfg model.Config) error {
+func ChangeMasterpass(cfg model.Config, key *model.MasterAESKeyManager) error {
 	fmt.Println(strings.Repeat("*", 24))
 	fmt.Println("Input current password:")
 	fmt.Println(strings.Repeat("*", 24))
@@ -100,12 +107,12 @@ func ChangeMasterpass(cfg model.Config) error {
 	}
 
 	cfg.MasterPassword = bNewPass
-	cfgB, err := crypt.EncryptConfig(cfg)
+	cfgB, err := crypt.EncryptConfig(cfg, key)
 	if err != nil {
 		return err
 	}
 
-	cfgFile, err := os.OpenFile(utils.CONFIG_FILE, os.O_RDWR, 0644)
+	cfgFile, err := os.OpenFile(utils.CONFIG_FILE, os.O_RDWR, 0o644)
 	if err != nil {
 		return err
 	}

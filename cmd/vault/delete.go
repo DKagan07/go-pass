@@ -47,7 +47,14 @@ func DeleteCmdHandler(cmd *cobra.Command, args []string) error {
 
 	itemToDelete := strings.Join(args, " ")
 
-	cfg, err := utils.CheckConfig("")
+	passB, err := utils.GetPasswordFromUser(true, os.Stdin)
+	if err != nil {
+		return err
+	}
+
+	keyring := model.NewMasterAESKeyManager(string(passB))
+
+	cfg, err := utils.CheckConfig("", keyring)
 	if err != nil {
 		return err
 	}
@@ -57,7 +64,7 @@ func DeleteCmdHandler(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("cannot access, need to login")
 	}
 
-	err = DeleteItemInVault(cfg, itemToDelete, os.Stdin)
+	err = DeleteItemInVault(cfg, itemToDelete, os.Stdin, keyring)
 	if err != nil {
 		return err
 	}
@@ -67,7 +74,12 @@ func DeleteCmdHandler(cmd *cobra.Command, args []string) error {
 
 // DeleteItemInVault encapsulates the logic for deleting 'name' from the vault
 // if it exists. If not, it will error and print a message out to user.
-func DeleteItemInVault(cfg model.Config, name string, r io.Reader) error {
+func DeleteItemInVault(
+	cfg model.Config,
+	name string,
+	r io.Reader,
+	key *model.MasterAESKeyManager,
+) error {
 	// TODO: should I add all the open and decrypt into the confirm conditional?
 	f, err := utils.OpenVault(cfg.VaultName)
 	if err != nil {
@@ -75,7 +87,7 @@ func DeleteItemInVault(cfg model.Config, name string, r io.Reader) error {
 	}
 	defer f.Close()
 
-	entries := crypt.DecryptVault(f)
+	entries := crypt.DecryptVault(f, key, false)
 
 	if len(entries) == 0 {
 		return fmt.Errorf("nothing in your vault")
@@ -101,7 +113,7 @@ func DeleteItemInVault(cfg model.Config, name string, r io.Reader) error {
 		}
 	}
 
-	b, err := crypt.EncryptVault(entries)
+	b, err := crypt.EncryptVault(entries, key)
 	if err != nil {
 		log.Fatalf("delete::failed to encrypt: %v", err)
 	}

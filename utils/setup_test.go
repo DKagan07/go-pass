@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"go-pass/model"
+	"go-pass/testutils"
 )
 
 const TEST_FILE_NAME = "test.json"
@@ -23,11 +24,14 @@ func cleanup() {
 // TODO: UPDATE THESE TESTS FOR THE CREATE CONFIG AND VAULT FUNCTIONS
 // This needs to happen in ALL of the command test files too
 func TestCreateVault(t *testing.T) {
-	cleanup()
-	defer cleanup()
+	testutils.TestCleanup(string(testutils.TEST_MASTER_PASSWORD))
+	defer testutils.TestCleanup(string(testutils.TEST_MASTER_PASSWORD))
 	assert := assert.New(t)
 
-	f, err := CreateVault(TEST_FILE_NAME)
+	key, err := testutils.InitTestKeyring(string(testutils.TEST_MASTER_PASSWORD))
+	assert.NoError(err)
+
+	f, err := CreateVault(TEST_FILE_NAME, key)
 	assert.NoError(err)
 	defer f.Close()
 
@@ -37,11 +41,14 @@ func TestCreateVault(t *testing.T) {
 }
 
 func TestOpenVault(t *testing.T) {
-	cleanup()
-	defer cleanup()
+	testutils.TestCleanup(string(testutils.TEST_MASTER_PASSWORD))
+	defer testutils.TestCleanup(string(testutils.TEST_MASTER_PASSWORD))
 	assert := assert.New(t)
 
-	f, err := CreateVault(TEST_FILE_NAME)
+	key, err := testutils.InitTestKeyring(string(testutils.TEST_MASTER_PASSWORD))
+	assert.NoError(err)
+
+	f, err := CreateVault(TEST_FILE_NAME, key)
 	assert.NoError(err)
 	f.Close()
 
@@ -70,7 +77,7 @@ func TestIsAccessBeforeLogin(t *testing.T) {
 			name: "time is before 30 mins",
 			config: model.Config{
 				LastVisited: time.Now().Add(time.Minute * -12).UnixMilli(),
-				Timeout:     THIRTY_MINUTES,
+				Timeout:     testutils.THIRTY_MINUTES,
 			},
 			expected: true,
 		},
@@ -78,7 +85,7 @@ func TestIsAccessBeforeLogin(t *testing.T) {
 			name: "time is more than 30 mins",
 			config: model.Config{
 				LastVisited: time.Now().Add(time.Minute * -45).UnixMilli(),
-				Timeout:     THIRTY_MINUTES,
+				Timeout:     testutils.THIRTY_MINUTES,
 			},
 			expected: false,
 		},
@@ -126,30 +133,36 @@ func TestCheckConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			testutils.TestCleanup(string(testutils.TEST_MASTER_PASSWORD))
+			defer testutils.TestCleanup(string(testutils.TEST_MASTER_PASSWORD))
 			assert := assert.New(t)
+
+			key, err := testutils.InitTestKeyring(string(testutils.TEST_MASTER_PASSWORD))
+			assert.NoError(err)
 
 			if tt.configPresent {
 				fmt.Println("Creating config")
 				f, err := CreateConfig(
-					TEST_VAULT_NAME,
-					TEST_MASTER_PASSWORD,
-					TEST_CONFIG_NAME,
+					testutils.TEST_VAULT_NAME,
+					testutils.TEST_MASTER_PASSWORD,
+					testutils.TEST_CONFIG_NAME,
+					key,
 				)
 				assert.NoError(err)
 				defer f.Close()
 			}
 
 			fmt.Println("Checking config")
-			cfg, err := CheckConfig(TEST_CONFIG_NAME)
+			cfg, err := CheckConfig(testutils.TEST_CONFIG_NAME, key)
 
 			time := cfg.LastVisited
 			if tt.configPresent {
 				fmt.Println("Checking config if present")
 				assert.Equal(model.Config{
-					MasterPassword: TEST_MASTER_PASSWORD,
-					VaultName:      TEST_VAULT_NAME,
+					MasterPassword: testutils.TEST_MASTER_PASSWORD,
+					VaultName:      testutils.TEST_VAULT_NAME,
 					LastVisited:    time,
-					Timeout:        THIRTY_MINUTES,
+					Timeout:        testutils.THIRTY_MINUTES,
 				}, cfg)
 				assert.NoError(err)
 			} else {

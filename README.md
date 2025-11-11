@@ -1,80 +1,267 @@
-![Image](https://github.com/user-attachments/assets/df96f0ac-a1d5-4f61-9153-e245c8a5777c)
+![GoPass Logo](https://github.com/user-attachments/assets/df96f0ac-a1d5-4f61-9153-e245c8a5777c)
 
 # GoPass
 
-## GoPass is a CLI tool that help stores your passwords with security in mind.
+**A secure, local-first password manager with dual CLI/TUI interfaces**
 
-This application encrypts, hashes, and stores passwords.
-Everything is local to your computer! Nothing is stored on the internet
+GoPass is a modern command-line password manager built with Go that prioritizes security and privacy. All data is encrypted and stored locally on your machine—nothing ever touches the internet.
 
-### Features
+## Features
 
-- Secure storage of passwords locally
-- Encryption of passwords with AES-256-GCM algorithm
-- Hashing of passwords with bcrypt
-- Encrypted Backups
-- Restores form backups
-- Searching through your vault
-- Secure password generation
+- ** Triple-Layer Security**: OS keyring integration + master password + environment salt
+- ** Dual Interface**: Full-featured CLI and interactive TUI (Terminal User Interface)
+- ** AES-256-GCM Encryption**: Authenticated encryption for all password storage
+- ** PBKDF2 Key Derivation**: 100,000 iterations with SHA-256
+- ** Encrypted Backups**: Create and restore from encrypted backup files
+- ** Fast Search**: Real-time filtering and case-insensitive search
+- ** Password Generator**: Cryptographically secure password generation (default 24 characters)
+- ** Session Management**: Configurable timeout for enhanced security
+- ** Local-Only Storage**: Zero network dependencies, complete privacy
 
-### Get Started
+## Security Architecture
 
-1. Ensure you have Golang installed on your system.
+GoPass implements a robust three-layer security model:
 
-   a. You can install Golang [here](https://go.dev/doc/install)
+### Layer 1: Master Password Authentication
+- User-provided master password
+- Hashed with bcrypt before storage
+- Required for all vault operations
 
-2. You want to have an environment variable, called `SECRET_PASSWORD_KEY` in your rc file (ex. `~/.zshrc` or `~/.bashrc`). It needs to be 32 bytes long.
+### Layer 2: OS Keyring Integration
+- 32-byte random key stored in system keyring
+- Hardware-backed on supported platforms (Keychain on macOS, Secret Service on Linux, Credential Manager on Windows)
+- Service: `gopass`, Account: `encryption_key`
 
-   a. You can create one [here](https://passwords-generator.org/32-character), for example. NOTE: You might need to escape certain characters, like single quote, double quote, backticks, and backslashes
+### Layer 3: Environment-Based Salt
+- `SECRET_PASSWORD_KEY` environment variable as a salt (32 bytes)
+- Additional salt layer for PBKDF2 key derivation
+- Combined with keyring key and master password
 
-3. Run `git clone https://github.com/DKagan07/go-pass.git` in your terminal to copy this repo onto your system.
+**Encryption Process:**
+```
+Base Key (from keyring) + Master Password → PBKDF2 (100k iterations, SHA-256) → AES-256-GCM Key
+```
 
-4. Run `cd go-pass` to enter the root of the repo.
+## Installation
 
-5. In the root of the repo, run `make`. This builds the binary and moves it to `/usr/local/bin`.
+### Requirements
+- Go 1.23 or higher
+- Linux, macOS, or Windows
+- System keyring support (typically built-in)
 
-   a. If you want to move this binary to another custom path, you can run `make PREFIX=/custom/path`. Ensure this has a `bin` directory, and is in your `$PATH`.
+### Quick Install
 
-6. You can now run `gopass <command> <sub_command>`!
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/DKagan07/go-pass.git
+   cd go-pass
+   ```
 
-### Commands
+2. **Set up environment variable:**
 
-Commands are divided into different categories. The main category are 'vault' related commands
+   Add this to your shell RC file (`~/.bashrc`, `~/.zshrc`, etc.):
+   ```bash
+   export SECRET_PASSWORD_KEY="your-32-character-secret-key-here"
+   ```
+
+   Generate a secure 32-character key [here](https://passwords-generator.org/32-character).
+
+   **Note:** Escape special characters like `'`, `"`, `` ` ``, and `\` if needed.
+
+3. **Build and install:**
+   ```bash
+   make
+   ```
+
+   This builds the binary and installs it to `/usr/local/bin`.
+
+   **Custom installation path:**
+   ```bash
+   make PREFIX=/custom/path
+   ```
+   Ensure the path contains a `bin/` directory and is in your `$PATH`.
+
+4. **Initialize GoPass:**
+   ```bash
+   gopass init
+   ```
+
+## Usage
+
+### TUI Mode (Interactive Interface)
+
+Launch the full-featured terminal UI:
+```bash
+gopass -o
+```
+
+**TUI Keyboard Shortcuts:**
+- `a` - Add new entry
+- `d` - Delete selected entry
+- `u` - Update selected entry
+- `Enter` - View entry details
+- `Tab` - Switch between search bar and vault list
+- `Esc` - Exit modals/cancel operations
+- `/` - Focus search bar
+
+### CLI Mode
+
+#### Getting Started
+```bash
+# Initialize vault (first-time setup)
+gopass init
+
+# Login (required after timeout)
+gopass login
+```
 
 #### Vault Commands
 
-- **add**: Add a new password to the vault
-- **backup**: Backups up your vault
-- **delete**: Delete a specific item from your vault
-- **generate**: Generates a secure password with any length (default is 24 characters)
-- **get**: Get specific information from your vault by source name
-- **list**: Lists all the sources of your login infos
-- **restore**: Restores your vault from a chosen backup
-- **search**: Insensitive-case search for sources in your vault. Will return a list of all matches
-- **update**: Updates an entry in your vault with specific flags
+```bash
+# Add a new password entry
+gopass vault add
 
-#### Config Commands
+# List all entries
+gopass vault list
 
-- **change_timeout**: Change the timeout of your session -> the longer the time, the longer time to pass before you need to log in
-- **change-masterpass**: Change the master password, used for logging in
-- **view**: Views the current state of your config without showing the Master Password
+# Search for entries (case-insensitive)
+gopass vault search <query>
 
-#### General Commands
+# Get a specific entry
+gopass vault get <name>
 
-- **clean**: Removes all storage of passwords
-- **completion**: Generate the autocompletion script for the specified shell
-- **init**: Initialize all files and begins use of the app
-- **login**: Login to the app
-- **help**: Help for all commands and sub_commands
+# Update an existing entry
+gopass vault update
 
-### Workflow:
+# Delete an entry
+gopass vault delete
 
-1. `gopass init` creates the files necessary and stores a master password.
+# Generate a secure password
+gopass vault generate [--length 24]
 
-   a. This counts as an initial login when creating files. For all future logins, you will need to `gopass login`.
+# Create an encrypted backup
+gopass vault backup
 
-2. Use the commands listed above to interact with the app and passwords.
+# Restore from backup
+gopass vault restore
 
-3. `gopass login` takes the master password and unlocks use of the app.
+# List available backups
+gopass vault list --backup
+```
 
-   a. If the app is not in use for your timeout time (default is 30 mins), you will need to login.
+#### Configuration Commands
+
+```bash
+# View current configuration
+gopass config view
+
+# Change master password
+gopass config change-masterpass
+
+# Update session timeout (in milliseconds)
+gopass config update-timeout
+```
+
+#### Maintenance Commands
+
+```bash
+# Remove all data (vault + config + keyring entry)
+gopass clean
+
+# Display help
+gopass help
+gopass vault help
+```
+
+## File Locations
+
+- **Vault:** `~/.local/gopass/pass.json` (encrypted)
+- **Config:** `~/.config/gopass/gopass-cfg.json` (encrypted)
+- **Backups:** `~/.local/gopass-backup/backup__<timestamp>.json`
+- **Keyring:** System keyring (location varies by OS)
+
+## Development
+
+### Project Structure
+
+```
+go-pass/
+├── cmd/                    # Command implementations
+│   ├── vault/             # Vault-related commands
+│   ├── config/            # Configuration commands
+│   └── test_tview_root.go # TUI implementation
+├── model/                 # Data models and keyring manager
+├── crypt/                 # Encryption/decryption logic
+├── utils/                 # File I/O and utilities
+└── testutils/             # Testing utilities
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+make test
+
+# Run tests for specific package
+go test ./cmd/...
+go test ./crypt/...
+```
+
+### Building from Source
+
+```bash
+# Build binary
+go build -o gopass
+
+# Run without installing
+go run main.go <command>
+go run main.go -o  # TUI mode
+```
+
+### Cleanup
+
+```bash
+# Remove vault and config files
+make remove
+
+# Uninstall binary
+make uninstall
+```
+
+## Dependencies
+
+- **CLI Framework:** [spf13/cobra](https://github.com/spf13/cobra)
+- **TUI Framework:** [rivo/tview](https://github.com/rivo/tview) + [gdamore/tcell](https://github.com/gdamore/tcell)
+- **Keyring:** [zalando/go-keyring](https://github.com/zalando/go-keyring)
+- **Crypto:** `golang.org/x/crypto` (bcrypt, PBKDF2)
+- **Testing:** [stretchr/testify](https://github.com/stretchr/testify)
+
+## Security Best Practices
+
+1. **Never share your `SECRET_PASSWORD_KEY`** - Treat it like a password
+2. **Use a strong master password** - It's your first line of defense
+3. **Regular backups** - Use `gopass vault backup` periodically
+4. **Session timeout** - Default is 30 minutes; adjust based on your security needs
+5. **Secure your backup files** - They contain encrypted vault data
+
+## Troubleshooting
+
+**"Salt not appropriate length or not present"**
+- Ensure `SECRET_PASSWORD_KEY` is exactly 32 characters
+- Verify it's exported in your current shell session
+
+**Keyring errors on Linux**
+- Ensure `gnome-keyring` or `seahorse` is installed
+- For headless systems, consider using `secret-tool` manually
+
+**Permission denied during installation**
+- The Makefile uses `sudo` to install to `/usr/local/bin`
+- Alternatively, use `make PREFIX=~/.local` for user-local installation
+
+## License
+
+See [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+Built with security and privacy in mind. Special thanks to the Go community and the maintainers of the excellent libraries this project depends on.

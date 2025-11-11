@@ -44,7 +44,14 @@ func ListCmdHandler(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("no arguments needed for 'list'. see 'help' for more guidance")
 	}
 
-	cfg, err := utils.CheckConfig("")
+	bp, err := utils.GetPasswordFromUser(true, os.Stdin)
+	if err != nil {
+		return err
+	}
+
+	keyring := model.NewMasterAESKeyManager(string(bp))
+
+	cfg, err := utils.CheckConfig("", keyring)
 	if err != nil {
 		return err
 	}
@@ -65,7 +72,7 @@ func ListCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 
 	if !backups {
-		err = PrintList(sourceName, cfg)
+		err = PrintList(sourceName, cfg, keyring)
 		if err != nil {
 			return fmt.Errorf("error printing list: %v", err)
 		}
@@ -81,13 +88,14 @@ func ListCmdHandler(cmd *cobra.Command, args []string) error {
 // PrintList is the function that prints the list of sources in the vault.
 // If a source name is provided, it will check if the source exists in the vault.
 // If a source name is not provided, it will print all sources in the vault.
-func PrintList(sourceName string, cfg model.Config) error {
+func PrintList(sourceName string, cfg model.Config, key *model.MasterAESKeyManager) error {
 	f, err := utils.OpenVault(cfg.VaultName)
 	if err != nil {
 		return fmt.Errorf("opening vault: %v", err)
 	}
 	defer f.Close()
-	entries := crypt.DecryptVault(f)
+
+	entries := crypt.DecryptVault(f, key, false)
 
 	if len(entries) == 0 {
 		return fmt.Errorf("nothing in vault")
@@ -113,7 +121,7 @@ func PrintList(sourceName string, cfg model.Config) error {
 		return fmt.Errorf("%s does not exist", sourceName)
 	}
 
-	encryptedCipherText, err := crypt.EncryptVault(entries)
+	encryptedCipherText, err := crypt.EncryptVault(entries, key)
 	if err != nil {
 		return fmt.Errorf("list::obtaining ciphertext: %v", err)
 	}

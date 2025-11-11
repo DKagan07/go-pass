@@ -52,7 +52,14 @@ func GenerateCmdHandler(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("no arguments needed for 'generate'. see 'help' for more guidance")
 	}
 
-	cfg, err := utils.CheckConfig("")
+	passB, err := utils.GetPasswordFromUser(true, os.Stdin)
+	if err != nil {
+		return err
+	}
+
+	keyring := model.NewMasterAESKeyManager(string(passB))
+
+	cfg, err := utils.CheckConfig("", keyring)
 	if err != nil {
 		return err
 	}
@@ -81,7 +88,7 @@ func GenerateCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 
 	if source != "" {
-		return AddGeneratedPasswordToVault(source, strongPasswordBytes, cfg, now)
+		return AddGeneratedPasswordToVault(source, strongPasswordBytes, cfg, now, keyring)
 	}
 
 	return nil
@@ -91,9 +98,16 @@ func GenerateCmdHandler(cmd *cobra.Command, args []string) error {
 // from the user and storing the information in the vault. The source is
 // obtained from the '-a' flag, and the password is generated from the
 // 'GeneratePassword' function.
-func AddGeneratedPasswordToVault(source string, password []byte, cfg model.Config, t int64) error {
+func AddGeneratedPasswordToVault(
+	source string,
+	password []byte,
+	cfg model.Config,
+	t int64,
+	key *model.MasterAESKeyManager,
+) error {
+	pass, _ := crypt.EncryptPassword(password, key)
 	userInput := model.UserInput{
-		Password: crypt.EncryptPassword(password),
+		Password: []byte(pass),
 	}
 
 	username, err := utils.GetInputFromUser(os.Stdin, "Username")
@@ -107,7 +121,7 @@ func AddGeneratedPasswordToVault(source string, password []byte, cfg model.Confi
 
 	userInput.Username = username
 	userInput.Notes = notes
-	return AddToVault(source, userInput, cfg, t)
+	return AddToVault(source, userInput, cfg, t, key)
 }
 
 // GeneratePassword generates a strong password of default length 24 consisting

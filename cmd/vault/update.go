@@ -74,19 +74,33 @@ func UpdateCmdHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	passB, err := utils.GetPasswordFromUser(true, os.Stdin)
+	if err != nil {
+		return err
+	}
+
+	keyring := model.NewMasterAESKeyManager(string(passB))
+
 	cfgFile, ok, err := utils.OpenConfig("")
 	if ok && err == nil {
 		return errors.New("need to init")
 	}
 	defer cfgFile.Close()
-	cfg := crypt.DecryptConfig(cfgFile)
+
+	cfg := crypt.DecryptConfig(cfgFile, keyring, false)
 
 	now := time.Now().UnixMilli()
 	if !utils.IsAccessBeforeLogin(cfg, now) {
 		return errors.New("need to login")
 	}
 
-	err = UpdateEntry(i, cfg, totalStr, InputSources{os.Stdin, os.Stdin, os.Stdin, os.Stdin})
+	err = UpdateEntry(
+		i,
+		cfg,
+		totalStr,
+		InputSources{os.Stdin, os.Stdin, os.Stdin, os.Stdin},
+		keyring,
+	)
 	if err != nil {
 		return fmt.Errorf("error updating entry: %v", err)
 	}
@@ -132,13 +146,19 @@ func UpdateFlags(cmd *cobra.Command) (Inputs, error) {
 
 // UpdateEntry contains the logic of actually updating the vault entry and
 // storing it in the vault.
-func UpdateEntry(inputs Inputs, cfg model.Config, sourceName string, is InputSources) error {
+func UpdateEntry(
+	inputs Inputs,
+	cfg model.Config,
+	sourceName string,
+	is InputSources,
+	key *model.MasterAESKeyManager,
+) error {
 	f, err := utils.OpenVault(cfg.VaultName)
 	if err != nil {
 		return fmt.Errorf("opening vault: %v", err)
 	}
 	defer f.Close()
-	entries := crypt.DecryptVault(f)
+	entries := crypt.DecryptVault(f, key, false)
 
 	var ve model.VaultEntry
 
@@ -156,14 +176,14 @@ func UpdateEntry(inputs Inputs, cfg model.Config, sourceName string, is InputSou
 		return fmt.Errorf("'%s' not found", sourceName)
 	}
 
-	ve, err = UpdateVaultEntry(ve, inputs, is)
+	ve, err = UpdateVaultEntry(ve, inputs, is, key)
 	if err != nil {
 		return err
 	}
 
 	entries[idx] = ve
 
-	encryptedCipherText, err := crypt.EncryptVault(entries)
+	encryptedCipherText, err := crypt.EncryptVault(entries, key)
 	if err != nil {
 		log.Fatalf("update::obtaining ciphertext: %v", err)
 	}
@@ -178,6 +198,7 @@ func UpdateVaultEntry(
 	ve model.VaultEntry,
 	inputs Inputs,
 	updateSources InputSources,
+	key *model.MasterAESKeyManager,
 ) (model.VaultEntry, error) {
 	var updatedSourceName string
 	var updatedUsername string
@@ -204,7 +225,9 @@ func UpdateVaultEntry(
 		if err != nil {
 			return model.VaultEntry{}, err
 		}
-		ve.Password = crypt.EncryptPassword(updatedPassword)
+		p, _ := crypt.EncryptPassword(updatedPassword, key)
+
+		ve.Password = []byte(p)
 	}
 	if inputs.Notes {
 		updatedNotes, err = utils.GetInputFromUser(updateSources.Notes, "Notes")

@@ -57,7 +57,14 @@ func AddCmdHandler(cmd *cobra.Command, args []string) error {
 
 	totalStr := strings.Join(args, " ")
 
-	cfg, err := utils.CheckConfig("")
+	pBytes, err := utils.GetPasswordFromUser(true, os.Stdin)
+	if err != nil {
+		return err
+	}
+
+	keyring := model.NewMasterAESKeyManager(string(pBytes))
+
+	cfg, err := utils.CheckConfig("", keyring)
 	if err != nil {
 		return err
 	}
@@ -67,17 +74,17 @@ func AddCmdHandler(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("cannot access, need to login")
 	}
 
-	userInput, err := GetInput(os.Stdin, os.Stdin, os.Stdin)
+	userInput, err := GetInput(os.Stdin, os.Stdin, os.Stdin, keyring)
 	if err != nil {
 		return err
 	}
 
-	return AddToVault(totalStr, userInput, cfg, time.Now().UnixMilli())
+	return AddToVault(totalStr, userInput, cfg, time.Now().UnixMilli(), keyring)
 }
 
 // GetInput is a function where we get input from the user, and return it in a
 // model.UserInput.
-func GetInput(us, pw, no io.Reader) (model.UserInput, error) {
+func GetInput(us, pw, no io.Reader, key *model.MasterAESKeyManager) (model.UserInput, error) {
 	ui := model.UserInput{}
 
 	username, err := utils.GetInputFromUser(us, "Username")
@@ -93,15 +100,23 @@ func GetInput(us, pw, no io.Reader) (model.UserInput, error) {
 		return ui, err
 	}
 
+	pas, _ := crypt.EncryptPassword(password, key)
+
 	ui.Username = username
-	ui.Password = crypt.EncryptPassword(password)
+	ui.Password = []byte(pas)
 	ui.Notes = notes
 	return ui, nil
 }
 
 // AddToVault holds the logic that adds encrypts the input from the user, and
 // stores it into the vault.
-func AddToVault(source string, ui model.UserInput, cfg model.Config, t int64) error {
+func AddToVault(
+	source string,
+	ui model.UserInput,
+	cfg model.Config,
+	t int64,
+	key *model.MasterAESKeyManager,
+) error {
 	ve := model.VaultEntry{
 		Name:      source,
 		Username:  ui.Username,
@@ -123,12 +138,12 @@ func AddToVault(source string, ui model.UserInput, cfg model.Config, t int64) er
 
 	var entries []model.VaultEntry
 	if fStat.Size() != 2 {
-		entries = crypt.DecryptVault(f)
+		entries = crypt.DecryptVault(f, key, false)
 	}
 
 	entries = append(entries, ve)
 
-	encryptedCipherText, err := crypt.EncryptVault(entries)
+	encryptedCipherText, err := crypt.EncryptVault(entries, key)
 	if err != nil {
 		return fmt.Errorf("add::obtaining ciphertext: %v", err)
 	}

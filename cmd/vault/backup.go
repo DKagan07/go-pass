@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"go-pass/crypt"
+	"go-pass/model"
 	"go-pass/utils"
 )
 
@@ -56,7 +57,14 @@ func BackupCmdHandler(cmd *cobra.Command, args []string) error {
 		)
 	}
 
-	cfg, err := utils.CheckConfig("")
+	passB, err := utils.GetPasswordFromUser(true, os.Stdin)
+	if err != nil {
+		return err
+	}
+
+	keyring := model.NewMasterAESKeyManager(string(passB))
+
+	cfg, err := utils.CheckConfig("", keyring)
 	if err != nil {
 		return err
 	}
@@ -66,7 +74,7 @@ func BackupCmdHandler(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("cannot access, need to login")
 	}
 
-	return BackupVault("", cfg.VaultName, "", now)
+	return BackupVault("", cfg.VaultName, "", now, keyring)
 }
 
 // BackupVault contains the logic of creating the backup directory, if it
@@ -74,8 +82,12 @@ func BackupCmdHandler(cmd *cobra.Command, args []string) error {
 // `backup__YYYY-MM-DD_HH-MM-SS.json`. It then copies the contents of the vault
 // to the backup file.
 // TODO: Look into making better error handling
-func BackupVault(configName, vaultName, backupName string, now time.Time) error {
-	if err := os.MkdirAll(utils.BACKUP_DIR, 0700); err != nil {
+func BackupVault(
+	configName, vaultName, backupName string,
+	now time.Time,
+	key *model.MasterAESKeyManager,
+) error {
+	if err := os.MkdirAll(utils.BACKUP_DIR, 0o700); err != nil {
 		return err
 	}
 
@@ -83,7 +95,7 @@ func BackupVault(configName, vaultName, backupName string, now time.Time) error 
 	if backupName == "" {
 		fn = fmt.Sprintf(BACKUP_FILE_NAME, now.Format(DATE_FORMAT_STRING))
 	} else {
-		fn = fmt.Sprintf(utils.TEST_BACKUP_NAME, now.Format(DATE_FORMAT_STRING))
+		fn = fmt.Sprintf(backupName, now.Format(DATE_FORMAT_STRING))
 	}
 
 	backupFilePath := path.Join(utils.BACKUP_DIR, fn)
@@ -98,13 +110,13 @@ func BackupVault(configName, vaultName, backupName string, now time.Time) error 
 	}
 	defer currentVault.Close()
 
-	entries := crypt.DecryptVault(currentVault)
-	b, err := crypt.EncryptVault(entries)
+	entries := crypt.DecryptVault(currentVault, key, false)
+	b, err := crypt.EncryptVault(entries, key)
 	if err != nil {
 		return err
 	}
 
-	if err = os.WriteFile(backupFilePath, b, 0600); err != nil {
+	if err = os.WriteFile(backupFilePath, []byte(b), 0o600); err != nil {
 		return err
 	}
 
