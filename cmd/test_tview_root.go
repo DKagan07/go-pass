@@ -11,7 +11,6 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"golang.org/x/crypto/bcrypt"
 
 	"go-pass/crypt"
 	"go-pass/model"
@@ -26,6 +25,7 @@ type App struct {
 	Vault         []model.VaultEntry
 	FilteredVault []model.VaultEntry
 	Cfg           model.Config
+	Keyring       *model.MasterAESKeyManager
 
 	VaultList   *tview.List
 	Root        *tview.Flex
@@ -86,7 +86,7 @@ func (a *App) PopulateVaultList() {
 }
 
 func (a *App) ModalVaultInfoByVault(ve model.VaultEntry) *tview.Modal {
-	decryptedPassword := crypt.DecryptPassword(ve.Password)
+	decryptedPassword := crypt.DecryptPassword(ve.Password, a.Keyring, false)
 	text := fmt.Sprintf(`
 	Name: %s
 	Username: %s
@@ -165,7 +165,7 @@ func (a *App) VaultListView() *tview.Flex {
 
 func (a *App) ModalVaultInfoByIdx(idx int) *tview.Modal {
 	entry := a.Vault[idx]
-	decryptedPassword := crypt.DecryptPassword(entry.Password)
+	decryptedPassword := crypt.DecryptPassword(entry.Password, a.Keyring, false)
 	text := fmt.Sprintf(`
 	Name: %s
 	Username: %s
@@ -223,6 +223,10 @@ func (a *App) ModalAddVault() *tview.Flex {
 
 		a.PopulateVaultList()
 		a.RefreshRoot()
+
+		// FIX: For some reason, after adding something to the vault, the vault
+		// list loads properly, but there's no search bar, but it shows up
+		// after the inspection. Seems to be after all the actions (add, delete, etc)
 		a.App.SetRoot(a.Root, true)
 	})
 	inputForm.SetTitle(" Add Vault ")
@@ -249,14 +253,14 @@ func (a *App) ModalAddVault() *tview.Flex {
 
 func (a *App) AddToVault(name, notes, username, password string) {
 	passwordBytes := []byte(password)
-	encryptedPassword := crypt.EncryptPassword(passwordBytes)
+	encryptedPassword, _ := crypt.EncryptPassword(passwordBytes, a.Keyring)
 	now := time.Now().UnixMilli()
 
 	vault := model.VaultEntry{
 		Name:      name,
 		Username:  username,
 		Notes:     notes,
-		Password:  encryptedPassword,
+		Password:  []byte(encryptedPassword),
 		UpdatedAt: now,
 	}
 	a.Vault = append(a.Vault, vault)
@@ -298,7 +302,7 @@ func (a *App) UpdateVaultModal(currIdx int) *tview.Flex {
 	form := tview.NewForm().
 		AddInputField("Name", entry.Name, 0, nil, nil).
 		AddInputField("Username", entry.Username, 0, nil, nil).
-		AddInputField("Password", string(crypt.DecryptPassword(entry.Password)), 0, nil, nil).
+		AddInputField("Password", crypt.DecryptPassword(entry.Password, a.Keyring, false), 0, nil, nil).
 		AddInputField("Notes", entry.Notes, 0, nil, nil)
 	form.AddButton("Save", func() {
 		formName := form.GetFormItem(0).(*tview.InputField).GetText()
@@ -324,11 +328,12 @@ func (a *App) UpdateVaultModal(currIdx int) *tview.Flex {
 			return
 		}
 
+		p, _ := crypt.EncryptPassword([]byte(formPassword), a.Keyring)
 		newEntry := model.VaultEntry{
 			Name:      formName,
 			Username:  formUsername,
 			Notes:     formNotes,
-			Password:  crypt.EncryptPassword([]byte(formPassword)),
+			Password:  []byte(p),
 			UpdatedAt: entry.UpdatedAt,
 		}
 
@@ -381,12 +386,35 @@ func (a *App) RefreshRoot() {
 }
 
 func (a *App) SaveVault() {
-	encryptedCipherText, err := crypt.EncryptVault(a.Vault)
+	encryptedCipherText, err := crypt.EncryptVault(a.Vault, a.Keyring)
 	if err != nil {
 		panic(err)
 	}
 
 	utils.WriteToFile(a.VaultFile, encryptedCipherText)
+}
+
+func (a *App) CreateRoot() *tview.Flex {
+	help := tview.NewTextView().
+		SetText(helpText).
+		SetDynamicColors(true).
+		SetTextAlign(tview.AlignCenter)
+	help.SetBorder(true).SetTitle(" Help ")
+
+	root := tview.NewFlex().
+		SetDirection(tview.FlexRow).
+		AddItem(a.CreateSearchBar(), 3, 1, true).
+		AddItem(a.VaultListView(), 0, 1, true).
+		AddItem(help, 3, 1, false)
+	root.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyEsc {
+			a.App.Stop()
+			return nil
+		}
+		return event
+	})
+
+	return root
 }
 
 func (a *App) ErrorModal(errMsg string, dest tview.Primitive) *tview.Modal {
@@ -414,82 +442,54 @@ func NewApp() *App {
 func TviewRun() {
 	app := NewApp()
 	app.App = tview.NewApplication()
-	cfgFile, ok, err := utils.OpenConfig("")
-	if ok && err == nil {
-		panic(errors.New("a file is not found. need to 'init'"))
-		// TODO: implement 'init'
-	}
-	cfg := crypt.DecryptConfig(cfgFile)
-	app.Cfg = cfg
 
-	vaultF, _ := utils.OpenVault(cfg.VaultName)
-	app.VaultFile = vaultF
-	vault := crypt.DecryptVault(vaultF)
-	app.Vault = vault
+	// if !app.IsLoggedIn {
+	loginForm := tview.NewForm().
+		AddPasswordField("Master Password", "", 0, '*', nil)
 
-	app.PopulateVaultList()
+	loginForm.SetTitle(" Login ")
+	loginForm.SetBorder(true)
+	loginForm.SetBackgroundColor(tcell.ColorBlack)
+	loginForm.SetFieldBackgroundColor(tcell.ColorBlack)
+	loginForm.SetButtonBackgroundColor(tcell.Color103)
+	loginForm.AddButton("Login", func() {
+		masterPassword := loginForm.GetFormItem(0).(*tview.InputField).GetText()
 
-	help := tview.NewTextView().
-		SetText(helpText).
-		SetDynamicColors(true).
-		SetTextAlign(tview.AlignCenter)
-	help.SetBorder(true).SetTitle(" Help ")
+		keyring := model.NewMasterAESKeyManager(masterPassword)
+		app.Keyring = keyring
 
-	root := tview.NewFlex().
-		SetDirection(tview.FlexRow).
-		AddItem(app.CreateSearchBar(), 3, 1, true).
-		AddItem(app.VaultListView(), 0, 1, true).
-		AddItem(help, 3, 1, false)
-	root.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Key() == tcell.KeyEsc {
-			app.App.Stop()
-			return nil
+		cfgFile, ok, err := utils.OpenConfig("")
+		if ok && err == nil {
+			panic(errors.New("a file is not found. need to 'init'"))
+			// TODO: implement 'init'
 		}
-		return event
+		cfg := crypt.DecryptConfig(cfgFile, app.Keyring, false)
+		app.Cfg = cfg
+
+		vaultF, _ := utils.OpenVault(cfg.VaultName)
+		app.VaultFile = vaultF
+		vault := crypt.DecryptVault(vaultF, app.Keyring, false)
+		app.Vault = vault
+
+		app.PopulateVaultList()
+
+		root := app.CreateRoot()
+		app.Root = root
+
+		cfg.LastVisited = time.Now().UnixMilli()
+		encryptedCfg, err := crypt.EncryptConfig(cfg, app.Keyring)
+		if err != nil {
+			panic(err)
+		}
+		utils.WriteToFile(cfgFile, encryptedCfg)
+		app.App.SetRoot(app.Root, true)
 	})
-	app.Root = root
 
-	now := time.Now().UnixMilli()
-	if !utils.IsAccessBeforeLogin(cfg, now) {
-		loginForm := tview.NewForm().
-			AddPasswordField("Master Password", "", 0, '*', nil)
+	loginPage := tview.NewFlex().
+		SetDirection(tview.FlexRow).
+		AddItem(loginForm, 0, 1, true)
 
-		loginForm.SetTitle(" Login ")
-		loginForm.SetBorder(true)
-		loginForm.SetBackgroundColor(tcell.ColorBlack)
-		loginForm.SetFieldBackgroundColor(tcell.ColorBlack)
-		loginForm.SetButtonBackgroundColor(tcell.Color103)
-		loginForm.AddButton("Login", func() {
-			masterPassword := loginForm.GetFormItem(0).(*tview.InputField).GetText()
-			// if err is not nil, then the user has input the wrong password
-			err := bcrypt.CompareHashAndPassword(cfg.MasterPassword, []byte(masterPassword))
-			if err != nil {
-				modal := app.ErrorModal("Incorrect Master Password", loginForm)
-				loginForm.GetFormItem(0).(*tview.InputField).SetText("")
-				app.App.SetRoot(modal, false)
-				return
-			}
-
-			cfg.LastVisited = now
-			encryptedCfg, err := crypt.EncryptConfig(cfg)
-			if err != nil {
-				panic(err)
-			}
-			utils.WriteToFile(cfgFile, encryptedCfg)
-			app.App.SetRoot(app.Root, true)
-		})
-
-		loginPage := tview.NewFlex().
-			SetDirection(tview.FlexRow).
-			AddItem(loginForm, 0, 1, true).
-			AddItem(help, 3, 1, false)
-
-		if err := app.App.SetRoot(loginPage, true).Run(); err != nil {
-			panic(err)
-		}
-	} else {
-		if err := app.App.SetRoot(app.Root, true).Run(); err != nil {
-			panic(err)
-		}
+	if err := app.App.SetRoot(loginPage, true).Run(); err != nil {
+		panic(err)
 	}
 }

@@ -73,7 +73,6 @@ func LoginUser(cfgName string, input io.Reader, key *model.MasterAESKeyManager, 
 	}
 
 	cfg := crypt.DecryptConfig(cfgFile, key, false)
-	fmt.Printf("config: %+v\n", cfg)
 
 	if err = bcrypt.CompareHashAndPassword(cfg.MasterPassword, pass); err != nil {
 		return errors.New("login failed")
