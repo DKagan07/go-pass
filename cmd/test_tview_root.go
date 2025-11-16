@@ -223,10 +223,6 @@ func (a *App) ModalAddVault() *tview.Flex {
 
 		a.PopulateVaultList()
 		a.RefreshRoot()
-
-		// FIX: For some reason, after adding something to the vault, the vault
-		// list loads properly, but there's no search bar, but it shows up
-		// after the inspection. Seems to be after all the actions (add, delete, etc)
 		a.App.SetRoot(a.Root, true)
 	})
 	inputForm.SetTitle(" Add Vault ")
@@ -372,6 +368,7 @@ func (a *App) RefreshRoot() {
 
 	root := tview.NewFlex().
 		SetDirection(tview.FlexRow).
+		AddItem(a.SearchBar, 3, 1, false).
 		AddItem(a.VaultListView(), 0, 1, true).
 		AddItem(help, 3, 1, false)
 	root.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
