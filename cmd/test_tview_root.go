@@ -60,14 +60,24 @@ func (a *App) PopulateVaultList() {
 		case 'd':
 			currentIndex := a.VaultList.GetCurrentItem()
 			if currentIndex >= 0 && currentIndex < len(a.Vault) {
-				modal := a.DeleteVaultModal(currentIndex)
-				a.App.SetRoot(modal, false)
+				entry := a.FilteredVault[currentIndex]
+				actualIdx := a.findFilteredVaultIndex(entry)
+
+				if actualIdx >= 0 {
+					modal := a.DeleteVaultModal(actualIdx)
+					a.App.SetRoot(modal, false)
+				}
 			}
 		case 'u':
 			currentIndex := a.VaultList.GetCurrentItem()
 			if currentIndex >= 0 && currentIndex < len(a.Vault) {
-				flex := a.UpdateVaultModal(currentIndex)
-				a.App.SetRoot(flex, true)
+				entry := a.FilteredVault[currentIndex]
+				actualIdx := a.findFilteredVaultIndex(entry)
+
+				if actualIdx >= 0 {
+					flex := a.UpdateVaultModal(actualIdx)
+					a.App.SetRoot(flex, true)
+				}
 			}
 		case '\t':
 			a.App.SetFocus(a.SearchInput)
@@ -83,6 +93,16 @@ func (a *App) PopulateVaultList() {
 			a.App.SetRoot(modal, false)
 		}
 	})
+}
+
+// findFilteredVaultIndex finds the actual vault entry after search
+func (a *App) findFilteredVaultIndex(entry model.VaultEntry) int {
+	for i, v := range a.Vault {
+		if v.UpdatedAt == entry.UpdatedAt {
+			return i
+		}
+	}
+	return -1
 }
 
 func (a *App) ModalVaultInfoByVault(ve model.VaultEntry) *tview.Modal {
