@@ -12,12 +12,13 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
+	"go-pass/cmd/vault"
 	"go-pass/crypt"
 	"go-pass/model"
 	"go-pass/utils"
 )
 
-var helpText = " a: Add | d: Delete | u: Update | tab: Switch between Search and Vault "
+var helpText = " a: Add | d: Delete | u: Update | g: Generate Password | tab: Switch between Search and Vault "
 
 type App struct {
 	App           *tview.Application
@@ -79,6 +80,10 @@ func (a *App) PopulateVaultList() {
 					a.App.SetRoot(flex, true)
 				}
 			}
+		case 'g':
+			generatedPassword := vault.GeneratePassword(20, vault.DefaultChars)
+			modal := a.GeneratedPasswordModal(string(generatedPassword))
+			a.App.SetRoot(modal, true)
 		case '\t':
 			a.App.SetFocus(a.SearchInput)
 			return nil
@@ -379,6 +384,22 @@ func (a *App) UpdateVaultEntry(currIdx int, newEntry model.VaultEntry) {
 	a.SaveVault()
 }
 
+func (a *App) GeneratedPasswordModal(generatedPass string) *tview.Modal {
+	modal := tview.NewModal().
+		AddButtons([]string{"OK"}).
+		SetBackgroundColor(tcell.ColorBlack)
+
+	modal.SetTitle(" Generated Password ")
+	modal.SetText(generatedPass)
+	modal.SetBorder(true)
+	modal.SetBorderStyle(tcell.StyleDefault.Background(tcell.ColorBlack))
+	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+		a.App.SetRoot(a.Root, true)
+	})
+
+	return modal
+}
+
 func (a *App) RefreshRoot() {
 	help := tview.NewTextView().
 		SetText(helpText).
@@ -487,6 +508,7 @@ func TviewRun() {
 		app.VaultFile = vaultF
 		vault := crypt.DecryptVault(vaultF, app.Keyring, false)
 		app.Vault = vault
+		app.FilteredVault = vault
 
 		app.PopulateVaultList()
 
