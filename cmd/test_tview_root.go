@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/atotto/clipboard"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
@@ -386,7 +387,7 @@ func (a *App) UpdateVaultEntry(currIdx int, newEntry model.VaultEntry) {
 
 func (a *App) GeneratedPasswordModal(generatedPass string) *tview.Modal {
 	modal := tview.NewModal().
-		AddButtons([]string{"OK"}).
+		AddButtons([]string{"OK", "Copy"}).
 		SetBackgroundColor(tcell.ColorBlack)
 
 	modal.SetTitle(" Generated Password ")
@@ -394,6 +395,12 @@ func (a *App) GeneratedPasswordModal(generatedPass string) *tview.Modal {
 	modal.SetBorder(true)
 	modal.SetBorderStyle(tcell.StyleDefault.Background(tcell.ColorBlack))
 	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+		if strings.EqualFold(buttonLabel, "Copy") {
+			err := clipboard.WriteAll(generatedPass)
+			if err != nil {
+				panic(err)
+			}
+		}
 		a.App.SetRoot(a.Root, true)
 	})
 
@@ -521,6 +528,7 @@ func TviewRun() {
 			panic(err)
 		}
 		utils.WriteToFile(cfgFile, encryptedCfg)
+
 		app.App.SetRoot(app.Root, true)
 	})
 
