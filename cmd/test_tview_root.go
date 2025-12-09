@@ -19,7 +19,7 @@ import (
 	"go-pass/utils"
 )
 
-var helpText = " a: Add | d: Delete | u: Update | g: Generate Password | tab: Switch between Search and Vault "
+var helpText = "a: Add | d: Delete | u: Update | g: Generate Password | tab: Switch between Search and Vault"
 
 type App struct {
 	App           *tview.Application
@@ -120,7 +120,7 @@ func (a *App) ModalVaultInfoByVault(ve model.VaultEntry) *tview.Modal {
 	Notes: %s
 	`, ve.Name, ve.Username, decryptedPassword, ve.Notes)
 	modal := tview.NewModal().
-		AddButtons([]string{"OK"}).
+		AddButtons([]string{"OK", "Copy"}).
 		SetBackgroundColor(tcell.ColorBlack)
 
 	modal.SetTitle(" Vault Info ")
@@ -128,6 +128,12 @@ func (a *App) ModalVaultInfoByVault(ve model.VaultEntry) *tview.Modal {
 	modal.SetBorder(true)
 	modal.SetBorderStyle(tcell.StyleDefault.Background(tcell.ColorBlack))
 	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+		if strings.EqualFold(buttonLabel, "Copy") {
+			err := clipboard.WriteAll(decryptedPassword)
+			if err != nil {
+				a.ErrorModal(err.Error(), a.Root)
+			}
+		}
 		a.App.SetRoot(a.Root, true)
 	})
 
@@ -199,7 +205,7 @@ func (a *App) ModalVaultInfoByIdx(idx int) *tview.Modal {
 	Notes: %s
 	`, entry.Name, entry.Username, decryptedPassword, entry.Notes)
 	modal := tview.NewModal().
-		AddButtons([]string{"OK"}).
+		AddButtons([]string{"OK", "Copy"}).
 		SetBackgroundColor(tcell.ColorBlack)
 
 	modal.SetTitle(" Vault Info ")
@@ -207,6 +213,12 @@ func (a *App) ModalVaultInfoByIdx(idx int) *tview.Modal {
 	modal.SetBorder(true)
 	modal.SetBorderStyle(tcell.StyleDefault.Background(tcell.ColorBlack))
 	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+		if strings.EqualFold(buttonLabel, "Copy") {
+			err := clipboard.WriteAll(decryptedPassword)
+			if err != nil {
+				a.ErrorModal(err.Error(), a.Root)
+			}
+		}
 		a.App.SetRoot(a.Root, true)
 	})
 
