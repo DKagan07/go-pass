@@ -28,7 +28,7 @@ func EncryptVault(vault []model.VaultEntry, keychain *model.MasterAESKeyManager)
 }
 
 // EncryptConfig encrypts the config with AES-256 GCM
-func EncryptConfig(cfg model.Config, keychain *model.MasterAESKeyManager) (string, error) {
+func EncryptConfig(cfg *model.Config, keychain *model.MasterAESKeyManager) (string, error) {
 	b, err := json.Marshal(cfg)
 	if err != nil {
 		log.Fatalf("EncryptConfig::Marshal json: %v", err)

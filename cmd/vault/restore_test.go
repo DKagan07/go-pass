@@ -36,7 +36,7 @@ func TestRestoreVault(t *testing.T) {
 	defer vaultFile.Close()
 
 	now := time.Now()
-	cfg := model.Config{
+	cfg := &model.Config{
 		MasterPassword: testutils.TEST_MASTER_PASSWORD,
 		VaultName:      testutils.TEST_VAULT_NAME,
 		LastVisited:    now.UnixMilli(),

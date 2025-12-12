@@ -66,7 +66,7 @@ func ChangeMasterpassCmdHandler(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func ChangeMasterpass(cfg model.Config, key *model.MasterAESKeyManager) error {
+func ChangeMasterpass(cfg *model.Config, key *model.MasterAESKeyManager) error {
 	fmt.Println(strings.Repeat("*", 24))
 	fmt.Println("Input current password:")
 	fmt.Println(strings.Repeat("*", 24))

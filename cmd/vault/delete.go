@@ -75,7 +75,7 @@ func DeleteCmdHandler(cmd *cobra.Command, args []string) error {
 // DeleteItemInVault encapsulates the logic for deleting 'name' from the vault
 // if it exists. If not, it will error and print a message out to user.
 func DeleteItemInVault(
-	cfg model.Config,
+	cfg *model.Config,
 	name string,
 	r io.Reader,
 	key *model.MasterAESKeyManager,

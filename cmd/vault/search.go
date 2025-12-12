@@ -78,7 +78,7 @@ func SearchCmdHandler(cmd *cobra.Command, args []string) error {
 // SearchVault is the function that searches the vault for a source that matches
 // the search term. It will print out all sources that match the search term.
 // This is a case insensitive search.
-func SearchVault(searchTerm string, cfg model.Config, key *model.MasterAESKeyManager) error {
+func SearchVault(searchTerm string, cfg *model.Config, key *model.MasterAESKeyManager) error {
 	if searchTerm == "" {
 		return fmt.Errorf("no search term provided")
 	}

@@ -101,7 +101,7 @@ func GenerateCmdHandler(cmd *cobra.Command, args []string) error {
 func AddGeneratedPasswordToVault(
 	source string,
 	password []byte,
-	cfg model.Config,
+	cfg *model.Config,
 	t int64,
 	key *model.MasterAESKeyManager,
 ) error {

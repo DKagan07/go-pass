@@ -92,7 +92,7 @@ func UploadCptfCmdHandler(cmd *cobra.Command, args []string) error {
 		Timeout:        utils.THIRTY_MINUTES,
 	}
 
-	cfgCiphertext, err := crypt.EncryptConfig(cfg, keyring)
+	cfgCiphertext, err := crypt.EncryptConfig(&cfg, keyring)
 	if err != nil {
 		return err
 	}

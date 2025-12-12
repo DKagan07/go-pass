@@ -57,7 +57,7 @@ func ViewCmdHandler(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func PrintConfig(cfg model.Config) {
+func PrintConfig(cfg *model.Config) {
 	fmt.Print(strings.Repeat("*", 8))
 	fmt.Print(" Config ")
 	fmt.Print(strings.Repeat("*", 8) + "\n")

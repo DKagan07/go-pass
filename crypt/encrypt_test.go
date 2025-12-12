@@ -53,6 +53,6 @@ func TestEncryptConfig(t *testing.T) {
 		LastVisited:    now.UnixMilli(),
 	}
 
-	_, err = EncryptConfig(testCfg, key)
+	_, err = EncryptConfig(&testCfg, key)
 	assert.NoError(t, err)
 }

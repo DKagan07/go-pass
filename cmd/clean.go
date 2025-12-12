@@ -45,12 +45,12 @@ func CleanCmdHandler(cmd *cobra.Command, args []string) error {
 		return errors.New("too many arugments for 'clean'. see 'help' for correct usage")
 	}
 
-	return CleanFiles(model.Config{}, os.Stdin)
+	return CleanFiles(&model.Config{}, os.Stdin)
 }
 
 // Clean files separates the logic from the handler. This prompts the user and
 // deletes the files if the user says yes.
-func CleanFiles(cfg model.Config, r io.Reader) error {
+func CleanFiles(cfg *model.Config, r io.Reader) error {
 	clean, err := utils.ConfirmPrompt(utils.CleanPrompt, "", os.Stdin)
 	if err != nil {
 		return fmt.Errorf("failed to confirm clean: %v", err)
@@ -86,21 +86,13 @@ func RemoveConfig(configFP string) error {
 // RemoveVault encapsulates the logic of removing the vault, or the place where
 // the passwords are stored.
 func RemoveVault(vaultName string) error {
-	dirEntrys, err := os.ReadDir(utils.VAULT_PATH)
-	if err != nil {
-		return err
+	if vaultName == "" {
+		vaultName = "pass.json"
 	}
 
-	for _, de := range dirEntrys {
-		fmt.Printf("dirEntry: %+v\n", de)
-		if err := os.Remove(path.Join(utils.VAULT_PATH, de.Name())); err != nil {
-			return err
-		}
+	if err := os.Remove(path.Join(utils.VAULT_PATH, vaultName)); err != nil {
+		return fmt.Errorf("error removing vault: %v", err)
 	}
-
-	// if err := os.Remove(path.Join(utils.VAULT_PATH, vaultName)); err != nil {
-	// 	return fmt.Errorf("error removing vault: %v", err)
-	// }
 	fmt.Println("Removed vault.")
 	return nil
 }

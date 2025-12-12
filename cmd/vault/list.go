@@ -88,7 +88,7 @@ func ListCmdHandler(cmd *cobra.Command, args []string) error {
 // PrintList is the function that prints the list of sources in the vault.
 // If a source name is provided, it will check if the source exists in the vault.
 // If a source name is not provided, it will print all sources in the vault.
-func PrintList(sourceName string, cfg model.Config, key *model.MasterAESKeyManager) error {
+func PrintList(sourceName string, cfg *model.Config, key *model.MasterAESKeyManager) error {
 	f, err := utils.OpenVault(cfg.VaultName)
 	if err != nil {
 		return fmt.Errorf("opening vault: %v", err)

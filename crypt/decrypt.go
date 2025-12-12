@@ -5,6 +5,7 @@ import (
 	"crypto/cipher"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -71,36 +72,40 @@ func DecryptVault(f *os.File, keychain *model.MasterAESKeyManager, isOld bool) [
 
 // DecryptConfig take the *os.File of the config file. It decrypts it, and
 // returns the model.Config.
-func DecryptConfig(f *os.File, keychain *model.MasterAESKeyManager, isOld bool) model.Config {
+func DecryptConfig(
+	f *os.File,
+	keychain *model.MasterAESKeyManager,
+	isOld bool,
+) (*model.Config, error) {
 	if _, err := f.Seek(0, io.SeekStart); err != nil {
-		log.Fatalf("DecryptConfig::seek: %v", err)
+		return nil, fmt.Errorf("seeking for config: %w", err)
 	}
 
 	// Get contents
 	contents, err := io.ReadAll(f)
 	if err != nil {
-		log.Fatalf("DecryptConfig::reading contents: %v", err)
+		return nil, fmt.Errorf("reading config file: %w", err)
 	}
 
 	var b []byte
 	if isOld {
 		b, err = Decrypt(contents)
 		if err != nil {
-			log.Fatalf("DecryptVault::decrypt:old: %v", err)
+			return nil, fmt.Errorf("decrypting file: %w", err)
 		}
 	} else {
 		b, err = keychain.Decrypt(string(contents))
 		if err != nil {
-			log.Fatalf("DecryptVault::decrypt:new: %v", err)
+			return nil, fmt.Errorf("decrypting contents: %w", err)
 		}
 	}
 
 	var cfg model.Config
 	if err = json.Unmarshal(b, &cfg); err != nil {
-		log.Fatalf("DecryptConfig::unmarshal: %v", err)
+		return nil, fmt.Errorf("unmarshaling decrypted config: %w", err)
 	}
 
-	return cfg
+	return &cfg, nil
 }
 
 // // Decrypt hold the decryption logic. It will AES-256 decrypt the contents and

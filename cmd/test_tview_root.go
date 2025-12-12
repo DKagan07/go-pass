@@ -26,7 +26,7 @@ type App struct {
 	VaultFile     *os.File
 	Vault         []model.VaultEntry
 	FilteredVault []model.VaultEntry
-	Cfg           model.Config
+	Cfg           *model.Config
 	Keyring       *model.MasterAESKeyManager
 
 	VaultList   *tview.List
@@ -412,8 +412,9 @@ func (a *App) GeneratedPasswordModal(generatedPass string) *tview.Modal {
 			if err != nil {
 				panic(err)
 			}
+		} else {
+			a.App.SetRoot(a.Root, true)
 		}
-		a.App.SetRoot(a.Root, true)
 	})
 
 	return modal
@@ -499,6 +500,7 @@ func NewApp() *App {
 func TviewRun() {
 	app := NewApp()
 	app.App = tview.NewApplication()
+	var loginPage *tview.Flex
 
 	// if !app.IsLoggedIn {
 	loginForm := tview.NewForm().
@@ -517,13 +519,31 @@ func TviewRun() {
 
 		cfgFile, ok, err := utils.OpenConfig("")
 		if ok && err == nil {
+			// I think it's fine to panic here, as this is just the TUI to the
+			// whole application
 			panic(errors.New("a file is not found. need to 'init'"))
-			// TODO: implement 'init'
 		}
-		cfg := crypt.DecryptConfig(cfgFile, app.Keyring, false)
+
+		cfg, err := crypt.DecryptConfig(cfgFile, app.Keyring, false)
+		if err != nil {
+			errMsg := err.Error()
+			if strings.Contains(errMsg, "decrypting contents") {
+				errMsg = "Authentication Failed"
+			}
+
+			modal := app.ErrorModal(errMsg, loginPage)
+			app.App.SetRoot(modal, true)
+			return
+		}
 		app.Cfg = cfg
 
-		vaultF, _ := utils.OpenVault(cfg.VaultName)
+		vaultF, err := utils.OpenVault(cfg.VaultName)
+		if err != nil {
+			modal := app.ErrorModal(err.Error(), loginPage)
+			app.App.SetRoot(modal, true)
+			return
+		}
+
 		app.VaultFile = vaultF
 		vault := crypt.DecryptVault(vaultF, app.Keyring, false)
 		app.Vault = vault
@@ -544,7 +564,7 @@ func TviewRun() {
 		app.App.SetRoot(app.Root, true)
 	})
 
-	loginPage := tview.NewFlex().
+	loginPage = tview.NewFlex().
 		SetDirection(tview.FlexRow).
 		AddItem(loginForm, 0, 1, true)
 

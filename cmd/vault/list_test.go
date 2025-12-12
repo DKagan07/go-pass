@@ -34,7 +34,7 @@ func TestPrintList(t *testing.T) {
 	assert.NoError(err)
 
 	now := time.Now().UnixMilli()
-	cfg := model.Config{
+	cfg := &model.Config{
 		MasterPassword: testutils.TEST_MASTER_PASSWORD,
 		VaultName:      testutils.TEST_VAULT_NAME,
 		LastVisited:    now,
@@ -90,7 +90,7 @@ func TestPrintList_OneEntry(t *testing.T) {
 	assert.NoError(err)
 
 	now := time.Now().UnixMilli()
-	cfg := model.Config{
+	cfg := &model.Config{
 		MasterPassword: testutils.TEST_MASTER_PASSWORD,
 		VaultName:      testutils.TEST_VAULT_NAME,
 		LastVisited:    now,

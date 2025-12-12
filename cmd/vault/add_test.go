@@ -51,18 +51,18 @@ func TestAddCheckConfig(t *testing.T) {
 
 			cfg, err := utils.CheckConfig(testutils.TEST_CONFIG_NAME, keyManager)
 
-			time := cfg.LastVisited
 			if tt.configPresent {
-				assert.Equal(model.Config{
+				assert.NotNil(cfg)
+				assert.Equal(&model.Config{
 					MasterPassword: testutils.TEST_MASTER_PASSWORD,
 					VaultName:      testutils.TEST_VAULT_NAME,
-					LastVisited:    time,
+					LastVisited:    cfg.LastVisited,
 					Timeout:        utils.THIRTY_MINUTES,
 				}, cfg)
 				assert.NoError(err)
 			} else {
 				assert.Error(err)
-				assert.Equal(model.Config{}, cfg)
+				assert.Nil(cfg)
 			}
 
 			testutils.TestCleanup(string(testutils.TEST_MASTER_PASSWORD))
@@ -99,7 +99,7 @@ func TestAddAddToVault(t *testing.T) {
 		Password: []byte("test"),
 		Notes:    "",
 	}
-	cfg := model.Config{
+	cfg := &model.Config{
 		MasterPassword: testutils.TEST_MASTER_PASSWORD,
 		VaultName:      testutils.TEST_VAULT_NAME,
 		LastVisited:    now - time.Hour.Milliseconds(),

@@ -33,7 +33,7 @@ func TestGetItemFromVault_HappyPath(t *testing.T) {
 	defer vaultFile.Close()
 
 	now := time.Now().UnixMilli()
-	cfg := model.Config{
+	cfg := &model.Config{
 		VaultName:      testutils.TEST_VAULT_NAME,
 		MasterPassword: testutils.TEST_MASTER_PASSWORD,
 		LastVisited:    now,
@@ -86,7 +86,7 @@ func TestGetItemFromVault_NotExist(t *testing.T) {
 	defer vaultFile.Close()
 
 	now := time.Now().UnixMilli()
-	cfg := model.Config{
+	cfg := &model.Config{
 		VaultName:      testutils.TEST_VAULT_NAME,
 		MasterPassword: testutils.TEST_MASTER_PASSWORD,
 		LastVisited:    now,

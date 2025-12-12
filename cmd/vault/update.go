@@ -87,7 +87,10 @@ func UpdateCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 	defer cfgFile.Close()
 
-	cfg := crypt.DecryptConfig(cfgFile, keyring, false)
+	cfg, err := crypt.DecryptConfig(cfgFile, keyring, false)
+	if err != nil {
+		return errors.New("decrypting config")
+	}
 
 	now := time.Now().UnixMilli()
 	if !utils.IsAccessBeforeLogin(cfg, now) {
@@ -148,7 +151,7 @@ func UpdateFlags(cmd *cobra.Command) (Inputs, error) {
 // storing it in the vault.
 func UpdateEntry(
 	inputs Inputs,
-	cfg model.Config,
+	cfg *model.Config,
 	sourceName string,
 	is InputSources,
 	key *model.MasterAESKeyManager,

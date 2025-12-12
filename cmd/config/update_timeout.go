@@ -52,7 +52,7 @@ func UpdateTimeoutCmdHandler(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("cannot access, need to login")
 	}
 
-	if err = updateConfigTimeout(&cfg, cmd); err != nil {
+	if err = updateConfigTimeout(cfg, cmd); err != nil {
 		return err
 	}
 
