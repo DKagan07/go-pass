@@ -537,7 +537,13 @@ func TviewRun() {
 		}
 		app.Cfg = cfg
 
-		vaultF, _ := utils.OpenVault(cfg.VaultName)
+		vaultF, err := utils.OpenVault(cfg.VaultName)
+		if err != nil {
+			modal := app.ErrorModal(err.Error(), loginPage)
+			app.App.SetRoot(modal, true)
+			return
+		}
+
 		app.VaultFile = vaultF
 		vault := crypt.DecryptVault(vaultF, app.Keyring, false)
 		app.Vault = vault
