@@ -85,7 +85,7 @@ func TestDecryptConfig(t *testing.T) {
 
 	t.Run("decrypt config from file", func(t *testing.T) {
 		// Encrypt config
-		encrypted, err := EncryptConfig(originalConfig, key)
+		encrypted, err := EncryptConfig(&originalConfig, key)
 		assert.NoError(err)
 		assert.NotNil(encrypted)
 
@@ -106,9 +106,10 @@ func TestDecryptConfig(t *testing.T) {
 		defer file.Close()
 
 		// Decrypt config from file
-		decryptedConfig := DecryptConfig(file, key, false)
+		decryptedConfig, err := DecryptConfig(file, key, false)
 
 		// Verify the decrypted config matches the original
+		assert.Nil(err)
 		assert.Equal(originalConfig.MasterPassword, decryptedConfig.MasterPassword)
 		assert.Equal(originalConfig.VaultName, decryptedConfig.VaultName)
 		assert.Equal(originalConfig.LastVisited, decryptedConfig.LastVisited)

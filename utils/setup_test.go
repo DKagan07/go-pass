@@ -70,12 +70,12 @@ func TestOpenVault(t *testing.T) {
 func TestIsAccessBeforeLogin(t *testing.T) {
 	tests := []struct {
 		name     string
-		config   model.Config
+		config   *model.Config
 		expected bool
 	}{
 		{
 			name: "time is before 30 mins",
-			config: model.Config{
+			config: &model.Config{
 				LastVisited: time.Now().Add(time.Minute * -12).UnixMilli(),
 				Timeout:     testutils.THIRTY_MINUTES,
 			},
@@ -83,7 +83,7 @@ func TestIsAccessBeforeLogin(t *testing.T) {
 		},
 		{
 			name: "time is more than 30 mins",
-			config: model.Config{
+			config: &model.Config{
 				LastVisited: time.Now().Add(time.Minute * -45).UnixMilli(),
 				Timeout:     testutils.THIRTY_MINUTES,
 			},
@@ -91,7 +91,7 @@ func TestIsAccessBeforeLogin(t *testing.T) {
 		},
 		{
 			name: "different timeout in config before 30 mins",
-			config: model.Config{
+			config: &model.Config{
 				LastVisited: time.Now().Add(time.Minute * -45).UnixMilli(),
 				Timeout:     time.Hour.Milliseconds(),
 			},
@@ -99,7 +99,7 @@ func TestIsAccessBeforeLogin(t *testing.T) {
 		},
 		{
 			name: "different timeout in config after range",
-			config: model.Config{
+			config: &model.Config{
 				LastVisited: time.Now().Add(time.Hour * -2).UnixMilli(),
 				Timeout:     time.Hour.Milliseconds(),
 			},
@@ -155,20 +155,20 @@ func TestCheckConfig(t *testing.T) {
 			fmt.Println("Checking config")
 			cfg, err := CheckConfig(testutils.TEST_CONFIG_NAME, key)
 
-			time := cfg.LastVisited
 			if tt.configPresent {
 				fmt.Println("Checking config if present")
-				assert.Equal(model.Config{
+				assert.NotNil(cfg)
+				assert.Equal(&model.Config{
 					MasterPassword: testutils.TEST_MASTER_PASSWORD,
 					VaultName:      testutils.TEST_VAULT_NAME,
-					LastVisited:    time,
+					LastVisited:    cfg.LastVisited,
 					Timeout:        testutils.THIRTY_MINUTES,
 				}, cfg)
 				assert.NoError(err)
 			} else {
 				fmt.Println("Checking config if not present")
 				assert.Error(err)
-				assert.Equal(model.Config{}, cfg)
+				assert.Nil(cfg)
 			}
 		})
 

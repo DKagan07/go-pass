@@ -45,12 +45,12 @@ func CleanCmdHandler(cmd *cobra.Command, args []string) error {
 		return errors.New("too many arugments for 'clean'. see 'help' for correct usage")
 	}
 
-	return CleanFiles(model.Config{}, os.Stdin)
+	return CleanFiles(&model.Config{}, os.Stdin)
 }
 
 // Clean files separates the logic from the handler. This prompts the user and
 // deletes the files if the user says yes.
-func CleanFiles(cfg model.Config, r io.Reader) error {
+func CleanFiles(cfg *model.Config, r io.Reader) error {
 	clean, err := utils.ConfirmPrompt(utils.CleanPrompt, "", os.Stdin)
 	if err != nil {
 		return fmt.Errorf("failed to confirm clean: %v", err)

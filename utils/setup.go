@@ -142,7 +142,7 @@ func CreateConfig(
 			Timeout:        THIRTY_MINUTES,
 		}
 
-		cipherText, err := crypt.EncryptConfig(cfg, keychain)
+		cipherText, err := crypt.EncryptConfig(&cfg, keychain)
 		if err != nil {
 			return nil, fmt.Errorf("err in creating cfg ciphertext: %v", err)
 		}
@@ -184,23 +184,26 @@ func OpenConfig(fn string) (*os.File, bool, error) {
 
 // IsAccessBeforeLogin returns true if the command being run is before the
 // timeout time in the config, in other words, 'logged in', false if otherwise
-func IsAccessBeforeLogin(cfg model.Config, now int64) bool {
+func IsAccessBeforeLogin(cfg *model.Config, now int64) bool {
 	return now <= (cfg.LastVisited + cfg.Timeout)
 }
 
 // CheckConfig checks to see if the config file exists. If it does, we return
 // the model.Config.
-func CheckConfig(fn string, key *model.MasterAESKeyManager) (model.Config, error) {
+func CheckConfig(fn string, key *model.MasterAESKeyManager) (*model.Config, error) {
 	if key == nil {
-		return model.Config{}, nil
+		return nil, nil
 	}
 
 	cfgFile, ok, err := OpenConfig(fn)
 	if ok && err == nil {
 		fmt.Println("A file is not found. Need to init.")
-		return model.Config{}, fmt.Errorf("file needs to be created")
+		return nil, fmt.Errorf("file needs to be created")
 	}
 	defer cfgFile.Close()
-	cfg := crypt.DecryptConfig(cfgFile, key, false)
+	cfg, err := crypt.DecryptConfig(cfgFile, key, false)
+	if err != nil {
+		return nil, fmt.Errorf("decryping config: %w", err)
+	}
 	return cfg, nil
 }

@@ -80,7 +80,7 @@ func GetCmdHandler(cmd *cobra.Command, args []string) error {
 
 // GetItemFromVault retreies the 'name' from the vault. If it doesn't exist, an
 // error gets returned.
-func GetItemFromVault(cfg model.Config, name string, keyring *model.MasterAESKeyManager) error {
+func GetItemFromVault(cfg *model.Config, name string, keyring *model.MasterAESKeyManager) error {
 	f, err := utils.OpenVault(cfg.VaultName)
 	if err != nil {
 		return fmt.Errorf("opening vault: %v", err)

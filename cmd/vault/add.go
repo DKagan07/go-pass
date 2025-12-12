@@ -113,7 +113,7 @@ func GetInput(us, pw, no io.Reader, key *model.MasterAESKeyManager) (model.UserI
 func AddToVault(
 	source string,
 	ui model.UserInput,
-	cfg model.Config,
+	cfg *model.Config,
 	t int64,
 	key *model.MasterAESKeyManager,
 ) error {

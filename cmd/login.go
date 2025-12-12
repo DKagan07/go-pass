@@ -72,7 +72,10 @@ func LoginUser(cfgName string, input io.Reader, key *model.MasterAESKeyManager, 
 		return errors.New("a file is not found. need to 'init'")
 	}
 
-	cfg := crypt.DecryptConfig(cfgFile, key, false)
+	cfg, err := crypt.DecryptConfig(cfgFile, key, false)
+	if err != nil {
+		return errors.New("decrypting")
+	}
 
 	if err = bcrypt.CompareHashAndPassword(cfg.MasterPassword, pass); err != nil {
 		return errors.New("login failed")

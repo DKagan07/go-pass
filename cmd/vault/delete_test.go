@@ -33,7 +33,7 @@ func TestDeleteItemInVault(t *testing.T) {
 	defer vaultFile.Close()
 
 	now := time.Now().UnixMilli()
-	cfg := model.Config{
+	cfg := &model.Config{
 		MasterPassword: testutils.TEST_MASTER_PASSWORD,
 		VaultName:      testutils.TEST_VAULT_NAME,
 		LastVisited:    now,
@@ -81,7 +81,7 @@ func TestDeleteItemInVaultNotExist(t *testing.T) {
 	defer vaultFile.Close()
 
 	now := time.Now().UnixMilli()
-	cfg := model.Config{
+	cfg := &model.Config{
 		MasterPassword: testutils.TEST_MASTER_PASSWORD,
 		VaultName:      testutils.TEST_VAULT_NAME,
 		LastVisited:    now,

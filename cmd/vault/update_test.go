@@ -33,7 +33,7 @@ func TestUpdateEntry(t *testing.T) {
 	assert.NoError(err)
 	vF.Close()
 
-	cfg := model.Config{
+	cfg := &model.Config{
 		VaultName:      testutils.TEST_VAULT_NAME,
 		MasterPassword: testutils.TEST_MASTER_PASSWORD,
 		LastVisited:    time.Now().UnixMilli(),
