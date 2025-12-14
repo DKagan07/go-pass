@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"slices"
@@ -28,6 +27,7 @@ type App struct {
 	FilteredVault []model.VaultEntry
 	Cfg           *model.Config
 	Keyring       *model.MasterAESKeyManager
+	NumRetries    int32
 
 	VaultList   *tview.List
 	Root        *tview.Flex
@@ -410,7 +410,8 @@ func (a *App) GeneratedPasswordModal(generatedPass string) *tview.Modal {
 		if strings.EqualFold(buttonLabel, "Copy") {
 			err := clipboard.WriteAll(generatedPass)
 			if err != nil {
-				panic(err)
+				modal := a.ErrorModal(fmt.Sprintf("Failed to copy password: %v", err), a.Root)
+				a.App.SetRoot(modal, true)
 			}
 		} else {
 			a.App.SetRoot(a.Root, true)
@@ -446,7 +447,8 @@ func (a *App) RefreshRoot() {
 func (a *App) SaveVault() {
 	encryptedCipherText, err := crypt.EncryptVault(a.Vault, a.Keyring)
 	if err != nil {
-		panic(err)
+		modal := a.ErrorModal(fmt.Sprintf("Failed to save vault: %v", err), a.Root)
+		a.App.SetRoot(modal, true)
 	}
 
 	utils.WriteToFile(a.VaultFile, encryptedCipherText)
@@ -493,6 +495,24 @@ func (a *App) ErrorModal(errMsg string, dest tview.Primitive) *tview.Modal {
 	return modal
 }
 
+func (a *App) ExitErrorModal(errMsg string) *tview.Modal {
+	modal := tview.NewModal().
+		SetBackgroundColor(tcell.ColorBlack).
+		AddButtons([]string{"OK"}).
+		SetButtonBackgroundColor(tcell.ColorBlack).
+		SetText(errMsg).
+		SetTextColor(tcell.ColorRed).
+		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+			a.App.Stop()
+		})
+
+	modal.SetTitle(" Error! ")
+	modal.SetTitleColor(tcell.ColorRed)
+	modal.SetBorder(true)
+	modal.SetBorderStyle(tcell.StyleDefault.Background(tcell.ColorBlack))
+	return modal
+}
+
 func NewApp() *App {
 	return &App{}
 }
@@ -519,22 +539,29 @@ func TviewRun() {
 
 		cfgFile, ok, err := utils.OpenConfig("")
 		if ok && err == nil {
-			// I think it's fine to panic here, as this is just the TUI to the
-			// whole application
-			panic(errors.New("a file is not found. need to 'init'"))
+			modal := app.ExitErrorModal("a file is not found. need to run 'gopass init'")
+			app.App.SetRoot(modal, true)
 		}
 
 		cfg, err := crypt.DecryptConfig(cfgFile, app.Keyring, false)
 		if err != nil {
 			errMsg := err.Error()
 			if strings.Contains(errMsg, "decrypting contents") {
-				errMsg = "Authentication Failed"
+				app.NumRetries++
+				errMsg = fmt.Sprintf("Authentication Failed, retries: %d", app.NumRetries)
 			}
 
-			modal := app.ErrorModal(errMsg, loginPage)
-			app.App.SetRoot(modal, true)
-			return
+			if app.NumRetries >= 3 {
+				finalModal := app.ExitErrorModal("All attempts made")
+				app.App.SetRoot(finalModal, true)
+				return
+			} else {
+				modal := app.ErrorModal(errMsg, loginPage)
+				app.App.SetRoot(modal, true)
+				return
+			}
 		}
+
 		app.Cfg = cfg
 
 		vaultF, err := utils.OpenVault(cfg.VaultName)
@@ -557,7 +584,8 @@ func TviewRun() {
 		cfg.LastVisited = time.Now().UnixMilli()
 		encryptedCfg, err := crypt.EncryptConfig(cfg, app.Keyring)
 		if err != nil {
-			panic(err)
+			modal := app.ExitErrorModal(err.Error())
+			app.App.SetRoot(modal, true)
 		}
 		utils.WriteToFile(cfgFile, encryptedCfg)
 
@@ -569,6 +597,7 @@ func TviewRun() {
 		AddItem(loginForm, 0, 1, true)
 
 	if err := app.App.SetRoot(loginPage, true).Run(); err != nil {
-		panic(err)
+		modal := app.ExitErrorModal(err.Error())
+		app.App.SetRoot(modal, true)
 	}
 }

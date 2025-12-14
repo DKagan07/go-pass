@@ -27,3 +27,4 @@ go.work.sum
 
 vendor/**
 gopass
+todo*
