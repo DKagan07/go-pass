@@ -18,7 +18,7 @@ import (
 	"go-pass/utils"
 )
 
-var helpText = "a: Add | d: Delete | u: Update | g: Generate Password | tab: Switch between Search and Vault"
+var helpText = "a: Add | d: Delete | u: Update | g: Generate Password | q: Quit | tab: Switch between Search and Vault"
 
 type App struct {
 	App           *tview.Application
@@ -41,8 +41,12 @@ func (a *App) PopulateVaultList() {
 		return a.Vault[i].Name < a.Vault[j].Name
 	})
 
+	if a.SearchInput != nil {
+		a.SyncFilteredVault()
+	}
+
 	a.VaultList = tview.NewList()
-	for _, v := range a.Vault {
+	for _, v := range a.FilteredVault {
 		vault := v
 		a.VaultList.AddItem(vault.Name, "", 0, func() {
 			m := a.ModalVaultInfoByVault(vault)
@@ -85,6 +89,8 @@ func (a *App) PopulateVaultList() {
 			generatedPassword := vault.GeneratePassword(20, vault.DefaultChars)
 			modal := a.GeneratedPasswordModal(string(generatedPassword))
 			a.App.SetRoot(modal, true)
+		case 'q':
+			a.App.Stop()
 		case '\t':
 			a.App.SetFocus(a.SearchInput)
 			return nil
@@ -99,6 +105,22 @@ func (a *App) PopulateVaultList() {
 			a.App.SetRoot(modal, false)
 		}
 	})
+}
+
+func (a *App) SyncFilteredVault() {
+	text := a.SearchInput.GetText()
+	if text != "" {
+		a.FilteredVault = make([]model.VaultEntry, 0)
+
+		for _, v := range a.Vault {
+			if strings.Contains(strings.ToLower(v.Name), strings.ToLower(text)) {
+				vault := v
+				a.FilteredVault = append(a.FilteredVault, vault)
+			}
+		}
+	} else {
+		a.FilteredVault = a.Vault
+	}
 }
 
 // findFilteredVaultIndex finds the actual vault entry after search
