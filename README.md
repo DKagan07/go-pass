@@ -72,6 +72,7 @@ gopass -o
    ```bash
    openssl rand -base64 24 | head -c 32
    ```
+    or go to [https://passwords-generator.org/32-character](https://passwords-generator.org/32-character)
    
    Add to your shell config (`~/.bashrc`, `~/.zshrc`, etc.):
    ```bash
@@ -122,12 +123,12 @@ gopass -o
 
 **Vault operations:**
 ```bash
-gopass vault add                    # Add password
-gopass vault list                   # List all passwords
-gopass vault search <query>         # Search passwords
-gopass vault get <name>             # Get specific password
-gopass vault update                 # Update password
-gopass vault delete                 # Delete password
+gopass vault add                    # Add entry
+gopass vault list                   # List all entries
+gopass vault search <query>         # Search entries
+gopass vault get <name>             # Get specific entry
+gopass vault update <flags>         # Update entry
+gopass vault delete                 # Delete entry
 gopass vault generate [--length N]  # Generate password
 ```
 
@@ -218,30 +219,10 @@ go run main.go <command>    # Run without installing
 make test                   # Run tests
 ```
 
-### Contributing
-
-Contributions welcome! Please:
-1. Check existing issues first
-2. Fork and create a feature branch
-3. Run tests before submitting
-4. Follow existing code style
-5. Open a pull request
-
----
 
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
-
----
-
-## Acknowledgments
-
-Thanks to the maintainers of:
-- [spf13/cobra](https://github.com/spf13/cobra) - CLI framework
-- [rivo/tview](https://github.com/rivo/tview) - TUI library
-- [zalando/go-keyring](https://github.com/zalando/go-keyring) - Keyring integration
-- Go crypto libraries
 
 ---
 
