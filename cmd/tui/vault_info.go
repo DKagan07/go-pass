@@ -1,0 +1,72 @@
+package tui
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/atotto/clipboard"
+	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
+
+	"go-pass/crypt"
+	"go-pass/model"
+)
+
+func (a *App) ModalVaultInfoByVault(ve model.VaultEntry) *tview.Modal {
+	decryptedPassword := crypt.DecryptPassword(ve.Password, a.Keyring, false)
+	text := fmt.Sprintf(`
+	Name: %s
+	Username: %s
+	Password: %s
+	Notes: %s
+	`, ve.Name, ve.Username, decryptedPassword, ve.Notes)
+	modal := tview.NewModal().
+		AddButtons([]string{"OK", "Copy"}).
+		SetBackgroundColor(tcell.ColorBlack)
+
+	modal.SetTitle(" Vault Info ")
+	modal.SetText(text)
+	modal.SetBorder(true)
+	modal.SetBorderStyle(tcell.StyleDefault.Background(tcell.ColorBlack))
+	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+		if strings.EqualFold(buttonLabel, "Copy") {
+			err := clipboard.WriteAll(decryptedPassword)
+			if err != nil {
+				a.ErrorModal(err.Error(), a.Root)
+			}
+		}
+		a.App.SetRoot(a.Root, true)
+	})
+
+	return modal
+}
+
+func (a *App) ModalVaultInfoByIdx(idx int) *tview.Modal {
+	entry := a.Vault[idx]
+	decryptedPassword := crypt.DecryptPassword(entry.Password, a.Keyring, false)
+	text := fmt.Sprintf(`
+	Name: %s
+	Username: %s
+	Password: %s
+	Notes: %s
+	`, entry.Name, entry.Username, decryptedPassword, entry.Notes)
+	modal := tview.NewModal().
+		AddButtons([]string{"OK", "Copy"}).
+		SetBackgroundColor(tcell.ColorBlack)
+
+	modal.SetTitle(" Vault Info ")
+	modal.SetText(text)
+	modal.SetBorder(true)
+	modal.SetBorderStyle(tcell.StyleDefault.Background(tcell.ColorBlack))
+	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+		if strings.EqualFold(buttonLabel, "Copy") {
+			err := clipboard.WriteAll(decryptedPassword)
+			if err != nil {
+				a.ErrorModal(err.Error(), a.Root)
+			}
+		}
+		a.App.SetRoot(a.Root, true)
+	})
+
+	return modal
+}
