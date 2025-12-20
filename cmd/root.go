@@ -7,6 +7,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+
+	"go-pass/cmd/tui"
 )
 
 var LongDescriptionText = `GoPass is a CLI tool that help stores your passwords with security in mind.
@@ -20,7 +22,7 @@ var rootCmd = &cobra.Command{
 	Long:  LongDescriptionText,
 	Run: func(cmd *cobra.Command, args []string) {
 		if isOther {
-			TviewRun()
+			tui.TviewRun()
 		} else {
 			if err := cmd.Help(); err != nil {
 				panic(err)
