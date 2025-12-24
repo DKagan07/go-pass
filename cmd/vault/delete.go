@@ -11,7 +11,6 @@ import (
 	"os"
 	"slices"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 
@@ -57,11 +56,6 @@ func DeleteCmdHandler(cmd *cobra.Command, args []string) error {
 	cfg, err := utils.CheckConfig("", keyring)
 	if err != nil {
 		return err
-	}
-
-	now := time.Now().UnixMilli()
-	if !utils.IsAccessBeforeLogin(cfg, now) {
-		return fmt.Errorf("cannot access, need to login")
 	}
 
 	err = DeleteItemInVault(cfg, itemToDelete, os.Stdin, keyring)
