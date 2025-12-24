@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 
@@ -63,11 +62,6 @@ func GetCmdHandler(cmd *cobra.Command, args []string) error {
 	cfg, err := utils.CheckConfig("", keyring)
 	if err != nil {
 		return fmt.Errorf("error checking config: %v", err)
-	}
-
-	now := time.Now().UnixMilli()
-	if !utils.IsAccessBeforeLogin(cfg, now) {
-		return fmt.Errorf("cannot access, need to login")
 	}
 
 	err = GetItemFromVault(cfg, name, keyring)

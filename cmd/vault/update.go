@@ -92,11 +92,6 @@ func UpdateCmdHandler(cmd *cobra.Command, args []string) error {
 		return errors.New("decrypting config")
 	}
 
-	now := time.Now().UnixMilli()
-	if !utils.IsAccessBeforeLogin(cfg, now) {
-		return errors.New("need to login")
-	}
-
 	err = UpdateEntry(
 		i,
 		cfg,

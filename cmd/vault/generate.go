@@ -48,6 +48,7 @@ cryptographically secure RNG. Please modify and change that if needed.
 // and if the flag is provided, it will prompt the user for the required information
 // and add it to the vault.
 func GenerateCmdHandler(cmd *cobra.Command, args []string) error {
+	now := time.Now().UnixMilli()
 	if len(args) != 0 {
 		return fmt.Errorf("no arguments needed for 'generate'. see 'help' for more guidance")
 	}
@@ -62,11 +63,6 @@ func GenerateCmdHandler(cmd *cobra.Command, args []string) error {
 	cfg, err := utils.CheckConfig("", keyring)
 	if err != nil {
 		return err
-	}
-
-	now := time.Now().UnixMilli()
-	if !utils.IsAccessBeforeLogin(cfg, now) {
-		return fmt.Errorf("cannot access, need to login")
 	}
 
 	length, err := cmd.Flags().GetInt("length")

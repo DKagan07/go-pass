@@ -9,7 +9,6 @@ import (
 	"os"
 	"path"
 	"strings"
-	"time"
 
 	"github.com/charmbracelet/huh"
 	"github.com/spf13/cobra"
@@ -66,11 +65,6 @@ func RestoreCmdHandler(cmd *cobra.Command, args []string) error {
 	cfg, err := utils.CheckConfig("", keyring)
 	if err != nil {
 		return err
-	}
-
-	now := time.Now()
-	if !utils.IsAccessBeforeLogin(cfg, now.UnixMilli()) {
-		return fmt.Errorf("cannot access, need to login")
 	}
 
 	return RestoreVault(cfg.VaultName, false, keyring)

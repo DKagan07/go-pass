@@ -50,6 +50,7 @@ Ex.
 // BackupCmdHandler is the handler function that encapsulates the logic of
 // creating a backup of the vault. This is stored in a different directory
 func BackupCmdHandler(cmd *cobra.Command, args []string) error {
+	now := time.Now()
 	// perhaps check args? Currently there are none
 	if len(args) != 0 {
 		return errors.New(
@@ -67,11 +68,6 @@ func BackupCmdHandler(cmd *cobra.Command, args []string) error {
 	cfg, err := utils.CheckConfig("", keyring)
 	if err != nil {
 		return err
-	}
-
-	now := time.Now()
-	if !utils.IsAccessBeforeLogin(cfg, now.UnixMilli()) {
-		return fmt.Errorf("cannot access, need to login")
 	}
 
 	return BackupVault("", cfg.VaultName, "", now, keyring)

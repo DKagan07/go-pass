@@ -69,11 +69,6 @@ func AddCmdHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	now := time.Now().UnixMilli()
-	if !utils.IsAccessBeforeLogin(cfg, now) {
-		return fmt.Errorf("cannot access, need to login")
-	}
-
 	userInput, err := GetInput(os.Stdin, os.Stdin, os.Stdin, keyring)
 	if err != nil {
 		return err
