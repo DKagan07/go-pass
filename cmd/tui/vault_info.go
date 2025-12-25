@@ -13,7 +13,11 @@ import (
 )
 
 func (a *App) ModalVaultInfoByVault(ve model.VaultEntry) *tview.Modal {
-	decryptedPassword := crypt.DecryptPassword(ve.Password, a.Keyring, false)
+	decryptedPassword, err := crypt.DecryptPassword(ve.Password, a.Keyring, false)
+	if err != nil {
+		modal := a.ErrorModal(err.Error(), a.Root)
+		a.App.SetRoot(modal, true)
+	}
 	text := fmt.Sprintf(`
 	Name: %s
 	Username: %s
@@ -43,7 +47,11 @@ func (a *App) ModalVaultInfoByVault(ve model.VaultEntry) *tview.Modal {
 
 func (a *App) ModalVaultInfoByIdx(idx int) *tview.Modal {
 	entry := a.Vault[idx]
-	decryptedPassword := crypt.DecryptPassword(entry.Password, a.Keyring, false)
+	decryptedPassword, err := crypt.DecryptPassword(entry.Password, a.Keyring, false)
+	if err != nil {
+		modal := a.ErrorModal(err.Error(), a.Root)
+		a.App.SetRoot(modal, true)
+	}
 	text := fmt.Sprintf(`
 	Name: %s
 	Username: %s

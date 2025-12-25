@@ -14,10 +14,16 @@ import (
 func (a *App) UpdateVaultModal(currIdx int) *tview.Flex {
 	entry := a.Vault[currIdx]
 
+	decryptedPass, err := crypt.DecryptPassword(entry.Password, a.Keyring, false)
+	if err != nil {
+		modal := a.ErrorModal(err.Error(), a.Root)
+		a.App.SetRoot(modal, true)
+	}
+
 	form := tview.NewForm().
 		AddInputField("Name", entry.Name, 0, nil, nil).
 		AddInputField("Username", entry.Username, 0, nil, nil).
-		AddInputField("Password", crypt.DecryptPassword(entry.Password, a.Keyring, false), 0, nil, nil).
+		AddInputField("Password", decryptedPass, 0, nil, nil).
 		AddInputField("Notes", entry.Notes, 0, nil, nil)
 	form.AddButton("Save", func() {
 		formName := form.GetFormItem(0).(*tview.InputField).GetText()
@@ -36,33 +42,6 @@ func (a *App) UpdateVaultModal(currIdx int) *tview.Flex {
 			a.App.SetRoot(modal, false)
 			return
 		}
-
-		// if strings.EqualFold(formName, "") {
-		// 	modal := a.ErrorModal("Name cannot be empty", a.Root)
-		// 	a.App.SetRoot(modal, false)
-		// 	return
-		// }
-		//
-		// if strings.EqualFold(formUsername, "") {
-		// 	modal := a.ErrorModal("Username cannot be empty", a.Root)
-		// 	a.App.SetRoot(modal, false)
-		// 	return
-		// }
-		//
-		// if strings.EqualFold(formPassword, "") {
-		// 	modal := a.ErrorModal("Password cannot be empty", a.Root)
-		// 	a.App.SetRoot(modal, false)
-		// 	return
-		// }
-		//
-		// p, _ := crypt.EncryptPassword([]byte(formPassword), a.Keyring)
-		// newEntry := model.VaultEntry{
-		// 	Name:      formName,
-		// 	Username:  formUsername,
-		// 	Notes:     formNotes,
-		// 	Password:  []byte(p),
-		// 	UpdatedAt: entry.UpdatedAt,
-		// }
 
 		a.UpdateVaultEntry(currIdx, *newEntry)
 		a.PopulateVaultList()

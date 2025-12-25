@@ -33,10 +33,15 @@ func TestFilterVaultBySearch(t *testing.T) {
 	assert.Equal("GitHub", filteredEntries[0].Name)
 	assert.Equal("notes2", filteredEntries[0].Notes)
 	assert.Equal("user2", filteredEntries[0].Username)
-	assert.Equal("pass2", crypt.DecryptPassword(filteredEntries[0].Password, app.Keyring, false))
+	decryptedPass2, err := crypt.DecryptPassword(filteredEntries[0].Password, app.Keyring, false)
+	assert.NoError(err)
+	assert.Equal("pass2", decryptedPass2)
 
 	assert.Equal("Gmail", filteredEntries[1].Name)
 	assert.Equal("notes1", filteredEntries[1].Notes)
 	assert.Equal("user1", filteredEntries[1].Username)
-	assert.Equal("pass1", crypt.DecryptPassword(filteredEntries[1].Password, app.Keyring, false))
+
+	decryptedPass1, err := crypt.DecryptPassword(filteredEntries[1].Password, app.Keyring, false)
+	assert.NoError(err)
+	assert.Equal("pass1", decryptedPass1)
 }

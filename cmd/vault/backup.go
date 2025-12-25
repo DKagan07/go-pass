@@ -43,10 +43,6 @@ Ex.
 	},
 }
 
-// TODO: Think about any sort of flags that could be added
-// ex.
-// backupCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-
 // BackupCmdHandler is the handler function that encapsulates the logic of
 // creating a backup of the vault. This is stored in a different directory
 func BackupCmdHandler(cmd *cobra.Command, args []string) error {
@@ -77,7 +73,6 @@ func BackupCmdHandler(cmd *cobra.Command, args []string) error {
 // doesn't exist, create a new backup file following the format of:
 // `backup__YYYY-MM-DD_HH-MM-SS.json`. It then copies the contents of the vault
 // to the backup file.
-// TODO: Look into making better error handling
 func BackupVault(
 	configName, vaultName, backupName string,
 	now time.Time,
@@ -106,7 +101,11 @@ func BackupVault(
 	}
 	defer currentVault.Close()
 
-	entries := crypt.DecryptVault(currentVault, key, false)
+	entries, err := crypt.DecryptVault(currentVault, key, false)
+	if err != nil {
+		return err
+	}
+
 	b, err := crypt.EncryptVault(entries, key)
 	if err != nil {
 		return err

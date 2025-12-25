@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -156,7 +155,11 @@ func UpdateEntry(
 		return fmt.Errorf("opening vault: %v", err)
 	}
 	defer f.Close()
-	entries := crypt.DecryptVault(f, key, false)
+
+	entries, err := crypt.DecryptVault(f, key, false)
+	if err != nil {
+		return fmt.Errorf("decryping vault: %v", err)
+	}
 
 	var ve model.VaultEntry
 
@@ -183,11 +186,10 @@ func UpdateEntry(
 
 	encryptedCipherText, err := crypt.EncryptVault(entries, key)
 	if err != nil {
-		log.Fatalf("update::obtaining ciphertext: %v", err)
+		return fmt.Errorf("obtaining ciphertext: %v", err)
 	}
 
-	utils.WriteToFile(f, encryptedCipherText)
-	return nil
+	return utils.WriteToFile(f, encryptedCipherText)
 }
 
 // UpdateVaultEntry takes in the user input and, depending on the flags, update

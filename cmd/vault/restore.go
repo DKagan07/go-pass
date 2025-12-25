@@ -115,7 +115,10 @@ func RestoreVault(vaultName string, test bool, key *model.MasterAESKeyManager) e
 	defer restoreFp.Close()
 
 	// Get plaintext from file
-	backupEntries := crypt.DecryptVault(restoreFp, key, false)
+	backupEntries, err := crypt.DecryptVault(restoreFp, key, false)
+	if err != nil {
+		return err
+	}
 	// Encrypt with new nonce
 	backupBytes, err := crypt.EncryptVault(backupEntries, key)
 	if err != nil {

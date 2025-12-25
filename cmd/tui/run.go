@@ -113,7 +113,12 @@ func TviewRun() {
 		}
 
 		app.VaultFile = vaultF
-		vault := crypt.DecryptVault(vaultF, app.Keyring, false)
+		vault, err := crypt.DecryptVault(vaultF, app.Keyring, false)
+		if err != nil {
+			modal := app.ExitErrorModal(err.Error())
+			app.App.SetRoot(modal, true)
+		}
+
 		app.Vault = vault
 		app.FilteredVault = vault
 

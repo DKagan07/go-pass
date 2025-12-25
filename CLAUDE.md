@@ -26,8 +26,14 @@ go-pass/
 │   ├── init.go          # Initialize vault/config
 │   ├── login.go         # Authenticate with master password
 │   ├── clean.go         # Remove all data
-│   ├── cptf.go          # [WIP] Create plaintext file export
-│   ├── test_tview_root.go  # Full TUI implementation
+│   ├── cptf.go          # Create plaintext file export (migration tool)
+│   ├── upload_cptf.go   # Import plaintext file (migration tool)
+│   ├── tui/             # Terminal UI implementation
+│   │   ├── run.go       # TUI entry point and main screen
+│   │   ├── vault.go     # Vault display logic
+│   │   ├── vault_add.go    # Add entry modal
+│   │   ├── vault_delete.go # Delete confirmation modal
+│   │   └── vault_update.go # Update entry modal
 │   ├── vault/           # Password vault commands
 │   │   ├── add.go       # Add new entry
 │   │   ├── backup.go    # Create encrypted backup
@@ -44,11 +50,11 @@ go-pass/
 │       └── view.go              # Display current config
 ├── model/               # Data models
 │   ├── model.go         # VaultEntry, Config structs
-│   └── keyring.go       # [WIP] OS keyring integration
-├── crypt/               # Encryption/decryption [BROKEN - REFACTORING]
-│   ├── crypt.go         # [COMMENTED OUT] Old implementation
+│   └── keyring.go       # OS keyring integration (MasterAESKeyManager)
+├── crypt/               # Encryption/decryption wrappers
+│   ├── crypt.go         # Constants (NONCE_SIZE, KEY_SIZE, NUM_ITERATIONS)
 │   ├── encrypt.go       # Encrypt passwords/vault/config
-│   └── decrypt.go       # Decrypt passwords/vault/config
+│   └── decrypt.go       # Decrypt passwords/vault/config (supports legacy format)
 └── utils/               # Utilities
     ├── setup.go         # File I/O, vault/config creation
     └── input.go         # User input (text, password, confirmations)
@@ -90,7 +96,7 @@ type Config struct {
 }
 ```
 
-### MasterAESKeyManager (NEW - WIP)
+### MasterAESKeyManager
 ```go
 type MasterAESKeyManager struct {
     Masterpassword string  // Master password for key derivation
@@ -104,6 +110,8 @@ type MasterAESKeyManager struct {
 - `Decrypt(ciphertext []byte)` - AES-256-GCM decryption
 - `GenerateNonce()` - Creates 12-byte cryptographic nonce
 - `GetSalt()` - Retrieves SECRET_PASSWORD_KEY from environment
+
+The `crypt/` package provides wrapper functions that delegate to `MasterAESKeyManager` methods for backward compatibility.
 
 ## Security Model
 
@@ -135,17 +143,26 @@ type MasterAESKeyManager struct {
    - Format: `base64(nonce || ciphertext)`
 
 **Security Benefits**:
-- OS keyring provides hardware-backed security
+- OS keyring provides hardware-backed security and handles authentication
 - Master password required even with keyring access
 - PBKDF2 slows brute-force attacks
 - Environment variable adds additional secret layer
 - GCM mode provides authentication (tamper detection)
 
-### TODO: Session Management
-- Timeout enforcement (default: 30 minutes)
-- `LastVisited` timestamp in config
-- Check performed before every vault operation
-- User must re-login after timeout
+### Session Management
+- Infrastructure exists for timeout enforcement (default: 30 minutes)
+- `LastVisited` timestamp tracked in config
+- Timeout is **not actively enforced** in vault operations since OS keyring already requires authentication
+- TUI enforces timeout before displaying vault on launch
+
+## Migration Tools
+
+The `cptf` (create plaintext file) and `upload` commands exist to support migration from legacy encryption formats to the current keyring-based implementation:
+
+1. **Export**: `gopass cptf` - Decrypts vault using legacy format and exports to plaintext file named `out`
+2. **Import**: `gopass upload` - Reads plaintext file `out` and creates new vault with current keyring-based encryption
+
+These tools are intended for one-time migration and should be used with caution as they create temporary plaintext files.
 
 ## File Storage
 
@@ -155,18 +172,19 @@ type MasterAESKeyManager struct {
 - Path: `~/.local/gopass/pass.json`
 - Format: Base64-encoded AES-GCM ciphertext
 - Plaintext: JSON array of VaultEntry objects
-- Permissions: 0644
+- Permissions: 0600 (owner read/write only)
 
 **Config File**:
 - Path: `~/.config/gopass/gopass-cfg.json`
 - Format: Base64-encoded AES-GCM ciphertext
 - Contains: Master password hash, vault name, timeout, last login
-- Permissions: 0644
+- Permissions: 0600 (owner read/write only)
 
 **Backups**:
 - Path: `~/.local/gopass-backup/`
 - Format: Same as vault (encrypted)
 - Naming: `backup__<timestamp>.json`
+- Permissions: 0600 (owner read/write only)
 
 **OS Keyring**:
 - Service: "gopass"
@@ -175,7 +193,7 @@ type MasterAESKeyManager struct {
 
 ## TUI Interface
 
-### Implementation (`cmd/test_tview_root.go`)
+### Implementation (`cmd/tui/`)
 
 **Framework**: tview with tcell backend
 
@@ -183,7 +201,7 @@ type MasterAESKeyManager struct {
 - Login screen with master password input
 - Search bar (real-time vault filtering)
 - Vault list (alphabetically sorted)
-- Modal dialogs for all operations
+- Modal dialogs for all operations (add, update, delete, view)
 
 **Keyboard Shortcuts**:
 - `a` - Add new entry
@@ -201,7 +219,7 @@ type MasterAESKeyManager struct {
 - Pages - Screen management (login, main, modals)
 
 **Session Handling**:
-- Enforces timeout before displaying vault
+- Enforces timeout check on TUI launch
 - Returns to login screen on timeout
 - Clears sensitive data from memory
 
@@ -213,7 +231,8 @@ gopass init                    # Initialize vault and config
 gopass login                   # Authenticate with master password
 gopass clean                   # Remove all data (vault + config)
 gopass -o                      # Launch TUI mode
-gopass cptf                    # [WIP] Export to plaintext (DEBUG ONLY)
+gopass cptf                    # Export vault to plaintext file (migration tool)
+gopass upload                  # Import plaintext file to new vault (migration tool)
 ```
 
 ### Vault Commands
@@ -262,7 +281,7 @@ gopass config view              # Display current config
 - Validate input lengths and formats
 - Use `crypto/rand` for random generation
 - Clear sensitive data from memory when done
-- Enforce session timeouts
+- Use 0600 file permissions for sensitive data
 - Use confirmation prompts for destructive operations
 
 ### Environment Setup

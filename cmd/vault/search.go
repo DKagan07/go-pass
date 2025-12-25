@@ -83,7 +83,10 @@ func SearchVault(searchTerm string, cfg *model.Config, key *model.MasterAESKeyMa
 	}
 	defer f.Close()
 
-	entries := crypt.DecryptVault(f, key, false)
+	entries, err := crypt.DecryptVault(f, key, false)
+	if err != nil {
+		return fmt.Errorf("decrypting vault: %v", err)
+	}
 
 	if len(entries) == 0 {
 		return fmt.Errorf("nothing in vault")

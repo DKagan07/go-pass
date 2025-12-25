@@ -81,6 +81,7 @@ func TestAddToVault(t *testing.T) {
 	assert.Equal("", app.Vault[0].Notes)
 
 	encryptedPass := app.Vault[0].Password
-	testPass := crypt.DecryptPassword(encryptedPass, app.Keyring, false)
+	testPass, err := crypt.DecryptPassword(encryptedPass, app.Keyring, false)
+	assert.NoError(err)
 	assert.Equal("test_password", testPass)
 }

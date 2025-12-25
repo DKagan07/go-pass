@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"fmt"
 	"log"
 	"os"
 
@@ -98,15 +99,18 @@ func (k *MasterAESKeyManager) Encrypt(plaintext []byte) (string, error) {
 
 	cipherBlock, err := aes.NewCipher(key)
 	if err != nil {
-		log.Fatalf("EncryptConfig::creating cipher block: %v", err)
+		return "", fmt.Errorf("creating cipher block: %v", err)
 	}
 
 	aesgcm, err := cipher.NewGCM(cipherBlock)
 	if err != nil {
-		log.Fatal("EncryptConfig::creating aes gcm")
+		return "", fmt.Errorf("creating aes gcm: %v", err)
 	}
 
-	nonce := GenerateNonce()
+	nonce, err := GenerateNonce()
+	if err != nil {
+		return "", err
+	}
 
 	cipherText := aesgcm.Seal(nil, nonce, plaintext, nil)
 
@@ -129,12 +133,12 @@ func (k *MasterAESKeyManager) Decrypt(ciphertext string) ([]byte, error) {
 
 	cipherBlock, err := aes.NewCipher(key)
 	if err != nil {
-		log.Fatalf("EncryptConfig::creating cipher block: %v", err)
+		return nil, err
 	}
 
 	aesgcm, err := cipher.NewGCM(cipherBlock)
 	if err != nil {
-		log.Fatal("EncryptConfig::creating aes gcm")
+		return nil, err
 	}
 
 	nonce, cipher := decoded[:NONCE_SIZE], decoded[NONCE_SIZE:]
@@ -147,16 +151,16 @@ func (k *MasterAESKeyManager) Decrypt(ciphertext string) ([]byte, error) {
 }
 
 // GenerateNonce generates a Number Once, used for AES-256 encryption.
-func GenerateNonce() []byte {
+func GenerateNonce() ([]byte, error) {
 	nonce := make([]byte, NONCE_SIZE)
 	if _, err := rand.Read(nonce); err != nil {
-		log.Fatalf("EncryptVault::creating nonce: %v", err)
+		return nil, fmt.Errorf("creating nonce: %v", err)
 	}
 
 	if len(nonce) != NONCE_SIZE {
-		log.Fatal("GenerateNonce::nonce not correct length")
+		return nil, fmt.Errorf("nonce not correct length")
 	}
-	return nonce
+	return nonce, nil
 }
 
 // GetSalt is a helper function that gets the key from the environment

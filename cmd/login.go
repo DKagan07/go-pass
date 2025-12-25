@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"time"
 
@@ -88,7 +87,7 @@ func LoginUser(cfgName string, input io.Reader, key *model.MasterAESKeyManager, 
 
 	cipherText, err := crypt.EncryptConfig(cfg, key)
 	if err != nil {
-		log.Fatalf("login::failed creating ciphertext: %v", err)
+		return fmt.Errorf("creating ciphertext: %v", err)
 	}
 
 	utils.WriteToFile(cfgFile, cipherText)

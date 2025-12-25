@@ -21,8 +21,6 @@ func cleanup() {
 	os.Remove(fName)
 }
 
-// TODO: UPDATE THESE TESTS FOR THE CREATE CONFIG AND VAULT FUNCTIONS
-// This needs to happen in ALL of the command test files too
 func TestCreateVault(t *testing.T) {
 	testutils.TestCleanup(string(testutils.TEST_MASTER_PASSWORD))
 	defer testutils.TestCleanup(string(testutils.TEST_MASTER_PASSWORD))

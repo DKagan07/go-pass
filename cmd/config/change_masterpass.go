@@ -106,7 +106,7 @@ func ChangeMasterpass(cfg *model.Config, key *model.MasterAESKeyManager) error {
 		return err
 	}
 
-	cfgFile, err := os.OpenFile(utils.CONFIG_FILE, os.O_RDWR, 0o644)
+	cfgFile, err := os.OpenFile(utils.CONFIG_FILE, os.O_RDWR, 0o600)
 	if err != nil {
 		return err
 	}

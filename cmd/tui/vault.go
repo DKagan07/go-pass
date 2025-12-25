@@ -37,7 +37,6 @@ func (a *App) PopulateVaultList() {
 	a.VaultList.SetTitle(" Vault ")
 	a.VaultList.SetBackgroundColor(tcell.ColorBlack)
 	a.VaultList.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		// TODO: Add keys to proceed with vault actions
 		switch event.Rune() {
 		case 'a':
 			flex := a.ModalAddVault()
@@ -65,7 +64,11 @@ func (a *App) PopulateVaultList() {
 				}
 			}
 		case 'g':
-			generatedPassword := vault.GeneratePassword(20, vault.DefaultChars)
+			generatedPassword, err := vault.GeneratePassword(20, vault.DefaultChars)
+			if err != nil {
+				modal := a.ErrorModal(err.Error(), a.Root)
+				a.App.SetRoot(modal, true)
+			}
 			modal := a.GeneratedPasswordModal(string(generatedPassword))
 			a.App.SetRoot(modal, true)
 		case 'q':
