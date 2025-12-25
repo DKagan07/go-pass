@@ -33,6 +33,7 @@ Ex.
 	},
 }
 
+// ViewCmdHandler handles the config's 'view' command
 func ViewCmdHandler(cmd *cobra.Command, args []string) error {
 	passB, err := utils.GetPasswordFromUser(true, os.Stdin)
 	if err != nil {
@@ -51,6 +52,7 @@ func ViewCmdHandler(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// PritnConfig prints out the properties of the current config to the terminal
 func PrintConfig(cfg *model.Config) {
 	fmt.Print(strings.Repeat("*", 8))
 	fmt.Print(" Config ")

@@ -38,6 +38,10 @@ func init() {
 	rootCmd.AddCommand(cptfCmd)
 }
 
+// CptfCmdHandler handles the 'cptf' command
+// This is 1 of 2 migration tools. This is used to move the old method of vault
+// encryption to a plaintext file to be used in conjunction with the 'upload'
+// command
 func CptfCmdHandler(cmd *cobra.Command, args []string) error {
 	cfg, err := utils.CheckConfig("", &model.MasterAESKeyManager{})
 	if err != nil {

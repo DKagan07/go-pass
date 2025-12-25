@@ -7,6 +7,8 @@ import (
 	"github.com/rivo/tview"
 )
 
+// CreateSearchBar returns a Flex primitive for the search bar at the top of
+// the root. This filters the vault entries displayed in the VaultList
 func (a *App) CreateSearchBar() *tview.Flex {
 	box := tview.NewBox().SetBackgroundColor(tcell.ColorBlack)
 	search := tview.NewInputField().
@@ -43,6 +45,8 @@ func (a *App) CreateSearchBar() *tview.Flex {
 	return searchbar
 }
 
+// FilterVaultBySearch filters the displayed VaultList by the search string.
+// This occurs on every keystroke
 func (a *App) FilterVaultBySearch(searchText string) {
 	a.VaultList.Clear()
 	a.FilteredVault = nil

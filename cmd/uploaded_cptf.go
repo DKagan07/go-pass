@@ -37,6 +37,9 @@ func init() {
 	rootCmd.AddCommand(uploadCptf)
 }
 
+// UploadCptfCmdHandler is a function that handles the upload command
+// The main purpose of this is to upload the output of the cptf command to
+// create a new vault
 func UploadCptfCmdHandler(cmd *cobra.Command, args []string) error {
 	f, err := os.OpenFile("out", os.O_RDONLY, 0o644)
 	if err != nil {

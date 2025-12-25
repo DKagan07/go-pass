@@ -9,6 +9,7 @@ type ValidationError struct {
 	Message string
 }
 
+// Error returns the string representation of the error
 func (va *ValidationError) Error() string {
 	return fmt.Sprintf("Error with field %s: %s", va.Field, va.Message)
 }

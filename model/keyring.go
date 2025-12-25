@@ -23,6 +23,8 @@ const (
 	DefaultKeyringAccount = "encryption_key"
 )
 
+// MasterAESKeyManager is the struct that contains the logic to handle the
+// keyring encryption and decryption
 type MasterAESKeyManager struct {
 	Masterpassword string
 	// KeyringService and KeyringAccount allow tests to use isolated keyring entries
@@ -30,6 +32,8 @@ type MasterAESKeyManager struct {
 	KeyringAccount string
 }
 
+// NewMasterAESKeyManager returns a new MasterAESKeyManager with the passed-in
+// password
 func NewMasterAESKeyManager(mp string) *MasterAESKeyManager {
 	return &MasterAESKeyManager{
 		Masterpassword: mp,
@@ -47,6 +51,7 @@ func NewTestMasterAESKeyManager(mp string) *MasterAESKeyManager {
 	}
 }
 
+// InitializeKeychain creates a new keyring and sets it
 func (k *MasterAESKeyManager) InitializeKeychain() error {
 	randomKey := make([]byte, 32)
 	if _, err := rand.Read(randomKey); err != nil {
@@ -67,6 +72,7 @@ func (k *MasterAESKeyManager) DeleteKeychain() error {
 	return keyring.Delete(k.KeyringService, k.KeyringAccount)
 }
 
+// GetEncryptionKey returns the encrypted key that is stored in the keyring
 func (k *MasterAESKeyManager) GetEncryptionKey() ([]byte, error) {
 	salt := GetSalt()
 
@@ -91,6 +97,8 @@ func (k *MasterAESKeyManager) GetEncryptionKey() ([]byte, error) {
 	return key, nil
 }
 
+// Encrypt encrypts the []byte using the keyring, and returns the hex-encoded
+// representation of the encrypted text
 func (k *MasterAESKeyManager) Encrypt(plaintext []byte) (string, error) {
 	key, err := k.GetEncryptionKey()
 	if err != nil {
@@ -120,6 +128,9 @@ func (k *MasterAESKeyManager) Encrypt(plaintext []byte) (string, error) {
 	return base64.StdEncoding.EncodeToString(cipherText), nil
 }
 
+// Decrypt decrypts the passed-in ciphertext using the keyring, and returns the
+// []byte represnetatino of the text. This []byte representation can be used in
+// conjunctino with `string()` to have it be in string form
 func (k *MasterAESKeyManager) Decrypt(ciphertext string) ([]byte, error) {
 	key, err := k.GetEncryptionKey()
 	if err != nil {

@@ -11,6 +11,8 @@ import (
 	"go-pass/model"
 )
 
+// UpdateVaultModal returns a Flex primitive containing the modal and form for
+// a user to update their vault entry
 func (a *App) UpdateVaultModal(currIdx int) *tview.Flex {
 	entry := a.Vault[currIdx]
 
@@ -64,11 +66,14 @@ func (a *App) UpdateVaultModal(currIdx int) *tview.Flex {
 	return flex
 }
 
+// UpdateVaultEntry contains the business logic of updating the vault on disk
 func (a *App) UpdateVaultEntry(currIdx int, newEntry model.VaultEntry) {
 	a.Vault[currIdx] = newEntry
 	a.SaveVault()
 }
 
+// ValidateUpdateInputs ensures that the necessary inputs are present when
+// updating a vault entry
 func (a *App) ValidateUpdateInputs(
 	name, username, password, notes string,
 ) (*model.VaultEntry, error) {

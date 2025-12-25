@@ -49,6 +49,10 @@ func DecryptVault(
 	keychain *model.MasterAESKeyManager,
 	isOld bool,
 ) ([]model.VaultEntry, error) {
+	if _, err := f.Seek(0, io.SeekStart); err != nil {
+		return nil, fmt.Errorf("seeking for vault: %w", err)
+	}
+
 	// Get contents
 	contents, err := io.ReadAll(f)
 	if err != nil {
@@ -115,9 +119,9 @@ func DecryptConfig(
 	return &cfg, nil
 }
 
-// // Decrypt hold the decryption logic. It will AES-256 decrypt the contents and
-// // return the decrypted bytes. It is up to the caller function to then Marshal
-// // that into the correct struct.
+// Decrypt hold the decryption logic. It will AES-256 decrypt the contents and
+// return the decrypted bytes. It is up to the caller function to then Marshal
+// that into the correct struct.
 func Decrypt(contents []byte) ([]byte, error) {
 	key := model.GetSalt()
 

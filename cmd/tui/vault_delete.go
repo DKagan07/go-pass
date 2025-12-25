@@ -9,6 +9,8 @@ import (
 	"github.com/rivo/tview"
 )
 
+// DeleteVaultModal returns the Modal primitive to delete a vault entry. This
+// also has built-in confirmation to ensure deletion of the entry
 func (a *App) DeleteVaultModal(i int) *tview.Modal {
 	modal := tview.NewModal().
 		SetBackgroundColor(tcell.ColorBlack).
@@ -33,6 +35,8 @@ func (a *App) DeleteVaultModal(i int) *tview.Modal {
 	return modal
 }
 
+// DeleteFromVault contains the business logic of removing the vault entry from
+// the vault, and saves the new vault to disk
 func (a *App) DeleteFromVault(vaultIdx int) {
 	a.Vault = slices.Delete(a.Vault, vaultIdx, vaultIdx+1)
 	a.SaveVault()

@@ -9,6 +9,8 @@ import (
 	"github.com/rivo/tview"
 )
 
+// GeneratedPasswordModal returns the Modal primitive that displays a newly
+// generated, secure password
 func (a *App) GeneratedPasswordModal(generatedPass string) *tview.Modal {
 	modal := tview.NewModal().
 		AddButtons([]string{"OK", "Copy"}).

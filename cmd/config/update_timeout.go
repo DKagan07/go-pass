@@ -34,6 +34,9 @@ Ex.
 	},
 }
 
+// UpdateTimeoutCmdHandler handles the 'update_timeout' command
+// This command handler will update the timeout field in the config with the
+// flags as the new values
 func UpdateTimeoutCmdHandler(cmd *cobra.Command, args []string) error {
 	passB, err := utils.GetPasswordFromUser(true, os.Stdin)
 	if err != nil {

@@ -16,6 +16,7 @@ import (
 
 var helpText = "a: Add | d: Delete | u: Update | g: Generate Password | q: Quit | tab: Switch between Search and Vault"
 
+// App is the structure that controls all the actions for the TUI
 type App struct {
 	App           *tview.Application
 	VaultFile     *os.File
@@ -31,10 +32,13 @@ type App struct {
 	SearchInput *tview.InputField
 }
 
+// NewApp returns a new App
 func NewApp() *App {
 	return &App{}
 }
 
+// CreateRoot returns a Flex primitive of the root of the program.
+// The root is a combination of the search bar and the list model.VaultEntry
 func (a *App) CreateRoot() *tview.Flex {
 	help := tview.NewTextView().
 		SetText(helpText).
@@ -58,6 +62,8 @@ func (a *App) CreateRoot() *tview.Flex {
 	return root
 }
 
+// TviewRun is the main entry point to the TUI part of the program. It sets up
+// the app and login screen.
 func TviewRun() {
 	app := NewApp()
 	app.App = tview.NewApplication()

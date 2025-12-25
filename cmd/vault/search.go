@@ -40,10 +40,6 @@ Ex.
 	},
 }
 
-// func init() {
-// 	rootCmd.AddCommand(searchCmd)
-// }
-
 // SearchCmdHandler is the handler function that encapsulates the SearchVault
 // logic and runs some checks beforehand.
 func SearchCmdHandler(cmd *cobra.Command, args []string) error {

@@ -5,6 +5,11 @@ import (
 	"github.com/rivo/tview"
 )
 
+// ErrorModal returns a modal that will
+// display the error
+// return to 'dest' when the user exits the modal
+// NOTE: The user should always set the focus or root of the program with this
+// modal
 func (a *App) ErrorModal(errMsg string, dest tview.Primitive) *tview.Modal {
 	modal := tview.NewModal().
 		SetBackgroundColor(tcell.ColorBlack).
@@ -23,6 +28,11 @@ func (a *App) ErrorModal(errMsg string, dest tview.Primitive) *tview.Modal {
 	return modal
 }
 
+// ExitErrorModal returns a modal that will:
+// display the error
+// when accepted, will safely quit the program
+// NOTE: The user should always set the focus or root of the program with this
+// modal
 func (a *App) ExitErrorModal(errMsg string) *tview.Modal {
 	modal := tview.NewModal().
 		SetBackgroundColor(tcell.ColorBlack).

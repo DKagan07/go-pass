@@ -58,6 +58,7 @@ func CreateVault(name string, key *model.MasterAESKeyManager) (*os.File, error) 
 			if err != nil {
 				return nil, err
 			}
+
 			WriteToFile(f, plaintext)
 		}
 
