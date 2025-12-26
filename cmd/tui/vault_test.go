@@ -50,12 +50,18 @@ func TestFindFilteredVaultIndex(t *testing.T) {
 		idx := app.findFilteredVaultIndex(nonExistentEntry)
 		assert.Equal(-1, idx)
 	})
+}
 
-	t.Run("empty vault", func(t *testing.T) {
-		emptyApp, cleanup := NewTestApp(t)
-		defer cleanup()
+func TestFindFilteredVaultIndex_EmptyVault(t *testing.T) {
+	assert := assert.New(t)
 
-		idx := emptyApp.findFilteredVaultIndex(entries[0])
-		assert.Equal(-1, idx)
-	})
+	entries := []model.VaultEntry{
+		{Name: "Entry1", Username: "user1"},
+	}
+
+	emptyApp, cleanup := NewTestApp(t)
+	defer cleanup()
+
+	idx := emptyApp.findFilteredVaultIndex(entries[0])
+	assert.Equal(-1, idx)
 }

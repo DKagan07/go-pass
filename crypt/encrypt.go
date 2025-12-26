@@ -2,7 +2,7 @@ package crypt
 
 import (
 	"encoding/json"
-	"log"
+	"fmt"
 
 	"go-pass/model"
 )
@@ -20,8 +20,7 @@ func EncryptPassword(pw []byte, keychain *model.MasterAESKeyManager) (string, er
 func EncryptVault(vault []model.VaultEntry, keychain *model.MasterAESKeyManager) (string, error) {
 	b, err := json.Marshal(vault)
 	if err != nil {
-		log.Fatalf("EncryptVault::Marshal json: %v", err)
-		return "", err
+		return "", fmt.Errorf("marshaling vault json: %v", err)
 	}
 
 	return keychain.Encrypt(b)
@@ -31,8 +30,7 @@ func EncryptVault(vault []model.VaultEntry, keychain *model.MasterAESKeyManager)
 func EncryptConfig(cfg *model.Config, keychain *model.MasterAESKeyManager) (string, error) {
 	b, err := json.Marshal(cfg)
 	if err != nil {
-		log.Fatalf("EncryptConfig::Marshal json: %v", err)
-		return "", err
+		return "", fmt.Errorf("marshaling cfg json: %v", err)
 	}
 
 	return keychain.Encrypt(b)

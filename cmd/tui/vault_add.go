@@ -11,6 +11,8 @@ import (
 	"go-pass/model"
 )
 
+// ModalAddVault returns a modal in a Flex primitive in which shows the
+// information needed to create a new model.VaultEntry
 func (a *App) ModalAddVault() *tview.Flex {
 	inputForm := tview.NewForm().
 		AddInputField("Name", "", 0, nil, nil).
@@ -60,6 +62,9 @@ func (a *App) ModalAddVault() *tview.Flex {
 	return flex
 }
 
+// AddToVault contians the business logic of creating a model.VaultEntry and
+// adding it to the vault. AddToVault also calls SaveVault() to save the new
+// entry to disk
 func (a *App) AddToVault(name, notes, username, password string) {
 	passwordBytes := []byte(password)
 	encryptedPassword, _ := crypt.EncryptPassword(passwordBytes, a.Keyring)
@@ -77,6 +82,7 @@ func (a *App) AddToVault(name, notes, username, password string) {
 	a.SaveVault()
 }
 
+// ValidateAddInput validates the input for the add modal
 func ValidateAddInput(name, username, password string) error {
 	if strings.EqualFold(name, "") {
 		return &ValidationError{Field: "Name", Message: "Name cannot be empty"}

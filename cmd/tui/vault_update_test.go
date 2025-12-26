@@ -44,8 +44,13 @@ func TestUpdateVaultEntry(t *testing.T) {
 	assert.NotEqual("Entry1", app.Vault[0].Name)
 	assert.Equal("NewUser1", app.Vault[0].Username)
 	assert.NotEqual("user1", app.Vault[0].Username)
-	assert.Equal("newPass1", crypt.DecryptPassword(app.Vault[0].Password, app.Keyring, false))
-	assert.NotEqual("pass1", crypt.DecryptPassword(app.Vault[0].Password, app.Keyring, false))
+	decryptedPass1, err := crypt.DecryptPassword(app.Vault[0].Password, app.Keyring, false)
+	assert.NoError(err)
+	assert.Equal("newPass1", decryptedPass1)
+
+	decryptedPass2, err := crypt.DecryptPassword(app.Vault[0].Password, app.Keyring, false)
+	assert.NoError(err)
+	assert.NotEqual("pass1", decryptedPass2)
 	assert.Equal("newNotes1", app.Vault[0].Notes)
 	assert.NotEqual("notes1", app.Vault[0].Notes)
 }

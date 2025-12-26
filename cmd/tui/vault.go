@@ -14,6 +14,9 @@ import (
 	"go-pass/utils"
 )
 
+// PopulateVaultList is the main engine behind the TUI application. This
+// repopulates the vault list from the Vault and FilteredVault, alphabezies the
+// vault, and controls the button presses for actions within the VaultList
 func (a *App) PopulateVaultList() {
 	// Alphebetize the vault by name
 	sort.Slice(a.Vault, func(i, j int) bool {
@@ -37,7 +40,6 @@ func (a *App) PopulateVaultList() {
 	a.VaultList.SetTitle(" Vault ")
 	a.VaultList.SetBackgroundColor(tcell.ColorBlack)
 	a.VaultList.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		// TODO: Add keys to proceed with vault actions
 		switch event.Rune() {
 		case 'a':
 			flex := a.ModalAddVault()
@@ -65,7 +67,11 @@ func (a *App) PopulateVaultList() {
 				}
 			}
 		case 'g':
-			generatedPassword := vault.GeneratePassword(20, vault.DefaultChars)
+			generatedPassword, err := vault.GeneratePassword(20, vault.DefaultChars)
+			if err != nil {
+				modal := a.ErrorModal(err.Error(), a.Root)
+				a.App.SetRoot(modal, true)
+			}
 			modal := a.GeneratedPasswordModal(string(generatedPassword))
 			a.App.SetRoot(modal, true)
 		case 'q':
@@ -86,11 +92,15 @@ func (a *App) PopulateVaultList() {
 	})
 }
 
+// SyncFilteredVault ensures that if there is text in the SearchInput, the
+// FilteredVault is updated with what the entries should be
 func (a *App) SyncFilteredVault() {
 	text := a.SearchInput.GetText()
 	a.FilteredVault = FilterVaultEntries(a.Vault, text)
 }
 
+// FilterVaultEntries contains the logic of filtering the vault list with each
+// keypress while searching
 func FilterVaultEntries(vault []model.VaultEntry, searchText string) []model.VaultEntry {
 	if searchText == "" {
 		return vault
@@ -117,6 +127,7 @@ func (a *App) findFilteredVaultIndex(entry model.VaultEntry) int {
 	return -1
 }
 
+// RefreshRoot refreshes the application root.
 func (a *App) RefreshRoot() {
 	help := tview.NewTextView().
 		SetText(helpText).
@@ -140,6 +151,7 @@ func (a *App) RefreshRoot() {
 	a.Root = root
 }
 
+// SaveVault encrypts the vault and saves the vault to disk
 func (a *App) SaveVault() {
 	encryptedCipherText, err := crypt.EncryptVault(a.Vault, a.Keyring)
 	if err != nil {
@@ -150,6 +162,7 @@ func (a *App) SaveVault() {
 	utils.WriteToFile(a.VaultFile, encryptedCipherText)
 }
 
+// VaultListView builds the list view of the VaultList in a Flex primitive
 func (a *App) VaultListView() *tview.Flex {
 	box := tview.NewBox().SetBackgroundColor(tcell.ColorBlack)
 	return tview.NewFlex().

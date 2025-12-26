@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -128,12 +127,15 @@ func AddToVault(
 
 	fStat, err := f.Stat()
 	if err != nil {
-		log.Fatalf("add::stat: %v", err)
+		return fmt.Errorf("stat: %v", err)
 	}
 
 	var entries []model.VaultEntry
 	if fStat.Size() != 2 {
-		entries = crypt.DecryptVault(f, key, false)
+		entries, err = crypt.DecryptVault(f, key, false)
+		if err != nil {
+			return fmt.Errorf("decrypting vault: %v", err)
+		}
 	}
 
 	entries = append(entries, ve)

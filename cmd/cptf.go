@@ -38,6 +38,10 @@ func init() {
 	rootCmd.AddCommand(cptfCmd)
 }
 
+// CptfCmdHandler handles the 'cptf' command
+// This is 1 of 2 migration tools. This is used to move the old method of vault
+// encryption to a plaintext file to be used in conjunction with the 'upload'
+// command
 func CptfCmdHandler(cmd *cobra.Command, args []string) error {
 	cfg, err := utils.CheckConfig("", &model.MasterAESKeyManager{})
 	if err != nil {
@@ -50,7 +54,10 @@ func CptfCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 	defer vaultF.Close()
 
-	ve := crypt.DecryptVault(vaultF, &model.MasterAESKeyManager{}, true)
+	ve, err := crypt.DecryptVault(vaultF, &model.MasterAESKeyManager{}, true)
+	if err != nil {
+		return fmt.Errorf("decrypting vault: %v", err)
+	}
 
 	outF, err := os.OpenFile("out", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
@@ -61,10 +68,15 @@ func CptfCmdHandler(cmd *cobra.Command, args []string) error {
 	decryptedVaultEntries := make([]model.DecryptedEntry, len(ve))
 
 	for i, v := range ve {
+		decryptedPass, err := crypt.DecryptPassword(v.Password, &model.MasterAESKeyManager{}, true)
+		if err != nil {
+			return fmt.Errorf("decrypting password: %v", err)
+		}
+
 		decryptedVaultEntries[i] = model.DecryptedEntry{
 			Name:      v.Name,
 			Username:  v.Username,
-			Password:  crypt.DecryptPassword(v.Password, &model.MasterAESKeyManager{}, true),
+			Password:  decryptedPass,
 			Notes:     v.Notes,
 			UpdatedAt: v.UpdatedAt,
 		}
@@ -81,26 +93,6 @@ func CptfCmdHandler(cmd *cobra.Command, args []string) error {
 
 	outF.Sync()
 	outF.Seek(0, io.SeekStart)
-
-	// readBytes, err := io.ReadAll(outF)
-	// if err != nil {
-	// 	return err
-	// }
-	//
-	// var entries []model.DecryptedEntry
-	// if err := json.Unmarshal(readBytes, &entries); err != nil {
-	// 	return err
-	// }
-	//
-	// for _, e := range entries {
-	// 	fmt.Printf(
-	// 		"source:%s\nusername:%s\npassword:%s\nnotes:%s\n",
-	// 		e.Name,
-	// 		e.Username,
-	// 		string(e.Password),
-	// 		e.Notes,
-	// 	)
-	// }
 
 	return nil
 }

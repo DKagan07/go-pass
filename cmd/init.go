@@ -5,7 +5,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path"
 	"strings"
@@ -81,7 +80,7 @@ func InitCmdHandler(cmd *cobra.Command, args []string) error {
 
 	password, err := utils.GetPasswordFromUser(true, os.Stdin)
 	if err != nil {
-		log.Fatalf("init::failed to get password: %v", err)
+		return fmt.Errorf("failed to get password: %v", err)
 	}
 
 	km := model.NewMasterAESKeyManager(string(password))

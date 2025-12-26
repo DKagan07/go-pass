@@ -37,9 +37,10 @@ func init() {
 	rootCmd.AddCommand(uploadCptf)
 }
 
+// UploadCptfCmdHandler is a function that handles the upload command
+// The main purpose of this is to upload the output of the cptf command to
+// create a new vault
 func UploadCptfCmdHandler(cmd *cobra.Command, args []string) error {
-	// TODO: Need to also make sure vault-file does not exist
-
 	f, err := os.OpenFile("out", os.O_RDONLY, 0o644)
 	if err != nil {
 		return fmt.Errorf("readFile: %+v", err)
@@ -55,11 +56,6 @@ func UploadCptfCmdHandler(cmd *cobra.Command, args []string) error {
 	if err := json.Unmarshal(b, &ve); err != nil {
 		return fmt.Errorf("unmarshal: %v", err)
 	}
-
-	// Just to make sure that it is working
-	// for _, v := range ve {
-	// 	fmt.Printf("vault entry: %+v\n", v)
-	// }
 
 	// Get masterpass -> create new keyring
 	vaultName, err := utils.GetInputFromUser(os.Stdin, "Vault Name")
@@ -106,7 +102,6 @@ func UploadCptfCmdHandler(cmd *cobra.Command, args []string) error {
 
 	v := make([]model.VaultEntry, len(ve))
 	for i, dv := range ve {
-		crypt.EncryptPassword([]byte(dv.Password), keyring)
 		encryptedPass, err := keyring.Encrypt([]byte(dv.Password))
 		if err != nil {
 			return err

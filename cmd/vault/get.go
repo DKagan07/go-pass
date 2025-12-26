@@ -81,7 +81,10 @@ func GetItemFromVault(cfg *model.Config, name string, keyring *model.MasterAESKe
 	}
 	defer f.Close()
 
-	entries := crypt.DecryptVault(f, keyring, false)
+	entries, err := crypt.DecryptVault(f, keyring, false)
+	if err != nil {
+		return fmt.Errorf("decrypting vault: %v", err)
+	}
 
 	if len(entries) == 0 {
 		return fmt.Errorf("nothing in vault")
@@ -89,13 +92,17 @@ func GetItemFromVault(cfg *model.Config, name string, keyring *model.MasterAESKe
 
 	for _, e := range entries {
 		if e.Name == name {
+			decryptedPass, err := crypt.DecryptPassword(e.Password, keyring, false)
+			if err != nil {
+				return fmt.Errorf("decrypting password: %v", err)
+			}
 			// The \t's are for aligning the text in the terminal
 			fmt.Println("From vault:")
 			fmt.Println("Name: ", e.Name)
 			fmt.Println("\tUsername: \t", e.Username)
 			fmt.Println(
 				"\tPassword: \t",
-				crypt.DecryptPassword(e.Password, keyring, false),
+				decryptedPass,
 			)
 
 			if len(e.Notes) > 0 {

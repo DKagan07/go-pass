@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path"
 	"time"
@@ -37,16 +36,16 @@ func CreateVault(name string, key *model.MasterAESKeyManager) (*os.File, error) 
 	}
 
 	vaultPath := path.Join(VAULT_PATH, fName)
-	f, err := os.OpenFile(vaultPath, os.O_RDWR, 0o644)
+	f, err := os.OpenFile(vaultPath, os.O_RDWR, 0o600)
 	if !os.IsExist(err) {
-		f, err := os.OpenFile(vaultPath, os.O_RDWR|os.O_CREATE, 0o644)
+		f, err := os.OpenFile(vaultPath, os.O_RDWR|os.O_CREATE, 0o600)
 		if err != nil {
 			return nil, fmt.Errorf("CreateVault::creating file: %v", err)
 		}
 
 		fileStat, err := f.Stat()
 		if err != nil {
-			panic("init::getting stat on file")
+			return nil, fmt.Errorf("getting stat: %v", err)
 		}
 
 		if fileStat.Size() == 0 {
@@ -59,6 +58,7 @@ func CreateVault(name string, key *model.MasterAESKeyManager) (*os.File, error) 
 			if err != nil {
 				return nil, err
 			}
+
 			WriteToFile(f, plaintext)
 		}
 
@@ -79,7 +79,7 @@ func OpenVault(name string) (*os.File, error) {
 		fName = "pass.json"
 	}
 	vaultPath := path.Join(VAULT_PATH, fName)
-	f, err := os.OpenFile(vaultPath, os.O_RDWR, 0o644)
+	f, err := os.OpenFile(vaultPath, os.O_RDWR, 0o600)
 	if errors.Is(err, os.ErrNotExist) {
 		return nil, fmt.Errorf("OpenVault::vault file does not exist")
 	}
@@ -93,20 +93,22 @@ func OpenVault(name string) (*os.File, error) {
 // WriteToFile takes a *os.File and the contents wanted in the file, in []byte,
 // and writes it to the file. It is up to the caller of this function that the
 // file is closed.
-func WriteToFile(f *os.File, contents string) {
+func WriteToFile(f *os.File, contents string) error {
 	// Reset the file
 	if _, err := f.Seek(0, io.SeekStart); err != nil {
-		log.Fatalf("WriteToFile::seek: %v", err)
+		return fmt.Errorf("seeking file: %v", err)
 	}
 
 	if err := f.Truncate(0); err != nil {
-		log.Fatalf("WriteToFile::truncate: %v", err)
+		return fmt.Errorf("truncating file: %v", err)
 	}
 
 	// Write to the file
 	if _, err := f.WriteString(contents); err != nil {
-		log.Fatalf("WriteToFile::write: %v", err)
+		return fmt.Errorf("write string to file: %v", err)
 	}
+
+	return nil
 }
 
 // Caller should close these open files
@@ -127,9 +129,9 @@ func CreateConfig(
 		configName = CONFIG_FILE
 	}
 
-	f, err := os.OpenFile(configName, os.O_RDWR, 0o644)
+	f, err := os.OpenFile(configName, os.O_RDWR, 0o600)
 	if !os.IsExist(err) {
-		f, err := os.OpenFile(configName, os.O_RDWR|os.O_CREATE, 0o644)
+		f, err := os.OpenFile(configName, os.O_RDWR|os.O_CREATE, 0o600)
 		if err != nil {
 			return nil, fmt.Errorf("CreateVault::creating file: %v", err)
 		}
@@ -152,7 +154,6 @@ func CreateConfig(
 		return f, nil
 	}
 	if err != nil {
-		// log.Fatalf("CreateVault::Error reading file %s: %v", CONFIG_FILE, err)
 		return nil, fmt.Errorf("CreateVault::Error reading file %s: %v", CONFIG_FILE, err)
 	}
 
@@ -163,8 +164,6 @@ func CreateConfig(
 // not the file does not exist (true if it doesn't exist), and an error.
 //
 // It is up to the caller to close the file
-// TODO: This probably isn't the most correct way to do this, but this is ok
-// for now
 func OpenConfig(fn string) (*os.File, bool, error) {
 	if fn != "" {
 		fn = path.Join(CONFIG_PATH, fn)
@@ -172,7 +171,7 @@ func OpenConfig(fn string) (*os.File, bool, error) {
 		fn = CONFIG_FILE
 	}
 
-	f, err := os.OpenFile(fn, os.O_RDWR, 0o644)
+	f, err := os.OpenFile(fn, os.O_RDWR, 0o600)
 	if os.IsNotExist(err) {
 		return nil, true, nil
 	}

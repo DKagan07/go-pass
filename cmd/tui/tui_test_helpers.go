@@ -37,14 +37,15 @@ func NewTestApp(t *testing.T) (*App, func()) {
 	assert.NoError(t, err)
 
 	// Load vault
-	// vault := crypt.DecryptVault(vaultFile, keyManager, false)
+	vault, err := crypt.DecryptVault(vaultFile, keyManager, false)
+	assert.NoError(t, err)
 
 	// Create App instance
 	testApp := &App{
 		App:           tview.NewApplication(),
 		VaultFile:     vaultFile,
-		Vault:         make([]model.VaultEntry, 0),
-		FilteredVault: make([]model.VaultEntry, 0),
+		Vault:         vault,
+		FilteredVault: vault,
 		Cfg:           cfg,
 		Keyring:       keyManager,
 		NumRetries:    0,

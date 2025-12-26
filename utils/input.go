@@ -22,6 +22,8 @@ func (c ConfirmationPrompt) String() string {
 	return string(c)
 }
 
+// GetInputFromUser reads the input from the user and returns the string form
+// of that input
 func GetInputFromUser(r io.Reader, field string) (string, error) {
 	br := bufio.NewReader(r)
 	fmt.Printf("%s: ", field)

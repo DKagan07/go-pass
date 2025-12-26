@@ -40,6 +40,7 @@ Ex.
 	},
 }
 
+// ChangeMasterpassCmdHandler handles the 'change_masterpass' command
 func ChangeMasterpassCmdHandler(cmd *cobra.Command, args []string) error {
 	passB, err := utils.GetPasswordFromUser(true, os.Stdin)
 	if err != nil {
@@ -60,6 +61,9 @@ func ChangeMasterpassCmdHandler(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// ChangeMasterpass handles the business logic of changing the master password
+// This will return an error, otherwise it'll print a success message to the
+// terminal indicating success.
 func ChangeMasterpass(cfg *model.Config, key *model.MasterAESKeyManager) error {
 	fmt.Println(strings.Repeat("*", 24))
 	fmt.Println("Input current password:")
@@ -106,7 +110,7 @@ func ChangeMasterpass(cfg *model.Config, key *model.MasterAESKeyManager) error {
 		return err
 	}
 
-	cfgFile, err := os.OpenFile(utils.CONFIG_FILE, os.O_RDWR, 0o644)
+	cfgFile, err := os.OpenFile(utils.CONFIG_FILE, os.O_RDWR, 0o600)
 	if err != nil {
 		return err
 	}

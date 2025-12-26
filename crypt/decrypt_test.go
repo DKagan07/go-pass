@@ -57,7 +57,8 @@ func TestDecryptVault(t *testing.T) {
 		defer file.Close()
 
 		// Decrypt vault from file
-		decryptedVault := DecryptVault(file, key, false)
+		decryptedVault, err := DecryptVault(file, key, false)
+		assert.NoError(err)
 
 		// Verify the decrypted vault matches the original
 		assert.Len(decryptedVault, len(originalVault))
@@ -147,7 +148,8 @@ func TestDecryptVault_Empty(t *testing.T) {
 		defer file.Close()
 
 		// Decrypt vault from file
-		decryptedVault := DecryptVault(file, key, false)
+		decryptedVault, err := DecryptVault(file, key, false)
+		assert.NoError(err)
 
 		// Verify the decrypted vault is empty
 		assert.Len(decryptedVault, 0)
@@ -193,7 +195,8 @@ func TestDecryptVault_VaultEntryLargeData(t *testing.T) {
 		defer file.Close()
 
 		// Decrypt vault from file
-		decryptedVault := DecryptVault(file, key, false)
+		decryptedVault, err := DecryptVault(file, key, false)
+		assert.NoError(err)
 
 		// Verify the decrypted vault matches the original
 		assert.Len(decryptedVault, len(largeVault))
@@ -242,7 +245,8 @@ func TestDecryptPasswordEdgeCases(t *testing.T) {
 			assert.NotNil(encrypted)
 
 			// Decrypt password
-			decrypted := DecryptPassword([]byte(encrypted), key, false)
+			decrypted, err := DecryptPassword([]byte(encrypted), key, false)
+			assert.NoError(err)
 			assert.Equal(tt.password, decrypted)
 		})
 	}

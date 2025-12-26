@@ -12,8 +12,14 @@ import (
 	"go-pass/model"
 )
 
+// ModalVaultInfoByVault returns the Modal primitive to display the specific
+// vault entry information
 func (a *App) ModalVaultInfoByVault(ve model.VaultEntry) *tview.Modal {
-	decryptedPassword := crypt.DecryptPassword(ve.Password, a.Keyring, false)
+	decryptedPassword, err := crypt.DecryptPassword(ve.Password, a.Keyring, false)
+	if err != nil {
+		modal := a.ErrorModal(err.Error(), a.Root)
+		a.App.SetRoot(modal, true)
+	}
 	text := fmt.Sprintf(`
 	Name: %s
 	Username: %s
@@ -41,9 +47,15 @@ func (a *App) ModalVaultInfoByVault(ve model.VaultEntry) *tview.Modal {
 	return modal
 }
 
+// ModalVaultInfoByIdx gets the specific vault entry information by index in the
+// vault to display the information
 func (a *App) ModalVaultInfoByIdx(idx int) *tview.Modal {
 	entry := a.Vault[idx]
-	decryptedPassword := crypt.DecryptPassword(entry.Password, a.Keyring, false)
+	decryptedPassword, err := crypt.DecryptPassword(entry.Password, a.Keyring, false)
+	if err != nil {
+		modal := a.ErrorModal(err.Error(), a.Root)
+		a.App.SetRoot(modal, true)
+	}
 	text := fmt.Sprintf(`
 	Name: %s
 	Username: %s

@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"slices"
 	"strings"
@@ -74,14 +73,16 @@ func DeleteItemInVault(
 	r io.Reader,
 	key *model.MasterAESKeyManager,
 ) error {
-	// TODO: should I add all the open and decrypt into the confirm conditional?
 	f, err := utils.OpenVault(cfg.VaultName)
 	if err != nil {
 		return fmt.Errorf("opening vault: %v", err)
 	}
 	defer f.Close()
 
-	entries := crypt.DecryptVault(f, key, false)
+	entries, err := crypt.DecryptVault(f, key, false)
+	if err != nil {
+		return fmt.Errorf("decrypting vault: %v", err)
+	}
 
 	if len(entries) == 0 {
 		return fmt.Errorf("nothing in your vault")
@@ -109,10 +110,8 @@ func DeleteItemInVault(
 
 	b, err := crypt.EncryptVault(entries, key)
 	if err != nil {
-		log.Fatalf("delete::failed to encrypt: %v", err)
+		return fmt.Errorf("failed to encrypt vault: %v", err)
 	}
 
-	utils.WriteToFile(f, b)
-
-	return nil
+	return utils.WriteToFile(f, b)
 }

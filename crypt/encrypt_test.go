@@ -36,7 +36,7 @@ func TestEncryptPassword(t *testing.T) {
 
 	encPw, err := EncryptPassword(testPw, key)
 	assert.NoError(t, err)
-	decPw := DecryptPassword([]byte(encPw), key, false)
+	decPw, err := DecryptPassword([]byte(encPw), key, false)
 	assert.NoError(t, err)
 
 	assert.Equal(t, string(testPw), decPw)

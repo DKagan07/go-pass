@@ -45,7 +45,8 @@ func TestGeneratePassword(t *testing.T) {
 				specialChars = tt.special
 			}
 
-			b := GeneratePassword(tt.length, specialChars)
+			b, err := GeneratePassword(tt.length, specialChars)
+			assert.NoError(t, err)
 
 			doesContain := false
 			for _, letter := range strings.Split(specialChars, "") {

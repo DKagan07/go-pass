@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"fmt"
 	"log"
 	"os"
 
@@ -22,6 +23,8 @@ const (
 	DefaultKeyringAccount = "encryption_key"
 )
 
+// MasterAESKeyManager is the struct that contains the logic to handle the
+// keyring encryption and decryption
 type MasterAESKeyManager struct {
 	Masterpassword string
 	// KeyringService and KeyringAccount allow tests to use isolated keyring entries
@@ -29,6 +32,8 @@ type MasterAESKeyManager struct {
 	KeyringAccount string
 }
 
+// NewMasterAESKeyManager returns a new MasterAESKeyManager with the passed-in
+// password
 func NewMasterAESKeyManager(mp string) *MasterAESKeyManager {
 	return &MasterAESKeyManager{
 		Masterpassword: mp,
@@ -46,6 +51,7 @@ func NewTestMasterAESKeyManager(mp string) *MasterAESKeyManager {
 	}
 }
 
+// InitializeKeychain creates a new keyring and sets it
 func (k *MasterAESKeyManager) InitializeKeychain() error {
 	randomKey := make([]byte, 32)
 	if _, err := rand.Read(randomKey); err != nil {
@@ -66,6 +72,7 @@ func (k *MasterAESKeyManager) DeleteKeychain() error {
 	return keyring.Delete(k.KeyringService, k.KeyringAccount)
 }
 
+// GetEncryptionKey returns the encrypted key that is stored in the keyring
 func (k *MasterAESKeyManager) GetEncryptionKey() ([]byte, error) {
 	salt := GetSalt()
 
@@ -90,6 +97,8 @@ func (k *MasterAESKeyManager) GetEncryptionKey() ([]byte, error) {
 	return key, nil
 }
 
+// Encrypt encrypts the []byte using the keyring, and returns the hex-encoded
+// representation of the encrypted text
 func (k *MasterAESKeyManager) Encrypt(plaintext []byte) (string, error) {
 	key, err := k.GetEncryptionKey()
 	if err != nil {
@@ -98,15 +107,18 @@ func (k *MasterAESKeyManager) Encrypt(plaintext []byte) (string, error) {
 
 	cipherBlock, err := aes.NewCipher(key)
 	if err != nil {
-		log.Fatalf("EncryptConfig::creating cipher block: %v", err)
+		return "", fmt.Errorf("creating cipher block: %v", err)
 	}
 
 	aesgcm, err := cipher.NewGCM(cipherBlock)
 	if err != nil {
-		log.Fatal("EncryptConfig::creating aes gcm")
+		return "", fmt.Errorf("creating aes gcm: %v", err)
 	}
 
-	nonce := GenerateNonce()
+	nonce, err := GenerateNonce()
+	if err != nil {
+		return "", err
+	}
 
 	cipherText := aesgcm.Seal(nil, nonce, plaintext, nil)
 
@@ -116,6 +128,9 @@ func (k *MasterAESKeyManager) Encrypt(plaintext []byte) (string, error) {
 	return base64.StdEncoding.EncodeToString(cipherText), nil
 }
 
+// Decrypt decrypts the passed-in ciphertext using the keyring, and returns the
+// []byte represnetatino of the text. This []byte representation can be used in
+// conjunctino with `string()` to have it be in string form
 func (k *MasterAESKeyManager) Decrypt(ciphertext string) ([]byte, error) {
 	key, err := k.GetEncryptionKey()
 	if err != nil {
@@ -129,12 +144,12 @@ func (k *MasterAESKeyManager) Decrypt(ciphertext string) ([]byte, error) {
 
 	cipherBlock, err := aes.NewCipher(key)
 	if err != nil {
-		log.Fatalf("EncryptConfig::creating cipher block: %v", err)
+		return nil, err
 	}
 
 	aesgcm, err := cipher.NewGCM(cipherBlock)
 	if err != nil {
-		log.Fatal("EncryptConfig::creating aes gcm")
+		return nil, err
 	}
 
 	nonce, cipher := decoded[:NONCE_SIZE], decoded[NONCE_SIZE:]
@@ -147,16 +162,16 @@ func (k *MasterAESKeyManager) Decrypt(ciphertext string) ([]byte, error) {
 }
 
 // GenerateNonce generates a Number Once, used for AES-256 encryption.
-func GenerateNonce() []byte {
+func GenerateNonce() ([]byte, error) {
 	nonce := make([]byte, NONCE_SIZE)
 	if _, err := rand.Read(nonce); err != nil {
-		log.Fatalf("EncryptVault::creating nonce: %v", err)
+		return nil, fmt.Errorf("creating nonce: %v", err)
 	}
 
 	if len(nonce) != NONCE_SIZE {
-		log.Fatal("GenerateNonce::nonce not correct length")
+		return nil, fmt.Errorf("nonce not correct length")
 	}
-	return nonce
+	return nonce, nil
 }
 
 // GetSalt is a helper function that gets the key from the environment

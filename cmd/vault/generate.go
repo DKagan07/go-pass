@@ -6,7 +6,6 @@ package vault
 import (
 	"crypto/rand"
 	"fmt"
-	"log"
 	"math/big"
 	"os"
 	"time"
@@ -75,7 +74,11 @@ func GenerateCmdHandler(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("getting specialChar flag: %v", err)
 	}
 
-	strongPasswordBytes := GeneratePassword(length, special)
+	strongPasswordBytes, err := GeneratePassword(length, special)
+	if err != nil {
+		return fmt.Errorf("failed generating password: %v", err)
+	}
+
 	fmt.Println("Generated Password: ", string(strongPasswordBytes))
 
 	source, err := cmd.Flags().GetString("add")
@@ -126,7 +129,7 @@ func AddGeneratedPasswordToVault(
 //
 // Note: There is always a chance that these passwords will not satisfy password
 // inputs, so double check that it does.
-func GeneratePassword(l int, special string) []byte {
+func GeneratePassword(l int, special string) ([]byte, error) {
 	baseByteSet := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	byteSet := baseByteSet + special
 	setLength := big.NewInt(int64(len(byteSet)))
@@ -135,10 +138,10 @@ func GeneratePassword(l int, special string) []byte {
 	for i := range b {
 		idx, err := rand.Int(rand.Reader, setLength)
 		if err != nil {
-			log.Fatalf("failed to get random number: %v", err)
+			return nil, fmt.Errorf("failed to get random number: %v", err)
 		}
 
 		b[i] = byteSet[idx.Int64()]
 	}
-	return b
+	return b, nil
 }
