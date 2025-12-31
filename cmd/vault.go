@@ -41,6 +41,9 @@ func init() {
 }
 
 func initVaultFlags() {
+	// Get Command
+	vault.GetCmd.Flags().BoolP("copy", "y", false, "Add password to clipboard, does not display information")
+
 	// Generate Command
 	specialCharsStr := "List the special characters you want to add to your password generation. If adjustment is necessary, list all the special characters you want. IMPORTANT: BE SURE TO USE SINGLE QUOTES."
 	vault.GenerateCmd.Flags().IntP("length", "l", 24, "Decides length of new password")

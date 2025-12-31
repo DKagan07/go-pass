@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/atotto/clipboard"
 	"github.com/spf13/cobra"
 
 	"go-pass/crypt"
@@ -51,6 +52,11 @@ func GetCmdHandler(cmd *cobra.Command, args []string) error {
 		)
 	}
 
+	copyFlag, err := cmd.Flags().GetBool("copy")
+	if err != nil {
+		return fmt.Errorf("error getting copy flag: %v", err)
+	}
+
 	name := strings.Join(args, " ")
 
 	passB, err := utils.GetPasswordFromUser(true, os.Stdin)
@@ -64,7 +70,7 @@ func GetCmdHandler(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error checking config: %v", err)
 	}
 
-	err = GetItemFromVault(cfg, name, keyring)
+	err = GetItemFromVault(cfg, name, copyFlag, keyring)
 	if err != nil {
 		return fmt.Errorf("cannot get %s from vault: %v", name, err)
 	}
@@ -74,7 +80,12 @@ func GetCmdHandler(cmd *cobra.Command, args []string) error {
 
 // GetItemFromVault retreies the 'name' from the vault. If it doesn't exist, an
 // error gets returned.
-func GetItemFromVault(cfg *model.Config, name string, keyring *model.MasterAESKeyManager) error {
+func GetItemFromVault(
+	cfg *model.Config,
+	name string,
+	copyFlag bool,
+	keyring *model.MasterAESKeyManager,
+) error {
 	f, err := utils.OpenVault(cfg.VaultName)
 	if err != nil {
 		return fmt.Errorf("opening vault: %v", err)
@@ -96,18 +107,25 @@ func GetItemFromVault(cfg *model.Config, name string, keyring *model.MasterAESKe
 			if err != nil {
 				return fmt.Errorf("decrypting password: %v", err)
 			}
-			// The \t's are for aligning the text in the terminal
-			fmt.Println("From vault:")
-			fmt.Println("Name: ", e.Name)
-			fmt.Println("\tUsername: \t", e.Username)
-			fmt.Println(
-				"\tPassword: \t",
-				decryptedPass,
-			)
 
-			if len(e.Notes) > 0 {
-				fmt.Println("\tNotes: \t\t", e.Notes)
+			if copyFlag {
+				clipboard.WriteAll(decryptedPass)
+				fmt.Println("Copied password to clipboard!")
+			} else {
+				// The \t's are for aligning the text in the terminal
+				fmt.Println("From vault:")
+				fmt.Println("Name: ", e.Name)
+				fmt.Println("\tUsername: \t", e.Username)
+				fmt.Println(
+					"\tPassword: \t",
+					decryptedPass,
+				)
+
+				if len(e.Notes) > 0 {
+					fmt.Println("\tNotes: \t\t", e.Notes)
+				}
 			}
+
 			return nil
 		}
 	}
