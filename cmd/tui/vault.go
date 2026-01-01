@@ -74,6 +74,21 @@ func (a *App) PopulateVaultList() {
 			}
 			modal := a.GeneratedPasswordModal(string(generatedPassword))
 			a.App.SetRoot(modal, true)
+		case 'b':
+			backupModal := a.BackupModal()
+			a.App.SetRoot(backupModal, true)
+		case 'l':
+			if a.ToggleShowBackup {
+				backups, err := a.ListBackupsFlex()
+				if err != nil {
+					modal := a.ErrorModal(err.Error(), a.Root)
+					a.App.SetRoot(modal, true)
+					return nil
+				}
+				a.App.SetRoot(backups, true)
+			} else {
+				a.App.SetRoot(a.Root, true)
+			}
 		case 'q':
 			a.App.Stop()
 		case '\t':
@@ -109,8 +124,8 @@ func FilterVaultEntries(vault []model.VaultEntry, searchText string) []model.Vau
 
 	for _, v := range vault {
 		if strings.Contains(strings.ToLower(v.Name), strings.ToLower(searchText)) {
-			vault := v
-			filtered = append(filtered, vault)
+			entry := v
+			filtered = append(filtered, entry)
 		}
 	}
 
@@ -130,7 +145,7 @@ func (a *App) findFilteredVaultIndex(entry model.VaultEntry) int {
 // RefreshRoot refreshes the application root.
 func (a *App) RefreshRoot() {
 	help := tview.NewTextView().
-		SetText(helpText).
+		SetText(HelpText).
 		SetDynamicColors(true).
 		SetTextAlign(tview.AlignCenter)
 	help.SetBorder(true).SetTitle(" Help ")

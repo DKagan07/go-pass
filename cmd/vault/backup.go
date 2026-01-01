@@ -66,7 +66,12 @@ func BackupCmdHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return BackupVault("", cfg.VaultName, "", now, keyring)
+	successString, err := BackupVault("", cfg.VaultName, "", now, keyring)
+	if err != nil {
+		return err
+	}
+	fmt.Println(successString)
+	return nil
 }
 
 // BackupVault contains the logic of creating the backup directory, if it
@@ -77,9 +82,9 @@ func BackupVault(
 	configName, vaultName, backupName string,
 	now time.Time,
 	key *model.MasterAESKeyManager,
-) error {
+) (string, error) {
 	if err := os.MkdirAll(utils.BACKUP_DIR, 0o700); err != nil {
-		return err
+		return "", err
 	}
 
 	var fn string
@@ -92,29 +97,28 @@ func BackupVault(
 	backupFilePath := path.Join(utils.BACKUP_DIR, fn)
 	_, err := os.Create(backupFilePath)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	currentVault, err := utils.OpenVault(vaultName)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer currentVault.Close()
 
 	entries, err := crypt.DecryptVault(currentVault, key, false)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	b, err := crypt.EncryptVault(entries, key)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if err = os.WriteFile(backupFilePath, []byte(b), 0o600); err != nil {
-		return err
+		return "", err
 	}
 
-	fmt.Printf("Backup %s created successfully", fn)
-	return nil
+	return fmt.Sprintf("Backup '%s' created successfully", fn), nil
 }

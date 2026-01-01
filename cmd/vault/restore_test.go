@@ -58,7 +58,7 @@ func TestRestoreVault(t *testing.T) {
 	}, cfg, now.UnixMilli(), key)
 	assert.NoError(err)
 
-	err = BackupVault(
+	_, err = BackupVault(
 		testutils.TEST_CONFIG_NAME,
 		testutils.TEST_VAULT_NAME,
 		testutils.TEST_BACKUP_NAME,
