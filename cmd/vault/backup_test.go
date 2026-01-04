@@ -69,7 +69,7 @@ func TestBackupVault(t *testing.T) {
 	assert.NoError(err)
 	vaultSize := vaultStat.Size()
 
-	err = BackupVault(
+	_, err = BackupVault(
 		testutils.TEST_CONFIG_NAME,
 		testutils.TEST_VAULT_NAME,
 		testutils.TEST_BACKUP_NAME,
