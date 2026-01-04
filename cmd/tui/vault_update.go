@@ -49,6 +49,7 @@ func (a *App) UpdateVaultModal(currIdx int) *tview.Flex {
 		a.PopulateVaultList()
 		a.RefreshRoot()
 		a.App.SetRoot(a.Root, true)
+		a.App.SetFocus(a.VaultList)
 	})
 
 	form.SetTitle(" Update Vault ")

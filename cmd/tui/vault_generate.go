@@ -26,9 +26,11 @@ func (a *App) GeneratedPasswordModal(generatedPass string) *tview.Modal {
 			if err != nil {
 				modal := a.ErrorModal(fmt.Sprintf("Failed to copy password: %v", err), a.Root)
 				a.App.SetRoot(modal, true)
+				a.App.SetFocus(a.VaultList)
 			}
 		} else {
 			a.App.SetRoot(a.Root, true)
+			a.App.SetFocus(a.VaultList)
 		}
 	})
 

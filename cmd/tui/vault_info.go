@@ -42,6 +42,7 @@ func (a *App) ModalVaultInfoByVault(ve model.VaultEntry) *tview.Modal {
 			}
 		}
 		a.App.SetRoot(a.Root, true)
+		a.App.SetFocus(a.VaultList)
 	})
 
 	return modal
@@ -78,6 +79,7 @@ func (a *App) ModalVaultInfoByIdx(idx int) *tview.Modal {
 			}
 		}
 		a.App.SetRoot(a.Root, true)
+		a.App.SetFocus(a.VaultList)
 	})
 
 	return modal
