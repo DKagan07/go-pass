@@ -39,6 +39,7 @@ func (a *App) ModalAddVault() *tview.Flex {
 		a.PopulateVaultList()
 		a.RefreshRoot()
 		a.App.SetRoot(a.Root, true)
+		a.App.SetFocus(a.VaultList)
 	})
 	inputForm.SetTitle(" Add Vault ")
 	inputForm.SetBorder(true)
@@ -49,6 +50,7 @@ func (a *App) ModalAddVault() *tview.Flex {
 	inputForm.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if event.Key() == tcell.KeyEsc {
 			a.App.SetRoot(a.Root, true)
+			a.App.SetFocus(a.VaultList)
 		}
 		return event
 	})

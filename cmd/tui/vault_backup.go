@@ -88,9 +88,14 @@ func (a *App) ListBackupsFlex() (*tview.Flex, error) {
 		AddItem(help, 3, 1, false)
 	backupRoot.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Rune() {
+		case 'j':
+			return tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModNone)
+		case 'k':
+			return tcell.NewEventKey(tcell.KeyUp, 0, tcell.ModNone)
 		case 'l':
 			a.ToggleShowBackup = !a.ToggleShowBackup
 			a.App.SetRoot(a.Root, true)
+			a.App.SetFocus(a.VaultList)
 			return nil
 		}
 

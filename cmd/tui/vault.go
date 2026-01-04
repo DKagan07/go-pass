@@ -41,6 +41,10 @@ func (a *App) PopulateVaultList() {
 	a.VaultList.SetBackgroundColor(tcell.ColorBlack)
 	a.VaultList.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Rune() {
+		case 'j':
+			return tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModNone)
+		case 'k':
+			return tcell.NewEventKey(tcell.KeyUp, 0, tcell.ModNone)
 		case 'a':
 			flex := a.ModalAddVault()
 			a.App.SetRoot(flex, true)
