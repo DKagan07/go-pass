@@ -29,7 +29,7 @@ var BackupCmd = &cobra.Command{
 	Use:   "backup",
 	Short: "Backup your vault",
 	Long: `'backup' backups your vault to a directory. These backups are encrypted in the
-same way as your vault, and can be restored with the 'restore' command. 
+same way as your vault, and can be restored with the 'restore' command.
 
 Ex.
 	$ gopass vault backup
@@ -83,7 +83,7 @@ func BackupVault(
 	now time.Time,
 	key *model.MasterAESKeyManager,
 ) (string, error) {
-	if err := os.MkdirAll(utils.BACKUP_DIR, 0o700); err != nil {
+	if err := os.MkdirAll(utils.BACKUP_PATH, 0o700); err != nil {
 		return "", err
 	}
 
@@ -94,7 +94,7 @@ func BackupVault(
 		fn = fmt.Sprintf(backupName, now.Format(DATE_FORMAT_STRING))
 	}
 
-	backupFilePath := path.Join(utils.BACKUP_DIR, fn)
+	backupFilePath := path.Join(utils.BACKUP_PATH, fn)
 	_, err := os.Create(backupFilePath)
 	if err != nil {
 		return "", err

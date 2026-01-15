@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path"
 	"time"
@@ -18,7 +17,7 @@ var (
 	VAULT_PATH     = path.Join(home, ".local", "gopass")
 	CONFIG_PATH    = path.Join(home, ".config", "gopass")
 	CONFIG_FILE    = path.Join(CONFIG_PATH, "gopass-cfg.json")
-	BACKUP_DIR     = path.Join(home, ".local", "gopass-backup")
+	BACKUP_PATH    = path.Join(home, ".local", "gopass-backup")
 	THIRTY_MINUTES = time.Minute.Milliseconds() * 30
 )
 
@@ -59,7 +58,16 @@ func CreateVault(name string, key *model.MasterAESKeyManager) (*os.File, error) 
 				return nil, err
 			}
 
-			WriteToFile(f, plaintext)
+			if err := WriteToFile(f.Name(), model.FileVault, plaintext); err != nil {
+				return nil, err
+			}
+
+			// Need to re-open
+			newF, err := os.OpenFile(vaultPath, os.O_RDWR, 0o600)
+			if err != nil {
+				return nil, err
+			}
+			return newF, nil
 		}
 
 		return f, nil
@@ -90,22 +98,57 @@ func OpenVault(name string) (*os.File, error) {
 	return f, nil
 }
 
-// WriteToFile takes a *os.File and the contents wanted in the file, in []byte,
-// and writes it to the file. It is up to the caller of this function that the
-// file is closed.
-func WriteToFile(f *os.File, contents string) error {
-	// Reset the file
-	if _, err := f.Seek(0, io.SeekStart); err != nil {
-		return fmt.Errorf("seeking file: %v", err)
+// WriteToFile takes a file name as a stringand the contents wanted in the file,
+// in []byte, and writes it to the file. It is up to the caller of this function
+// that the file is closed. The caller of this function will also need to
+// re-open the file as the original will be renamed, and therefore, stale.
+// This handles this action atomically by following the temp-then-rename
+// approach.
+func WriteToFile(fileName string, fileType model.TempFileKind, contents string) error {
+	// TODO: Think about adding FLOCK or something to prevent concurrent writes?
+
+	var beginningPath string
+	switch fileType {
+	case model.FileBackup:
+		beginningPath = VAULT_PATH
+	case model.FileConfig:
+		beginningPath = CONFIG_PATH
+	case model.FileVault:
+		beginningPath = BACKUP_PATH
 	}
 
-	if err := f.Truncate(0); err != nil {
-		return fmt.Errorf("truncating file: %v", err)
+	tmpFile, err := os.CreateTemp(beginningPath, "pass_*.tmp")
+	if err != nil {
+		return err
 	}
 
-	// Write to the file
-	if _, err := f.WriteString(contents); err != nil {
-		return fmt.Errorf("write string to file: %v", err)
+	err = os.WriteFile(tmpFile.Name(), []byte(contents), 0o600)
+	if err != nil {
+		os.Remove(tmpFile.Name())
+		return err
+	}
+
+	if err = tmpFile.Sync(); err != nil {
+		return err
+	}
+
+	// Manually close the file
+	if err = tmpFile.Close(); err != nil {
+		return err
+	}
+
+	if err := os.Rename(tmpFile.Name(), fileName); err != nil {
+		return err
+	}
+
+	// Directory sync
+	dir, err := os.Open(beginningPath)
+	if err != nil {
+		return err
+	}
+	defer dir.Close()
+	if err = dir.Sync(); err != nil {
+		return err
 	}
 
 	return nil
@@ -149,9 +192,17 @@ func CreateConfig(
 			return nil, fmt.Errorf("err in creating cfg ciphertext: %v", err)
 		}
 
-		WriteToFile(f, cipherText)
+		if err := WriteToFile(f.Name(), model.FileConfig, cipherText); err != nil {
+			return nil, err
+		}
 
-		return f, nil
+		// Re-opening the file because WriteToFile calls `os.Rename`, which overwrites the *os.File
+		newF, err := os.OpenFile(configName, os.O_RDWR, 0o600)
+		if err != nil {
+			return nil, err
+		}
+
+		return newF, nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("CreateVault::Error reading file %s: %v", CONFIG_FILE, err)

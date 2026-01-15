@@ -24,7 +24,7 @@ var ChangeMasterpassCmd = &cobra.Command{
 	Short: "Changes your master password, used for logging in",
 	Long: `'change_masterpass' changes the master password, used to login
 
-Ex. 
+Ex.
 	$gopass config change_masterpass
 	Master Password: <master_pass>
 	Master Password: <new_master_pass>
@@ -116,7 +116,9 @@ func ChangeMasterpass(cfg *model.Config, key *model.MasterAESKeyManager) error {
 	}
 	defer cfgFile.Close()
 
-	utils.WriteToFile(cfgFile, cfgB)
+	if err := utils.WriteToFile(cfgFile.Name(), model.FileConfig, cfgB); err != nil {
+		return err
+	}
 
 	fmt.Println("Success! Master Password changed.")
 	return nil

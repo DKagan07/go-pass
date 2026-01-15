@@ -90,7 +90,9 @@ func LoginUser(cfgName string, input io.Reader, key *model.MasterAESKeyManager, 
 		return fmt.Errorf("creating ciphertext: %v", err)
 	}
 
-	utils.WriteToFile(cfgFile, cipherText)
+	if err := utils.WriteToFile(cfgFile.Name(), model.FileConfig, cipherText); err != nil {
+		return err
+	}
 
 	return nil
 }

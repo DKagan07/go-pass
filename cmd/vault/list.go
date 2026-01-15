@@ -123,12 +123,11 @@ func PrintList(sourceName string, cfg *model.Config, key *model.MasterAESKeyMana
 		return fmt.Errorf("list::obtaining ciphertext: %v", err)
 	}
 
-	utils.WriteToFile(f, encryptedCipherText)
-	return nil
+	return utils.WriteToFile(f.Name(), model.FileVault, encryptedCipherText)
 }
 
 func PrintBackups() error {
-	dirEntries, err := os.ReadDir(utils.BACKUP_DIR)
+	dirEntries, err := os.ReadDir(utils.BACKUP_PATH)
 	if err != nil {
 		return err
 	}

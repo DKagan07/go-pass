@@ -137,6 +137,9 @@ func GetItemFromVault(
 		return fmt.Errorf("add::obtaining ciphertext: %v", err)
 	}
 
-	utils.WriteToFile(f, encryptedCipherText)
+	if err := utils.WriteToFile(f.Name(), model.FileVault, encryptedCipherText); err != nil {
+		return err
+	}
+
 	return fmt.Errorf("'%s' not found in vault", name)
 }

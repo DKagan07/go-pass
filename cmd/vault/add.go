@@ -145,6 +145,5 @@ func AddToVault(
 		return fmt.Errorf("add::obtaining ciphertext: %v", err)
 	}
 
-	utils.WriteToFile(f, encryptedCipherText)
-	return nil
+	return utils.WriteToFile(f.Name(), model.FileVault, encryptedCipherText)
 }

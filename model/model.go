@@ -1,5 +1,13 @@
 package model
 
+type TempFileKind string
+
+const (
+	FileVault  TempFileKind = "VAULT"
+	FileConfig TempFileKind = "CONFIG"
+	FileBackup TempFileKind = "BACKUP"
+)
+
 type VaultEntry struct {
 	// Name is the source name for the login info
 	Name string `json:"name"`

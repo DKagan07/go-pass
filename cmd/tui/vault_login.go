@@ -87,7 +87,7 @@ func (a *App) LoginPage() *tview.Flex {
 			modal := a.ExitErrorModal(err.Error())
 			a.App.SetRoot(modal, true)
 		}
-		utils.WriteToFile(cfgFile, encryptedCfg)
+		utils.WriteToFile(cfgFile.Name(), model.FileConfig, encryptedCfg)
 
 		a.App.SetRoot(a.Root, true)
 	})
