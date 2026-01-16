@@ -105,16 +105,14 @@ func OpenVault(name string) (*os.File, error) {
 // This handles this action atomically by following the temp-then-rename
 // approach.
 func WriteToFile(fileName string, fileType model.TempFileKind, contents string) error {
-	// TODO: Think about adding FLOCK or something to prevent concurrent writes?
-
 	var beginningPath string
 	switch fileType {
 	case model.FileBackup:
-		beginningPath = VAULT_PATH
+		beginningPath = BACKUP_PATH
 	case model.FileConfig:
 		beginningPath = CONFIG_PATH
 	case model.FileVault:
-		beginningPath = BACKUP_PATH
+		beginningPath = VAULT_PATH
 	}
 
 	tmpFile, err := os.CreateTemp(beginningPath, "pass_*.tmp")
