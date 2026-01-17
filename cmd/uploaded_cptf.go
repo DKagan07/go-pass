@@ -92,7 +92,10 @@ func UploadCptfCmdHandler(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	utils.WriteToFile(cfgF, cfgCiphertext)
+
+	if err := utils.WriteToFile(cfgF.Name(), model.FileConfig, cfgCiphertext); err != nil {
+		return err
+	}
 
 	vf, err := utils.CreateVault(vaultName, keyring)
 	if err != nil {
@@ -120,6 +123,9 @@ func UploadCptfCmdHandler(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	utils.WriteToFile(vf, ciphertext)
+	if err = utils.WriteToFile(vf.Name(), model.FileVault, ciphertext); err != nil {
+		return err
+	}
+
 	return nil
 }

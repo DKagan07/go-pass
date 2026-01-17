@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 
@@ -172,13 +173,28 @@ func (a *App) RefreshRoot() {
 
 // SaveVault encrypts the vault and saves the vault to disk
 func (a *App) SaveVault() {
+	defer func() {
+		a.PopulateVaultList()
+	}()
 	encryptedCipherText, err := crypt.EncryptVault(a.Vault, a.Keyring)
 	if err != nil {
 		modal := a.ErrorModal(fmt.Sprintf("Failed to save vault: %v", err), a.Root)
 		a.App.SetRoot(modal, true)
 	}
 
-	utils.WriteToFile(a.VaultFile, encryptedCipherText)
+	if err := utils.WriteToFile(a.VaultFile.Name(), model.FileVault, encryptedCipherText); err != nil {
+		modal := a.ErrorModal(fmt.Sprintf("Failed to save vault: %v", err), a.Root)
+		a.App.SetRoot(modal, true)
+		return
+	}
+
+	// need to refresh the app.VaultFile
+	a.VaultFile, err = os.OpenFile(a.VaultFile.Name(), os.O_RDWR, 0600)
+	if err != nil {
+		modal := a.ErrorModal(fmt.Sprintf("Failed to open vault file: %v", err), a.Root)
+		a.App.SetRoot(modal, true)
+		return
+	}
 }
 
 // VaultListView builds the list view of the VaultList in a Flex primitive

@@ -56,7 +56,7 @@ func (a *App) BackupModal() *tview.Modal {
 func (a *App) ListBackupsFlex() (*tview.Flex, error) {
 	a.ToggleShowBackup = !a.ToggleShowBackup
 
-	dirEntries, err := os.ReadDir(utils.BACKUP_DIR)
+	dirEntries, err := os.ReadDir(utils.BACKUP_PATH)
 	if err != nil {
 		return nil, err
 	}

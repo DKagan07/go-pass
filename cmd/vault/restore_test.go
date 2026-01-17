@@ -69,7 +69,7 @@ func TestRestoreVault(t *testing.T) {
 
 	backupFn := fmt.Sprintf(testutils.TEST_BACKUP_NAME, now.Format(DATE_FORMAT_STRING))
 	// cleanup the backup file after the test is done
-	defer os.Remove(path.Join(utils.BACKUP_DIR, backupFn))
+	defer os.Remove(path.Join(utils.BACKUP_PATH, backupFn))
 
 	// need to remove the test vault
 	testVault := path.Join(utils.VAULT_PATH, testutils.TEST_VAULT_NAME)

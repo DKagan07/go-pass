@@ -1,6 +1,8 @@
 package vault
 
 import (
+	"os"
+	"path"
 	"testing"
 	"time"
 
@@ -72,7 +74,7 @@ func TestAddCheckConfig(t *testing.T) {
 	}
 }
 
-func TestAddAddToVault(t *testing.T) {
+func TestAddToVault(t *testing.T) {
 	testutils.TestCleanup(string(testutils.TEST_MASTER_PASSWORD))
 	defer testutils.TestCleanup(string(testutils.TEST_MASTER_PASSWORD))
 
@@ -108,6 +110,12 @@ func TestAddAddToVault(t *testing.T) {
 	err = AddToVault(source, ui, cfg, now, keyManager)
 	assert.NoError(t, err)
 
-	fStat, _ := vaultF.Stat()
+	// Need to get the file again, as we're renaming the file
+	fn := path.Join(testutils.VAULT_PATH, testutils.TEST_VAULT_NAME)
+	f, err := os.OpenFile(fn, os.O_RDONLY, 0600)
+	assert.NoError(t, err)
+	defer f.Close()
+
+	fStat, _ := f.Stat()
 	assert.Greater(t, fStat.Size(), int64(2), "Vault should contain encrypted data")
 }

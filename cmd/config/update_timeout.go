@@ -21,7 +21,7 @@ var UpdateTimeoutCmd = &cobra.Command{
 	Short: "Update the login timeout",
 	Long: `'update_timeout' updates the timeout in which the need to login is
 measured against. There are 2 flags, '--hours' and '--minutes', which have to be
-present. 
+present.
 
 Ex.
 	$ gopass config update_timeout --hours 1 --minutes 45
@@ -65,7 +65,9 @@ func UpdateTimeoutCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 	defer cfgFile.Close()
 
-	utils.WriteToFile(cfgFile, encryptedConfig)
+	if err := utils.WriteToFile(cfgFile.Name(), model.FileConfig, encryptedConfig); err != nil {
+		return err
+	}
 
 	fmt.Println("Success in updating the timeout time")
 	return nil

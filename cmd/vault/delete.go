@@ -113,5 +113,5 @@ func DeleteItemInVault(
 		return fmt.Errorf("failed to encrypt vault: %v", err)
 	}
 
-	return utils.WriteToFile(f, b)
+	return utils.WriteToFile(f.Name(), model.FileVault, b)
 }

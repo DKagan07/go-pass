@@ -22,7 +22,7 @@ import (
 var RestoreCmd = &cobra.Command{
 	Use:   "restore",
 	Short: "Restore restores a backup to your primary vault",
-	Long: `'restore' restores a selected backup to become your vault. This is useful for if 
+	Long: `'restore' restores a selected backup to become your vault. This is useful for if
 anything were to happen to your primary vault, or if you wanted to restore a
 previous state, you can.
 
@@ -80,7 +80,7 @@ func RestoreVault(vaultName string, test bool, key *model.MasterAESKeyManager) e
 		return fmt.Errorf("vault already exists")
 	}
 
-	entries, err := os.ReadDir(utils.BACKUP_DIR)
+	entries, err := os.ReadDir(utils.BACKUP_PATH)
 	if err != nil {
 		return err
 	}
@@ -106,7 +106,7 @@ func RestoreVault(vaultName string, test bool, key *model.MasterAESKeyManager) e
 		}
 	}
 
-	restorePath := path.Join(utils.BACKUP_DIR, selection)
+	restorePath := path.Join(utils.BACKUP_PATH, selection)
 	// Opening selected file
 	restoreFp, err := os.Open(restorePath)
 	if err != nil {
@@ -130,7 +130,9 @@ func RestoreVault(vaultName string, test bool, key *model.MasterAESKeyManager) e
 		return err
 	}
 
-	utils.WriteToFile(v, backupBytes)
+	if err := utils.WriteToFile(v.Name(), model.FileVault, backupBytes); err != nil {
+		return err
+	}
 
 	fmt.Printf("Vault restored successfully")
 	return nil

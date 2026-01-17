@@ -189,7 +189,7 @@ func UpdateEntry(
 		return fmt.Errorf("obtaining ciphertext: %v", err)
 	}
 
-	return utils.WriteToFile(f, encryptedCipherText)
+	return utils.WriteToFile(f.Name(), model.FileVault, encryptedCipherText)
 }
 
 // UpdateVaultEntry takes in the user input and, depending on the flags, update

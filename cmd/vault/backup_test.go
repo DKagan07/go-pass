@@ -65,7 +65,11 @@ func TestBackupVault(t *testing.T) {
 	}, cfg, now.UnixMilli(), key)
 	assert.NoError(err)
 
-	vaultStat, err := vaultFile.Stat()
+	vf, err := os.OpenFile(path.Join(utils.VAULT_PATH, testutils.TEST_VAULT_NAME), os.O_RDWR, 0o600)
+	assert.NoError(err)
+	defer vf.Close()
+
+	vaultStat, err := vf.Stat()
 	assert.NoError(err)
 	vaultSize := vaultStat.Size()
 
@@ -80,7 +84,7 @@ func TestBackupVault(t *testing.T) {
 
 	backupFileName := fmt.Sprintf(testutils.TEST_BACKUP_NAME, now.Format(DATE_FORMAT_STRING))
 	backupFile, err := os.Open(
-		path.Join(utils.BACKUP_DIR, backupFileName),
+		path.Join(utils.BACKUP_PATH, backupFileName),
 	)
 	assert.NoError(err)
 	defer backupFile.Close()
@@ -91,6 +95,6 @@ func TestBackupVault(t *testing.T) {
 	assert.Equal(backupStat.Size(), vaultSize)
 
 	// backup cleanup
-	err = os.Remove(path.Join(utils.BACKUP_DIR, backupFileName))
+	err = os.Remove(path.Join(utils.BACKUP_PATH, backupFileName))
 	assert.NoError(err)
 }
