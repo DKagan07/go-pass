@@ -94,6 +94,18 @@ func (a *App) PopulateVaultList() {
 			} else {
 				a.App.SetRoot(a.Root, true)
 			}
+		case 'c':
+			currentIndex := a.VaultList.GetCurrentItem()
+			if currentIndex >= 0 && currentIndex < len(a.Vault) {
+				entry := a.FilteredVault[currentIndex]
+				actualIdx := a.findFilteredVaultIndex(entry)
+
+				if actualIdx >= 0 {
+					successModal := a.CopyDirectlyToClipboard(actualIdx)
+					a.App.SetRoot(successModal, true)
+				}
+			}
+
 		case 'q':
 			a.App.Stop()
 		case '\t':
@@ -189,7 +201,7 @@ func (a *App) SaveVault() {
 	}
 
 	// need to refresh the app.VaultFile
-	a.VaultFile, err = os.OpenFile(a.VaultFile.Name(), os.O_RDWR, 0600)
+	a.VaultFile, err = os.OpenFile(a.VaultFile.Name(), os.O_RDWR, 0o600)
 	if err != nil {
 		modal := a.ErrorModal(fmt.Sprintf("Failed to open vault file: %v", err), a.Root)
 		a.App.SetRoot(modal, true)
