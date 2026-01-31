@@ -84,3 +84,32 @@ func (a *App) ModalVaultInfoByIdx(idx int) *tview.Modal {
 
 	return modal
 }
+
+// CopyDirectlyToClipboard is triggered by pressing 'c' in the ListView and
+// directly copies the password to the clipboard without displaying the
+// password
+func (a *App) CopyDirectlyToClipboard(idx int) *tview.Modal {
+	entry := a.Vault[idx]
+	decryptedPassword, err := crypt.DecryptPassword(entry.Password, a.Keyring, false)
+	if err != nil {
+		modal := a.ErrorModal(err.Error(), a.Root)
+		a.App.SetRoot(modal, true)
+	}
+
+	clipboard.WriteAll(decryptedPassword)
+
+	modal := tview.NewModal().
+		AddButtons([]string{"OK"}).
+		SetBackgroundColor(tcell.ColorBlack)
+
+	modal.SetTitle(" Vault Info ")
+	modal.SetText("Copied to clipboard!")
+	modal.SetBorder(true)
+	modal.SetBorderStyle(tcell.StyleDefault.Background(tcell.ColorBlack))
+	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+		a.App.SetRoot(a.Root, true)
+		a.App.SetFocus(a.VaultList)
+	})
+
+	return modal
+}

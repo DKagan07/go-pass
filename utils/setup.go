@@ -152,6 +152,9 @@ func WriteToFile(fileName string, fileType model.TempFileKind, contents string) 
 	return nil
 }
 
+// CreateConfig creates a new config file with the given vault name,
+// MasterPassword password, config name, and keychain.
+//
 // Caller should close these open files
 func CreateConfig(
 	vaultName string,

@@ -9,7 +9,7 @@ import (
 	"go-pass/model"
 )
 
-var HelpText = "a: Add | d: Delete | u: Update | g: Generate Password | b: Create backup | l: Toggle Backup Display | q: Quit | tab: Switch Search and Vault"
+var HelpText = "a: Add | d: Delete | u: Update | g: Generate Password | c: Copy | b: Backup | l: Toggle Backup Display | q: Quit | tab: Switch Search and Vault"
 
 // App is the structure that controls all the actions for the TUI
 type App struct {
