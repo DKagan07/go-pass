@@ -36,13 +36,15 @@ func init() {
 	vaultCmd.AddCommand(vault.RestoreCmd)
 	vaultCmd.AddCommand(vault.SearchCmd)
 	vaultCmd.AddCommand(vault.UpdateCmd)
+	vaultCmd.AddCommand(vault.ExportCmd)
 
 	initVaultFlags()
 }
 
 func initVaultFlags() {
 	// Get Command
-	vault.GetCmd.Flags().BoolP("copy", "y", false, "Add password to clipboard, does not display information")
+	vault.GetCmd.Flags().
+		BoolP("copy", "y", false, "Add password to clipboard, does not display information")
 
 	// Generate Command
 	specialCharsStr := "List the special characters you want to add to your password generation. If adjustment is necessary, list all the special characters you want. IMPORTANT: BE SURE TO USE SINGLE QUOTES."
@@ -60,4 +62,8 @@ func initVaultFlags() {
 	vault.UpdateCmd.Flags().BoolP("username", "u", false, "Update the login username")
 	vault.UpdateCmd.Flags().BoolP("password", "p", false, "Update the password")
 	vault.UpdateCmd.Flags().BoolP("notes", "t", false, "Update the notes")
+
+	// Export Command
+	vault.ExportCmd.Flags().
+		StringP("export-format", "e", string(vault.OnePass), "the format to export your vault to")
 }
