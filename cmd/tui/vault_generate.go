@@ -28,10 +28,9 @@ func (a *App) GeneratedPasswordModal(generatedPass string) *tview.Modal {
 				a.App.SetRoot(modal, true)
 				a.App.SetFocus(a.VaultList)
 			}
-		} else {
-			a.App.SetRoot(a.Root, true)
-			a.App.SetFocus(a.VaultList)
 		}
+		a.App.SetRoot(a.Root, true)
+		a.App.SetFocus(a.VaultList)
 	})
 
 	return modal
