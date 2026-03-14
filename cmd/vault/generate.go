@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -143,5 +144,20 @@ func GeneratePassword(l int, special string) ([]byte, error) {
 
 		b[i] = byteSet[idx.Int64()]
 	}
+
+	var err error
+	if GeneratePostCheck(string(b), special) {
+		b, err = GeneratePassword(l, special)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get random number: %v", err)
+		}
+	}
 	return b, nil
+}
+
+// GeneratePostCheck is a function that ensures that the password has a special
+// character in it. It will return false if it does, and true if a new password
+// needs to be generated
+func GeneratePostCheck(pass, special string) bool {
+	return !strings.ContainsAny(pass, special)
 }
